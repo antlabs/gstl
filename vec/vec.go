@@ -7,7 +7,6 @@ import (
 )
 
 var ErrEmpty = errors.New("vec is empty")
-var 
 
 type Vec[T any] struct {
 	slice []T
@@ -33,25 +32,25 @@ func (v *Vec[T]) Pop() (e T, err error) {
 	e = v.slice[l-1]
 	v.slice = v.slice[:l-1]
 
-    // 缩容
-    if v.Len() * 2 < v.Cap() {
-        slice := make(T, v.Len())
-        copy(slice, v.slice)
-        v.slice = slice
-    }
+	// 缩容
+	if v.Len()*2 < v.Cap() {
+		slice := make(T, v.Len())
+		copy(slice, v.slice)
+		v.slice = slice
+	}
 
 	return e, nil
 }
 
 // 删除
 func (V *Vec[T]) Remove(index int) int {
-    l := v.Len()
-    if index >= l {
-        panic(fmt.Sprintf("removal index (is %d) should be < len (is %d)", index, l))
-    }
+	l := v.Len()
+	if index >= l {
+		panic(fmt.Sprintf("removal index (is %d) should be < len (is %d)", index, l))
+	}
 
-    copy(v.slice[index:], v.slice[index+1:])
-    v.slice = v.slice[:l-1]
+	copy(v.slice[index:], v.slice[index+1:])
+	v.slice = v.slice[:l-1]
 }
 
 // 反转
