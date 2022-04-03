@@ -20,6 +20,11 @@ func New[T any](a ...T) *Vec[T] {
 	return (*Vec[T])(&a)
 }
 
+// 初始化函数, 可以把slice指针转成Vec类型
+func FromSlicePtr[T any](ptr *[]T) *Vec[T] {
+	return (*Vec[T])(ptr)
+}
+
 // 初始化一个vec, 并指定底层的slice 容量
 func WithCapacity[T any](capacity int) *Vec[T] {
 	p := make([]T, 0, capacity)
