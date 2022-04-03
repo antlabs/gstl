@@ -12,7 +12,7 @@ import (
 var ErrVecElemEmpty = errors.New("vec is empty")
 var ErrLenGreaterCap = errors.New("len is too long > length of cap")
 
-// vec结构体
+// vec类型
 type Vec[T any] []T
 
 // 初始化一个vec
