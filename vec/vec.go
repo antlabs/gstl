@@ -2,6 +2,7 @@ package vec
 
 // 参考文件如下
 // https://doc.rust-lang.org/src/alloc/vec/mod.rs.html
+// https://doc.rust-lang.org/std/vec/struct.Vec.html
 import (
 	"errors"
 	"fmt"
@@ -32,16 +33,22 @@ func (v *Vec[T]) Clear() {
 }
 
 // 删除连续重复值
-func (v *Vec[T]) Dedup() {
+func (v *Vec[T]) DedupFunc(cmp func(a, b T) bool) {
 	l := v.Len()
 	if l <= 1 {
 		return
 	}
 
 	for i := 0; i < l; {
+		right := -1
 		for j := i + 1; j < l; {
-
+			if !cmp(v.slice[i], v.slice[j]) {
+				right = j
+				break
+			}
 		}
+
+		copy(v.slice[i:], v.slice[right:])
 	}
 }
 
@@ -321,14 +328,37 @@ func (v *Vec[T]) Filter(filter func(e T) bool) {
 	v.SetLen(left)
 }
 
-//原地旋转vec
+// 原地旋转vec, 向左边旋转
 func (v *Vec[T]) RotateLeft(n int) {
+	l := v.Len()
+	n %= l
 
+	if n == 0 {
+		return
+	}
+
+	left := make([]T, n)
+	copy(left, v.slice[:n])
+	copy(v.slice, v.slice[n:])
+	copy(v.slice[n:], left)
 }
 
-//原地旋转vec
+//原地旋转vec, 向右边旋转
 func (v *Vec[T]) RotateRight(n int) {
+	l := v.Len()
+	n %= l
+	if n == 0 {
+		return
+	}
 
+	rightVec := v.SplitOff(n)
+	for right, left := l, n; right > 0 && left > 0; {
+		v.slice[right] = v.slice[left]
+		right--
+		left--
+	}
+
+	copy(v.slice, rightVec.slice)
 }
 
 // 通过重置vec的内容, 来创建新的vec
