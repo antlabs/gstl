@@ -55,6 +55,11 @@ func (v *Vec[T]) Append(other Vec[T]) {
 	other.SetLen(0)
 }
 
+// 添加other类型的slice到v里面
+func (v *Vec[T]) Extend(other []T) {
+	v.slice = append(v.slice, other...)
+}
+
 // 从尾巴弹出
 func (v *Vec[T]) Pop() (e T, err error) {
 	if v.Len() == 0 {
@@ -129,8 +134,29 @@ func (v *Vec[T]) Remove(index int) int {
 	return v.Len()
 }
 
-//
-func (v *Vec[T]) Reserve() {
+// 提前在现有基础上再额外申请 additional 长度空间
+// 可以避免频繁的重新分配
+// 如果容量已经满足, 则什么事也不做
+func (v *Vec[T]) Reserve(additional int) {
+	v.reserve(1.2)
+}
+
+// 如果容量已经满足, 则什么事也不做
+// 保留最小容量, 提前在现有基础上再额外申请 additional 长度空间
+func (v *Vec[T]) ReserveExact(additional int) {
+	v.reserve(1)
+}
+
+func (v *Vec[T]) reserve(factor float64) {
+	l := v.Len()
+	if l+additional <= v.Cap() {
+		return
+	}
+
+	newSlice := make([]T, int(float64(l+additional)*factor))
+	copy(newSlice, v.slice)
+	v.slice = newSlice
+
 }
 
 func (v *Vec[T]) Truncate(newLen int) {
@@ -142,9 +168,19 @@ func (v *Vec[T]) ExtendWith(newLen int, value T) {
 
 }
 
-// 缩容
-func (v *Vec[T]) ShrinkToFit() {
+// 向下收缩vec的容器
+func (v *Vec[T]) ShrinkTo() {
+	l := v.Len()
+	if v.Cap() > l {
+		v.ShrinkToFit(l)
+	}
+}
 
+// 向下收缩vec的容器
+func (v *Vec[T]) ShrinkToFit(minCapacity int) {
+	if v.Cap() > minCapacity {
+
+	}
 }
 
 //
