@@ -52,3 +52,13 @@ func Test_Insert(t *testing.T) {
 	assert.Equal(t, New[int](1, 7).Insert(1, 2, 3, 4, 5, 6).ToSlice(), []int{1, 2, 3, 4, 5, 6, 7})
 	assert.Equal(t, New("world", "12345").Insert(0, "hello").ToSlice(), []string{"hello", "world", "12345"})
 }
+
+func Test_Map(t *testing.T) {
+	assert.Equal(t, New[int](1, 2, 3, 4, 5).Map(func(e int) int { return e * 2 }).ToSlice(), []int{2, 4, 6, 8, 10})
+	assert.Equal(t, New[string]("world", "12345").Map(func(e string) string { return "#" + e }).ToSlice(), []string{"#world", "#12345"})
+}
+
+func Test_Filter(t *testing.T) {
+	assert.Equal(t, New(1, 2, 3, 4, 5).Filter(func(e int) bool { return e%2 == 0 }).ToSlice(), []int{2, 4})
+	assert.Equal(t, New[int](1, 2, 3, 4, 5).Filter(func(e int) bool { return e%2 != 0 }).ToSlice(), []int{1, 3, 5})
+}

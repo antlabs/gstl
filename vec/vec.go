@@ -312,18 +312,19 @@ func (v *Vec[T]) Last() (n T, err error) {
 }
 
 // 原地操作, 回调函数会返回的元素值
-func (v *Vec[T]) Map(m func(e T) T) {
+func (v *Vec[T]) Map(m func(e T) T) *Vec[T] {
 
 	l := v.Len()
 
 	for i := 0; i < l; i++ {
-		newValue := m(v.slice[i])
-		v.slice[i] = newValue
+		v.slice[i] = m(v.slice[i])
 	}
+
+	return v
 }
 
 // 原地操作, 回调函数返回true的元素保留
-func (v *Vec[T]) Filter(filter func(e T) bool) {
+func (v *Vec[T]) Filter(filter func(e T) bool) *Vec[T] {
 
 	l := v.Len()
 	left := 0
@@ -332,11 +333,12 @@ func (v *Vec[T]) Filter(filter func(e T) bool) {
 		if filter(v.slice[i]) {
 			if left != i {
 				v.slice[left] = v.slice[i]
-				left++
 			}
+			left++
 		}
 	}
 	v.SetLen(left)
+	return v
 }
 
 // 原地旋转vec, 向左边旋转
