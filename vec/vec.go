@@ -13,23 +13,22 @@ var ErrVecElemEmpty = errors.New("vec is empty")
 var ErrLenGreaterCap = errors.New("len is too long > length of cap")
 
 // vec结构体
-type Vec[T any] struct {
-	slice []T
-}
+type Vec[T any] []T
 
 // 初始化一个vec
 func New[T any](a ...T) *Vec[T] {
-	return &Vec[T]{slice: a}
+	return (*Vec[T])(&a)
 }
 
 // 初始化一个vec, 并指定底层的slice 容量
 func WithCapacity[T any](capacity int) *Vec[T] {
-	return &Vec[T]{slice: make([]T, 0, capacity)}
+	p := make([]T, 0, capacity)
+	return (*Vec[T])(&p)
 }
 
 // 清空vec里面的所有值
 func (v *Vec[T]) Clear() {
-	v.slice = nil
+	v = nil
 }
 
 // 删除连续重复值
@@ -39,59 +38,67 @@ func (v *Vec[T]) DedupFunc(cmp func(a, b T) bool) {
 		return
 	}
 
+	slice := []T(*v)
 	for i := 0; i < l; {
 		right := -1
 		for j := i + 1; j < l; {
-			if !cmp(v.slice[i], v.slice[j]) {
+			if !cmp(slice[i], slice[j]) {
 				right = j
 				break
 			}
 		}
 
-		copy(v.slice[i:], v.slice[right:])
+		copy(slice[i:], slice[right:])
 	}
 }
 
 // 从尾巴插入
 // 支持插入一个值或者多个值
-func (v *Vec[T]) Push(e ...T) {
-	v.slice = append(v.slice, e...)
+func (v *Vec[T]) Push(e ...T) *Vec[T] {
+	slice := (*[]T)(v)
+	*slice = append(*slice, e...)
+	return (*Vec[T])(slice)
 }
 
 // 设置新长度
 func (v *Vec[T]) SetLen(newLen int) {
+	slice := []T(*v)
 	if newLen > v.Cap() {
 		panic(ErrLenGreaterCap)
 	}
 
-	v.slice = v.slice[:newLen]
+	slice = slice[:newLen]
+	*v = Vec[T](slice)
 }
 
 // 添加other类型的vec到v里面
-func (v *Vec[T]) Append(other Vec[T]) {
-	v.slice = append(v.slice, other.slice...)
+func (v *Vec[T]) Append(other Vec[T]) *Vec[T] {
+	*v = append(*v, other.ToSlice()...)
+	return v
 }
 
 // 添加other类型的slice到v里面
-func (v *Vec[T]) Extend(other []T) {
-	v.slice = append(v.slice, other...)
+func (v *Vec[T]) Extend(other []T) *Vec[T] {
+	*v = append(*v, other...)
+	return v
 }
 
 // 从尾巴弹出
 func (v *Vec[T]) Pop() (e T, err error) {
-	if v.Len() == 0 {
+	l := v.Len()
+	if l == 0 {
 		return e, ErrVecElemEmpty
 	}
 
-	l := len(v.slice)
-	e = v.slice[l-1]
-	v.slice = v.slice[:l-1]
+	slice := v.ToSlice()
+	e = slice[l-1]
+	v = New(slice[:l-1]...)
 
 	// 缩容
 	if v.Len()*2 < v.Cap() {
-		slice := make([]T, v.Len())
-		copy(slice, v.slice)
-		v.slice = slice
+		newSlice := make([]T, v.Len())
+		copy(newSlice, slice)
+		v = New(newSlice...)
 	}
 
 	return e, nil
@@ -99,7 +106,7 @@ func (v *Vec[T]) Pop() (e T, err error) {
 
 // 返回slice底层的slice
 func (v *Vec[T]) ToSlice() []T {
-	return v.slice
+	return []T(*v)
 }
 
 // 往指定位置插入元素, 后面的元素往右移动
@@ -120,26 +127,35 @@ func (v *Vec[T]) Insert(i int, es ...T) *Vec[T] {
 		v.Reserve(len(es))
 	}
 
-	s := v.slice
+	slice := v.ToSlice()
+
 	//重置下newSlice len
-	newSlice := v.slice[:l+len(es)]
-	copy(newSlice[i+len(es):], s[i:])
+	newSlice := slice[:l+len(es)]
+	copy(newSlice[i+len(es):], slice[i:])
 	copy(newSlice[i:], es)
 
-	v.slice = newSlice
+	*v = *New(newSlice...)
 	return v
 }
 
 // 删除指定范围内的元素
 func (v *Vec[T]) Delete(i, j int) *Vec[T] {
-	copy(v.slice[i:], v.slice[j:])
-	v.slice = v.slice[:v.Len()-(j-i)]
+	slice := v.ToSlice()
+	copy(slice[i:], slice[j:])
+	*v = *New(slice[:v.Len()-(j-i)]...)
 	return v
 }
 
 // 获取指定索引的值
 func (v *Vec[T]) Get(index int) (e T) {
-	return v.slice[index]
+	slice := v.ToSlice()
+	return slice[index]
+}
+
+// 设置指定索引的值
+func (v *Vec[T]) Set(index int, value T) *Vec[T] {
+	v.ToSlice()[index] = value
+	return v
 }
 
 // 删除指定索引的元素, 空缺的位置, 使用最后一个元素替换上去
@@ -149,8 +165,8 @@ func (v *Vec[T]) SwapRemove(index int) (rv T) {
 		panic(fmt.Sprintf("swap_remove index (is %d) should be < len (is %d)", index, l))
 	}
 
-	rv = v.slice[index]
-	v.slice[index] = v.slice[l-1]
+	rv = v.Get(index)
+	v.Set(index, v.Get(l-1))
 	v.SetLen(l - 1)
 	return
 }
@@ -172,21 +188,23 @@ func (v *Vec[T]) SplitOff(at int) (new *Vec[T]) {
 	}
 
 	newSlice := make([]T, l-at)
-	copy(newSlice, v.slice[at:])
-	return New(newSlice...)
+	copy(newSlice, v.ToSlice()[at:])
+	*v = Vec[T](newSlice)
+	return v
 }
 
-// 删除指定索引的元素
+// 删除指定索引的元素, 返回剩余长度
 func (v *Vec[T]) Remove(index int) int {
 	l := v.Len()
 	if index >= l {
 		panic(fmt.Sprintf("removal index (is %d) should be < len (is %d)", index, l))
 	}
 
-	copy(v.slice[index:], v.slice[index+1:])
-	v.slice = v.slice[:l-1]
+	copy(v.ToSlice()[index:], v.ToSlice()[index+1:])
+	newLen := l - 1
+	v.SetLen(newLen)
 
-	return v.Len()
+	return newLen
 }
 
 // 提前在现有基础上再额外申请 additional 长度空间
@@ -209,8 +227,8 @@ func (v *Vec[T]) reserve(additional int, factor float64) {
 	}
 
 	newSlice := make([]T, l, int(float64(l+additional)*factor))
-	copy(newSlice, v.slice)
-	v.slice = newSlice
+	copy(newSlice, v.ToSlice())
+	*v = Vec[T](newSlice)
 
 }
 
@@ -227,14 +245,14 @@ func (v *Vec[T]) ShrinkToFit(minCapacity int) {
 	cap := v.Cap()
 	if cap > minCapacity {
 		max := cmp.Max(cap, minCapacity)
-		newSlice := append([]T{}, v.slice[:max]...)
-		v.slice = newSlice
+		newSlice := append([]T{}, v.ToSlice()[:max]...)
+		*v = Vec[T](newSlice)
 	}
 }
 
 // 修改vec可访问的容量, 但是不会修改底层的slice, 只是修改slice的len
 func (v *Vec[T]) Truncate(newLen int) {
-	v.slice = v.slice[:newLen]
+	*v = Vec[T](v.ToSlice()[:newLen])
 }
 
 // 在vec后面追加newLen 长度的value
@@ -242,9 +260,11 @@ func (v *Vec[T]) ExtendWith(newLen int, value T) {
 
 	oldLen := v.Len()
 	v.Reserve(newLen)
-	v.slice = v.slice[:oldLen+newLen]
+	slice := v.ToSlice()
+	slice = slice[:oldLen+newLen]
+	*v = Vec[T](slice)
 	for i, l := newLen, oldLen; i < l; i++ {
-		v.slice[i] = value
+		slice[i] = value
 	}
 }
 
@@ -264,23 +284,23 @@ func (v *Vec[T]) Resize(newLen int, value T) {
 // 深度拷贝一份
 func (v *Vec[T]) Clone() *Vec[T] {
 	newSlice := make([]T, v.Len())
-	copy(newSlice, v.slice)
-	return New(newSlice...)
+	copy(newSlice, v.ToSlice())
+	return (*Vec[T])(&newSlice)
 }
 
 // 如果为空
 func (v *Vec[T]) IsEmpty() bool {
-	return len(v.slice) == 0
+	return len(v.ToSlice()) == 0
 }
 
 // len
 func (v *Vec[T]) Len() int {
-	return len(v.slice)
+	return len(v.ToSlice())
 }
 
 // cap
 func (v *Vec[T]) Cap() int {
-	return cap(v.slice)
+	return cap(v.ToSlice())
 }
 
 // 返回第1个元素
@@ -289,7 +309,7 @@ func (v *Vec[T]) First() (n T, err error) {
 		return n, ErrVecElemEmpty
 	}
 
-	return v.slice[0], nil
+	return v.Get(0), nil
 }
 
 // 删除vec第一个元素, 并返回它
@@ -298,7 +318,7 @@ func (v *Vec[T]) TakeFirst() (n T, err error) {
 		return n, ErrVecElemEmpty
 	}
 
-	n = v.slice[0]
+	n = v.Get(0)
 	v.Remove(0)
 	return n, nil
 }
@@ -309,7 +329,7 @@ func (v *Vec[T]) Last() (n T, err error) {
 		return n, ErrVecElemEmpty
 	}
 
-	return v.slice[v.Len()-1], nil
+	return v.Get(v.Len() - 1), nil
 }
 
 // 原地操作, 回调函数会返回的元素值
@@ -317,8 +337,9 @@ func (v *Vec[T]) Map(m func(e T) T) *Vec[T] {
 
 	l := v.Len()
 
+	slice := v.ToSlice()
 	for i := 0; i < l; i++ {
-		v.slice[i] = m(v.slice[i])
+		slice[i] = m(slice[i])
 	}
 
 	return v
@@ -330,10 +351,11 @@ func (v *Vec[T]) Filter(filter func(e T) bool) *Vec[T] {
 	l := v.Len()
 	left := 0
 
+	slice := v.ToSlice()
 	for i := 0; i < l; i++ {
-		if filter(v.slice[i]) {
+		if filter(slice[i]) {
 			if left != i {
-				v.slice[left] = v.slice[i]
+				slice[left] = slice[i]
 			}
 			left++
 		}
@@ -351,13 +373,14 @@ func (v *Vec[T]) RotateLeft(n int) {
 		return
 	}
 
+	slice := v.ToSlice()
 	left := make([]T, n)
 	// 先备份左边
-	copy(left, v.slice[:n])
+	copy(left, slice[:n])
 	// 备下的往左拷贝
-	copy(v.slice, v.slice[n:])
+	copy(slice, slice[n:])
 	// 右边需要被替换的空间
-	copy(v.slice[l-n:], left)
+	copy(slice[l-n:], left)
 }
 
 //原地旋转vec, 向右边旋转
@@ -368,14 +391,15 @@ func (v *Vec[T]) RotateRight(n int) {
 		return
 	}
 
+	slice := v.ToSlice()
 	rightVec := v.SplitOff(n)
 	for right, left := l, n; right > 0 && left > 0; {
-		v.slice[right] = v.slice[left]
+		slice[right] = slice[left]
 		right--
 		left--
 	}
 
-	copy(v.slice, rightVec.slice)
+	copy(slice, rightVec.ToSlice())
 }
 
 // 用于写入重复的值, 返回新的内存块, 来创建新的vec
