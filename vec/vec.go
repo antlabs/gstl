@@ -5,6 +5,7 @@ package vec
 import (
 	"errors"
 	"fmt"
+	"github.com/guonaihong/gstl/cmp"
 )
 
 var ErrVecElemEmpty = errors.New("vec is empty")
@@ -32,7 +33,16 @@ func (v *Vec[T]) Clear() {
 
 // 删除连续重复值
 func (v *Vec[T]) Dedup() {
+	l := v.Len()
+	if l <= 1 {
+		return
+	}
 
+	for i := 0; i < l; {
+		for j := i + 1; j < l; {
+
+		}
+	}
 }
 
 // 从尾巴插入
@@ -49,10 +59,9 @@ func (v *Vec[T]) SetLen(newLen int) {
 	v.slice = v.slice[:newLen]
 }
 
-// 添加other类型的vec到v里面, 并且让other里面的数据为0
+// 添加other类型的vec到v里面
 func (v *Vec[T]) Append(other Vec[T]) {
 	v.slice = append(v.slice, other.slice...)
-	other.SetLen(0)
 }
 
 // 添加other类型的slice到v里面
@@ -102,7 +111,7 @@ func (v *Vec[T]) Insert(index int, e T) {
 		v.slice = v.slice[:l+1]
 	}
 
-	for j := l + 1; i > index; j-- {
+	for j := l + 1; j > index; j-- {
 		v.slice[j] = v.slice[j-1]
 	}
 
@@ -118,12 +127,13 @@ func (v *Vec[T]) Get(index int) (e T) {
 func (v *Vec[T]) SwapRemove(index int) (rv T) {
 	l := v.Len()
 	if index >= l {
-		panic(fmt.Sprintf("swap_remove index (is %d) should be < len (is %d)", index, len))
+		panic(fmt.Sprintf("swap_remove index (is %d) should be < len (is %d)", index, l))
 	}
 
 	rv = v.slice[index]
 	v.slice[index] = v.slice[l-1]
 	v.SetLen(l - 1)
+	return
 }
 
 // 在给定索引处将vec拆分为两个
@@ -164,16 +174,16 @@ func (v *Vec[T]) Remove(index int) int {
 // 可以避免频繁的重新分配
 // 如果容量已经满足, 则什么事也不做
 func (v *Vec[T]) Reserve(additional int) {
-	v.reserve(1.2)
+	v.reserve(additional, 1.2)
 }
 
 // 如果容量已经满足, 则什么事也不做
 // 保留最小容量, 提前在现有基础上再额外申请 additional 长度空间
 func (v *Vec[T]) ReserveExact(additional int) {
-	v.reserve(1)
+	v.reserve(additional, 1)
 }
 
-func (v *Vec[T]) reserve(factor float64) {
+func (v *Vec[T]) reserve(additional int, factor float64) {
 	l := v.Len()
 	if l+additional <= v.Cap() {
 		return
@@ -198,7 +208,7 @@ func (v *Vec[T]) ShrinkToFit(minCapacity int) {
 	cap := v.Cap()
 	if cap > minCapacity {
 		max := cmp.Max(cap, minCapacity)
-		newSlice := append([]T{}, v.slice[:max])
+		newSlice := append([]T{}, v.slice[:max]...)
 		v.slice = newSlice
 	}
 }
@@ -208,13 +218,20 @@ func (v *Vec[T]) Truncate(newLen int) {
 	v.slice = v.slice[:newLen]
 }
 
-//
+// 在vec后面追加newLen 长度的value
 func (v *Vec[T]) ExtendWith(newLen int, value T) {
 
+	oldLen := v.Len()
+	v.Reserve(newLen)
+	v.slice = v.slice[:oldLen+newLen]
+	for i, l := newLen, oldLen; i < l; i++ {
+		v.slice[i] = value
+	}
 }
 
-//
-//
+// 调整vec的大小, 使用len等于newLen
+// 如果newLen > len, 差值部分会填充value
+// 如果newLen < len, 多余的部分会被截断
 func (v *Vec[T]) Resize(newLen int, value T) {
 	l := v.Len()
 	if newLen > l {
@@ -256,6 +273,26 @@ func (v *Vec[T]) First() (n T, err error) {
 	return v.slice[0], nil
 }
 
+// 删除vec第一个元素, 并返回它
+func (v *Vec[T]) TakeFirst() (n T, err error) {
+	if v.Len() == 0 {
+		return n, ErrVecElemEmpty
+	}
+
+	n = v.slice[0]
+	v.Remove(0)
+	return n, nil
+}
+
+// 返回最后一个元素
+func (v *Vec[T]) Last() (n T, err error) {
+	if v.Len() == 0 {
+		return n, ErrVecElemEmpty
+	}
+
+	return v.slice[v.Len()-1], nil
+}
+
 // 原地操作, 回调函数会返回的元素值
 func (v *Vec[T]) Map(m func(e T) T) {
 
@@ -282,4 +319,26 @@ func (v *Vec[T]) Filter(filter func(e T) bool) {
 		}
 	}
 	v.SetLen(left)
+}
+
+//原地旋转vec
+func (v *Vec[T]) RotateLeft(n int) {
+
+}
+
+//原地旋转vec
+func (v *Vec[T]) RotateRight(n int) {
+
+}
+
+// 通过重置vec的内容, 来创建新的vec
+func (v *Vec[T]) Repeat(count int) *Vec[T] {
+	need := v.Len() * count
+	rv := WithCapacity[T](need)
+
+	for i := 0; i < count; i++ {
+		rv.Append(*v)
+	}
+
+	return rv
 }

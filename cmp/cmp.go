@@ -4,14 +4,14 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-func Max[T constraints.Ordered](a, b T) bool {
+func Max[T constraints.Ordered](a, b T) T {
 	if a > b {
 		return a
 	}
 	return b
 }
 
-func Min[T constraints.Ordered](a, b T) bool {
+func Min[T constraints.Ordered](a, b T) T {
 	if a < b {
 		return a
 	}
@@ -23,7 +23,7 @@ func MaxSlice[T constraints.Ordered](s []T) int {
 		return -1
 	}
 
-	maxIndex = 0
+	maxIndex := 0
 	for i, v := range s[1:] {
 		if s[maxIndex] < v {
 			maxIndex = i
@@ -37,7 +37,7 @@ func MinSlice[T constraints.Ordered](s []T) int {
 		return -1
 	}
 
-	minIndex = 0
+	minIndex := 0
 	for i, v := range s[1:] {
 		if s[minIndex] > v {
 			minIndex = i
