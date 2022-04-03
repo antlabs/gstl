@@ -85,9 +85,28 @@ func (v *Vec[T]) ToSlice() []T {
 	return v.slice
 }
 
-//
-func (v *Vec[T]) Insert() {
+// 往指定位置插入元素, 后面的元素往右移动
+func (v *Vec[T]) Insert(index int, e T) {
+	l := v.Len()
+	if index == l {
+		v.Push(e)
+		return
+	}
 
+	if index > l {
+		panic(fmt.Sprintf("insertion index (is %d) should be <= len (is %d)", index, l))
+	}
+
+	if l == v.Cap() {
+		v.Reserve(1)
+		v.slice = v.slice[:l+1]
+	}
+
+	for j := l + 1; i > index; j-- {
+		v.slice[j] = v.slice[j-1]
+	}
+
+	v.slice[index] = e
 }
 
 // 获取指定索引的值
@@ -96,8 +115,15 @@ func (v *Vec[T]) Get(index int) (e T) {
 }
 
 // 删除指定索引的元素, 空缺的位置, 使用最后一个元素替换上去
-func (v *Vec[T]) SwapRemove(index int) {
+func (v *Vec[T]) SwapRemove(index int) (rv T) {
+	l := v.Len()
+	if index >= l {
+		panic(fmt.Sprintf("swap_remove index (is %d) should be < len (is %d)", index, len))
+	}
 
+	rv = v.slice[index]
+	v.slice[index] = v.slice[l-1]
+	v.SetLen(l - 1)
 }
 
 // 在给定索引处将vec拆分为两个
@@ -153,18 +179,9 @@ func (v *Vec[T]) reserve(factor float64) {
 		return
 	}
 
-	newSlice := make([]T, int(float64(l+additional)*factor))
+	newSlice := make([]T, l, int(float64(l+additional)*factor))
 	copy(newSlice, v.slice)
 	v.slice = newSlice
-
-}
-
-func (v *Vec[T]) Truncate(newLen int) {
-	v.slice = v.slice[:newLen]
-}
-
-//
-func (v *Vec[T]) ExtendWith(newLen int, value T) {
 
 }
 
@@ -176,11 +193,24 @@ func (v *Vec[T]) ShrinkTo() {
 	}
 }
 
-// 向下收缩vec的容器
+// 向下收缩vec的容器, 会重新分配底层的slice
 func (v *Vec[T]) ShrinkToFit(minCapacity int) {
-	if v.Cap() > minCapacity {
-
+	cap := v.Cap()
+	if cap > minCapacity {
+		max := cmp.Max(cap, minCapacity)
+		newSlice := append([]T{}, v.slice[:max])
+		v.slice = newSlice
 	}
+}
+
+// 修改vec可访问的容量, 但是不会修改底层的slice, 只是修改slice的len
+func (v *Vec[T]) Truncate(newLen int) {
+	v.slice = v.slice[:newLen]
+}
+
+//
+func (v *Vec[T]) ExtendWith(newLen int, value T) {
+
 }
 
 //
