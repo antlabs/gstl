@@ -338,9 +338,12 @@ func (v *Vec[T]) RotateLeft(n int) {
 	}
 
 	left := make([]T, n)
+	// 先备份左边
 	copy(left, v.slice[:n])
+	// 备下的往左拷贝
 	copy(v.slice, v.slice[n:])
-	copy(v.slice[n:], left)
+	// 右边需要被替换的空间
+	copy(v.slice[l-n:], left)
 }
 
 //原地旋转vec, 向右边旋转
