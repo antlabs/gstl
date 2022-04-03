@@ -103,6 +103,7 @@ func (v *Vec[T]) ToSlice() []T {
 }
 
 // 往指定位置插入元素, 后面的元素往右移动
+// i是索引位置, es可以是单个值和多个值
 func (v *Vec[T]) Insert(i int, es ...T) *Vec[T] {
 	l := v.Len()
 	if i == l {
@@ -120,7 +121,7 @@ func (v *Vec[T]) Insert(i int, es ...T) *Vec[T] {
 	}
 
 	s := v.slice
-	//重置下s2 len
+	//重置下newSlice len
 	newSlice := v.slice[:l+len(es)]
 	copy(newSlice[i+len(es):], s[i:])
 	copy(newSlice[i:], es)
