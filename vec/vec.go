@@ -53,8 +53,9 @@ func (v *Vec[T]) DedupFunc(cmp func(a, b T) bool) {
 }
 
 // 从尾巴插入
-func (v *Vec[T]) Push(e T) {
-	v.slice = append(v.slice, e)
+// 支持插入一个值或者多个值
+func (v *Vec[T]) Push(e ...T) {
+	v.slice = append(v.slice, e...)
 }
 
 // 设置新长度
@@ -102,27 +103,37 @@ func (v *Vec[T]) ToSlice() []T {
 }
 
 // 往指定位置插入元素, 后面的元素往右移动
-func (v *Vec[T]) Insert(index int, e T) {
+func (v *Vec[T]) Insert(i int, es ...T) *Vec[T] {
 	l := v.Len()
-	if index == l {
-		v.Push(e)
-		return
+	if i == l {
+		v.Push(es...)
+		return v
 	}
 
-	if index > l {
-		panic(fmt.Sprintf("insertion index (is %d) should be <= len (is %d)", index, l))
+	if i > l {
+		panic(fmt.Sprintf("insertion index (is %d) should be <= len (is %d)", i, l))
 	}
 
-	if l == v.Cap() {
-		v.Reserve(1)
-		v.slice = v.slice[:l+1]
+	need := l + len(es)
+	if need > v.Cap() {
+		v.Reserve(len(es))
 	}
 
-	for j := l + 1; j > index; j-- {
-		v.slice[j] = v.slice[j-1]
-	}
+	s := v.slice
+	//重置下s2 len
+	newSlice := v.slice[:l+len(es)]
+	copy(newSlice[i+len(es):], s[i:])
+	copy(newSlice[i:], es)
 
-	v.slice[index] = e
+	v.slice = newSlice
+	return v
+}
+
+// 删除指定范围内的元素
+func (v *Vec[T]) Delete(i, j int) *Vec[T] {
+	copy(v.slice[i:], v.slice[j:])
+	v.slice = v.slice[:v.Len()-(j-i)]
+	return v
 }
 
 // 获取指定索引的值
@@ -364,7 +375,7 @@ func (v *Vec[T]) RotateRight(n int) {
 	copy(v.slice, rightVec.slice)
 }
 
-// 通过重置vec的内容, 来创建新的vec
+// 用于写入重复的值, 返回新的内存块, 来创建新的vec
 func (v *Vec[T]) Repeat(count int) *Vec[T] {
 	need := v.Len() * count
 	rv := WithCapacity[T](need)
