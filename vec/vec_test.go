@@ -214,3 +214,27 @@ func Test_Remove(t *testing.T) {
 	assert.Equal(t, New(1, 2, 3).Remove(1).ToSlice(), []int{1, 3})
 	assert.Equal(t, New(1, 2, 3).Remove(2).ToSlice(), []int{1, 2})
 }
+
+// 测试扩容
+func Test_Reserve(t *testing.T) {
+	assert.Equal(t, WithCapacity[int](3).Reserve(1).Cap(), 3)
+	assert.Equal(t, WithCapacity[int](3).Reserve(2).Cap(), 3)
+	assert.Equal(t, WithCapacity[int](3).Reserve(3).Cap(), 3)
+	assert.Greater(t, WithCapacity[int](3).Reserve(4).Cap(), 4)
+	assert.NotEqual(t, WithCapacity[int](3).Reserve(4).Cap(), 4)
+}
+
+// 测试扩容
+func Test_ReserveExact(t *testing.T) {
+	assert.Equal(t, WithCapacity[int](3).ReserveExact(1).Cap(), 3)
+	assert.Equal(t, WithCapacity[int](3).ReserveExact(2).Cap(), 3)
+	assert.Equal(t, WithCapacity[int](3).ReserveExact(3).Cap(), 3)
+	assert.Equal(t, WithCapacity[int](3).ReserveExact(4).Cap(), 4)
+}
+
+// 测试IsEmpty接口
+func Test_IsEmpty(t *testing.T) {
+	assert.True(t, WithCapacity[int](3).IsEmpty())
+	assert.True(t, WithCapacity[int](4).IsEmpty())
+	assert.True(t, WithCapacity[int](5).IsEmpty())
+}

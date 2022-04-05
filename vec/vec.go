@@ -223,26 +223,26 @@ func (v *Vec[T]) Remove(index int) *Vec[T] {
 // 提前在现有基础上再额外申请 additional 长度空间
 // 可以避免频繁的重新分配
 // 如果容量已经满足, 则什么事也不做
-func (v *Vec[T]) Reserve(additional int) {
-	v.reserve(additional, 1.2)
+func (v *Vec[T]) Reserve(additional int) *Vec[T] {
+	return v.reserve(additional, 1.5)
 }
 
 // 如果容量已经满足, 则什么事也不做
 // 保留最小容量, 提前在现有基础上再额外申请 additional 长度空间
-func (v *Vec[T]) ReserveExact(additional int) {
-	v.reserve(additional, 1)
+func (v *Vec[T]) ReserveExact(additional int) *Vec[T] {
+	return v.reserve(additional, 1)
 }
 
-func (v *Vec[T]) reserve(additional int, factor float64) {
+func (v *Vec[T]) reserve(additional int, factor float64) *Vec[T] {
 	l := v.Len()
 	if l+additional <= v.Cap() {
-		return
+		return v
 	}
 
 	newSlice := make([]T, l, int(float64(l+additional)*factor))
 	copy(newSlice, v.ToSlice())
 	*v = Vec[T](newSlice)
-
+	return v
 }
 
 // 向下收缩vec的容器
