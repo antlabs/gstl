@@ -178,3 +178,39 @@ func Test_Get(t *testing.T) {
 	assert.Equal(t, New(1, 2, 3).Get(1), 2)
 	assert.Equal(t, New(1, 2, 3).Get(2), 3)
 }
+
+// 测试SwapRemove
+func Test_SwapRemove(t *testing.T) {
+	v := New(1, 2, 3)
+
+	assert.Equal(t, v.SwapRemove(0), 1)
+	assert.Equal(t, v.ToSlice(), []int{3, 2})
+
+	v = New(1, 2, 3)
+
+	assert.Equal(t, v.SwapRemove(2), 3)
+	assert.Equal(t, v.ToSlice(), []int{1, 2})
+}
+
+// 测试SplitOff接口
+func Test_SplitOff(t *testing.T) {
+	v := New(1, 2, 3)
+	v2 := v.SplitOff(0)
+
+	assert.Equal(t, v2.ToSlice(), []int{1, 2, 3})
+	assert.Equal(t, v.ToSlice(), []int{})
+	v2.Set(0, 5)
+	assert.Equal(t, v.ToSlice(), []int{})
+
+	v = New(1, 2, 3)
+	v2 = v.SplitOff(1)
+	assert.Equal(t, v2.ToSlice(), []int{2, 3})
+	assert.Equal(t, v.ToSlice(), []int{1})
+}
+
+// 测试Remove接口
+func Test_Remove(t *testing.T) {
+	assert.Equal(t, New(1, 2, 3).Remove(0).ToSlice(), []int{2, 3})
+	assert.Equal(t, New(1, 2, 3).Remove(1).ToSlice(), []int{1, 3})
+	assert.Equal(t, New(1, 2, 3).Remove(2).ToSlice(), []int{1, 2})
+}

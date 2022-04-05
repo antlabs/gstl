@@ -185,7 +185,7 @@ func (v *Vec[T]) SwapRemove(index int) (rv T) {
 }
 
 // 在给定索引处将vec拆分为两个
-// 返回一个新的vec, 范围是[at, len)
+// 返回一个新的vec, 范围是[at, len), 这里需要注意
 // 原始的vec的范围是[0, at], 不改变原先的容量
 func (v *Vec[T]) SplitOff(at int) (new *Vec[T]) {
 	l := v.Len()
@@ -195,29 +195,29 @@ func (v *Vec[T]) SplitOff(at int) (new *Vec[T]) {
 	}
 
 	if at == 0 {
-		new = v.Clone()
-		v.SetLen(0)
-		return
+		v2 := *v
+		v.Clear()
+		return &v2
 	}
 
 	newSlice := make([]T, l-at)
 	copy(newSlice, v.ToSlice()[at:])
-	*v = Vec[T](newSlice)
-	return v
+
+	*v = *New(v.ToSlice()[:at]...)
+	return New(newSlice...)
 }
 
-// 删除指定索引的元素, 返回剩余长度
-func (v *Vec[T]) Remove(index int) int {
+// 删除指定索引的元素
+func (v *Vec[T]) Remove(index int) *Vec[T] {
 	l := v.Len()
 	if index >= l {
 		panic(fmt.Sprintf("removal index (is %d) should be < len (is %d)", index, l))
 	}
 
 	copy(v.ToSlice()[index:], v.ToSlice()[index+1:])
-	newLen := l - 1
-	v.SetLen(newLen)
+	v.SetLen(l - 1)
 
-	return newLen
+	return v
 }
 
 // 提前在现有基础上再额外申请 additional 长度空间
