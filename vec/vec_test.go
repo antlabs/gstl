@@ -67,6 +67,9 @@ func Test_RotateRight(t *testing.T) {
 	v.RotateRight(0)
 	assert.Equal(t, v.ToSlice(), []byte{1, 2, 3, 4, 5, 6}, "test case:2")
 
+	assert.Equal(t, New[byte](1, 2, 3, 4, 5, 6).RotateRight(0).ToSlice(), []byte{1, 2, 3, 4, 5, 6}, "test case:3")
+	assert.Equal(t, New[byte](1, 2, 3, 4, 5, 6).RotateRight(6).ToSlice(), []byte{1, 2, 3, 4, 5, 6}, "test case:3")
+
 }
 
 // 测试填充
@@ -140,4 +143,38 @@ func Test_DedupFunc(t *testing.T) {
 	bk = v.Clone()
 	v2 = v.DedupFunc(func(a, b string) bool { return a == b }).ToSlice()
 	assert.Equal(t, v2, []string{"1"}, bk)
+}
+
+// 测试SetLen测试
+func Test_SetLen(t *testing.T) {
+	v := WithCapacity[int](10)
+	v.Push(1, 2, 3, 4, 5)
+	assert.Equal(t, v.Len(), 5)
+	assert.Equal(t, v.Cap(), 10)
+	v.SetLen(3)
+	assert.Equal(t, v.Len(), 3)
+}
+
+// 测试append接口
+func Test_Append(t *testing.T) {
+	assert.Equal(t, New(1, 2, 3).Append(New(4, 5, 6)).ToSlice(), []int{1, 2, 3, 4, 5, 6})
+	assert.Equal(t, New("hello").Append(New("world")).ToSlice(), []string{"hello", "world"})
+}
+
+// 测试Extend接口
+func Test_Extend(t *testing.T) {
+	assert.Equal(t, New(1, 2, 3).Extend([]int{4, 5, 6}).ToSlice(), []int{1, 2, 3, 4, 5, 6})
+	assert.Equal(t, New("hello").Extend([]string{"world"}).ToSlice(), []string{"hello", "world"})
+}
+
+// 测试Set接口
+func Test_Set(t *testing.T) {
+	assert.Equal(t, New(1, 2, 3).Set(0, 2).ToSlice(), []int{2, 2, 3})
+}
+
+// 测试Set接口
+func Test_Get(t *testing.T) {
+	assert.Equal(t, New(1, 2, 3).Get(0), 1)
+	assert.Equal(t, New(1, 2, 3).Get(1), 2)
+	assert.Equal(t, New(1, 2, 3).Get(2), 3)
 }

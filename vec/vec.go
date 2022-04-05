@@ -85,7 +85,7 @@ func (v *Vec[T]) SetLen(newLen int) {
 }
 
 // 添加other类型的vec到v里面
-func (v *Vec[T]) Append(other Vec[T]) *Vec[T] {
+func (v *Vec[T]) Append(other *Vec[T]) *Vec[T] {
 	*v = append(*v, other.ToSlice()...)
 	return v
 }
@@ -427,7 +427,7 @@ func (v *Vec[T]) Repeat(count int) *Vec[T] {
 	rv := WithCapacity[T](need)
 
 	for i := 0; i < count; i++ {
-		rv.Append(*v)
+		rv.Append(v)
 	}
 
 	return rv
