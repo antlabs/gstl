@@ -161,12 +161,6 @@ func Test_Append(t *testing.T) {
 	assert.Equal(t, New("hello").Append(New("world")).ToSlice(), []string{"hello", "world"})
 }
 
-// 测试Extend接口
-func Test_Extend(t *testing.T) {
-	assert.Equal(t, New(1, 2, 3).Extend([]int{4, 5, 6}).ToSlice(), []int{1, 2, 3, 4, 5, 6})
-	assert.Equal(t, New("hello").Extend([]string{"world"}).ToSlice(), []string{"hello", "world"})
-}
-
 // 测试Set接口
 func Test_Set(t *testing.T) {
 	assert.Equal(t, New(1, 2, 3).Set(0, 2).ToSlice(), []int{2, 2, 3})
@@ -237,4 +231,30 @@ func Test_IsEmpty(t *testing.T) {
 	assert.True(t, WithCapacity[int](3).IsEmpty())
 	assert.True(t, WithCapacity[int](4).IsEmpty())
 	assert.True(t, WithCapacity[int](5).IsEmpty())
+}
+
+// 收缩内存
+func Test_ShrinkTo(t *testing.T) {
+	assert.GreaterOrEqual(t, WithCapacity[int](10).ShrinkTo(0).Cap(), 3)
+	assert.GreaterOrEqual(t, WithCapacity[int](10).Push(1, 2, 3).ShrinkTo(4).Cap(), 3)
+	assert.GreaterOrEqual(t, WithCapacity[int](10).Push(1, 2, 3).ShrinkTo(4).Cap(), 3)
+
+}
+
+// 收缩内存
+func Test_ShrinkToFit(t *testing.T) {
+	assert.GreaterOrEqual(t, WithCapacity[int](10).Push(1, 2, 3).ShrinkToFit().Cap(), 3)
+	assert.GreaterOrEqual(t, WithCapacity[int](10).Push(1, 2, 3).ShrinkToFit().Cap(), 3)
+
+	assert.Less(t, WithCapacity[int](10).Push(1, 2, 3).ShrinkToFit().Cap(), 10)
+	assert.Less(t, WithCapacity[int](10).Push(1, 2, 3).ShrinkToFit().Cap(), 10)
+}
+
+// TODO
+func Test_ExtendWith(t *testing.T) {
+	assert.Equal(t, WithCapacity[string](10).ExtendWith(3, "hello").ToSlice(), []string{"hello", "hello", "hello"})
+}
+
+func Test_Resize(t *testing.T) {
+	assert.Equal(t, WithCapacity[string](10).Push("goto").Resize(3, "hello").ToSlice(), []string{"goto", "hello", "hello"})
 }

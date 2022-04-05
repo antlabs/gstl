@@ -12,6 +12,8 @@ import (
 var ErrVecElemEmpty = errors.New("vec is empty")
 var ErrLenGreaterCap = errors.New("len is too long > length of cap")
 
+const coefficient = 1.5
+
 // vec类型
 type Vec[T any] []T
 
@@ -68,9 +70,8 @@ func (v *Vec[T]) DedupFunc(cmp func(a, b T) bool) *Vec[T] {
 // 从尾巴插入
 // 支持插入一个值或者多个值
 func (v *Vec[T]) Push(e ...T) *Vec[T] {
-	slice := (*[]T)(v)
-	*slice = append(*slice, e...)
-	return (*Vec[T])(slice)
+	*v = append(*v, e...)
+	return v
 }
 
 // 设置新长度
@@ -87,12 +88,6 @@ func (v *Vec[T]) SetLen(newLen int) {
 // 添加other类型的vec到v里面
 func (v *Vec[T]) Append(other *Vec[T]) *Vec[T] {
 	*v = append(*v, other.ToSlice()...)
-	return v
-}
-
-// 添加other类型的slice到v里面
-func (v *Vec[T]) Extend(other []T) *Vec[T] {
-	*v = append(*v, other...)
 	return v
 }
 
@@ -224,7 +219,7 @@ func (v *Vec[T]) Remove(index int) *Vec[T] {
 // 可以避免频繁的重新分配
 // 如果容量已经满足, 则什么事也不做
 func (v *Vec[T]) Reserve(additional int) *Vec[T] {
-	return v.reserve(additional, 1.5)
+	return v.reserve(additional, coefficient)
 }
 
 // 如果容量已经满足, 则什么事也不做
@@ -246,21 +241,28 @@ func (v *Vec[T]) reserve(additional int, factor float64) *Vec[T] {
 }
 
 // 向下收缩vec的容器
-func (v *Vec[T]) ShrinkTo() {
+func (v *Vec[T]) ShrinkToFit() *Vec[T] {
 	l := v.Len()
-	if v.Cap() > l {
-		v.ShrinkToFit(l)
+	if v.Cap() > getCap(l) {
+		v.ShrinkTo(l)
 	}
+	return v
 }
 
 // 向下收缩vec的容器, 会重新分配底层的slice
-func (v *Vec[T]) ShrinkToFit(minCapacity int) {
+func (v *Vec[T]) ShrinkTo(minCapacity int) *Vec[T] {
 	cap := v.Cap()
+	minCapacity = getCap(minCapacity)
 	if cap > minCapacity {
-		max := cmp.Max(cap, minCapacity)
-		newSlice := append([]T{}, v.ToSlice()[:max]...)
+		min := cmp.Min(cap, minCapacity)
+		if min == 0 {
+			min = int(0.66 * float64(cap))
+		}
+
+		newSlice := append([]T{}, v.ToSlice()[:min]...)
 		*v = Vec[T](newSlice)
 	}
+	return v
 }
 
 // 修改vec可访问的容量, 但是不会修改底层的slice, 只是修改slice的len
@@ -269,29 +271,35 @@ func (v *Vec[T]) Truncate(newLen int) {
 }
 
 // 在vec后面追加newLen 长度的value
-func (v *Vec[T]) ExtendWith(newLen int, value T) {
+func (v *Vec[T]) ExtendWith(newLen int, value T) *Vec[T] {
 
 	oldLen := v.Len()
 	v.Reserve(newLen)
 	slice := v.ToSlice()
-	slice = slice[:oldLen+newLen]
-	*v = Vec[T](slice)
-	for i, l := newLen, oldLen; i < l; i++ {
+
+	l := oldLen + newLen
+	slice = slice[:l]
+
+	for i := oldLen; i < l; i++ {
 		slice[i] = value
 	}
+	*v = Vec[T](slice)
+
+	return v
 }
 
 // 调整vec的大小, 使用len等于newLen
 // 如果newLen > len, 差值部分会填充value
 // 如果newLen < len, 多余的部分会被截断
-func (v *Vec[T]) Resize(newLen int, value T) {
+func (v *Vec[T]) Resize(newLen int, value T) *Vec[T] {
 	l := v.Len()
 	if newLen > l {
 		v.ExtendWith(newLen-l, value)
-		return
+		return v
 	}
 
 	v.Truncate(newLen)
+	return v
 }
 
 // 深度拷贝一份
@@ -356,6 +364,11 @@ func (v *Vec[T]) Map(m func(e T) T) *Vec[T] {
 	}
 
 	return v
+}
+
+// Retain 是Filter函数的同义词
+func (v *Vec[T]) Retain(filter func(e T) bool) *Vec[T] {
+	return v.Filter(filter)
 }
 
 // 原地操作, 回调函数返回true的元素保留
@@ -431,4 +444,8 @@ func (v *Vec[T]) Repeat(count int) *Vec[T] {
 	}
 
 	return rv
+}
+
+func getCap(l int) int {
+	return int(float64(l) * coefficient)
 }
