@@ -32,29 +32,37 @@ func WithCapacity[T any](capacity int) *Vec[T] {
 }
 
 // 清空vec里面的所有值
+// TODO 需要看下效率. 如果效率不行,使用reflect.SliceHeader, 强转, 然后挨个置空
 func (v *Vec[T]) Clear() {
-	v = nil
+	*v = []T{}
 }
 
 // 删除连续重复值
-func (v *Vec[T]) DedupFunc(cmp func(a, b T) bool) {
-	l := v.Len()
-	if l <= 1 {
-		return
+// TODO 优化. 寻找更优做法
+func (v *Vec[T]) DedupFunc(cmp func(a, b T) bool) *Vec[T] {
+	if v.Len() <= 1 {
+		return v
 	}
 
-	slice := []T(*v)
-	for i := 0; i < l; {
-		right := -1
-		for j := i + 1; j < l; {
-			if !cmp(slice[i], slice[j]) {
-				right = j
-				break
-			}
+	slice := v.ToSlice()
+	i := 0
+	for i < len(slice) {
+		j := i + 1
+		for j < len(slice) && cmp(slice[i], slice[j]) {
+			j++
 		}
 
-		copy(slice[i:], slice[right:])
+		if j != i+1 {
+			copy(slice[i+1:], slice[j:])
+			slice = slice[:len(slice)-(j-i-1)]
+
+			//fmt.Printf("i = %d:%v\n", i, slice)
+		}
+		i++
 	}
+
+	*v = *New(slice...)
+	return v
 }
 
 // 从尾巴插入
@@ -370,12 +378,12 @@ func (v *Vec[T]) Filter(filter func(e T) bool) *Vec[T] {
 }
 
 // 原地旋转vec, 向左边旋转
-func (v *Vec[T]) RotateLeft(n int) {
+func (v *Vec[T]) RotateLeft(n int) *Vec[T] {
 	l := v.Len()
 	n %= l
 
 	if n == 0 {
-		return
+		return v
 	}
 
 	slice := v.ToSlice()
@@ -386,25 +394,31 @@ func (v *Vec[T]) RotateLeft(n int) {
 	copy(slice, slice[n:])
 	// 右边需要被替换的空间
 	copy(slice[l-n:], left)
+
+	return v
 }
 
 //原地旋转vec, 向右边旋转
-func (v *Vec[T]) RotateRight(n int) {
+func (v *Vec[T]) RotateRight(n int) *Vec[T] {
 	l := v.Len()
 	n %= l
 	if n == 0 {
-		return
+		return v
 	}
 
+	at := l - n
 	slice := v.ToSlice()
-	rightVec := v.SplitOff(n)
-	for right, left := l, n; right > 0 && left > 0; {
+	rightVec := make([]T, n)
+	copy(rightVec, slice[at:])
+
+	for right, left := l-1, at-1; right >= 0 && left >= 0; {
 		slice[right] = slice[left]
 		right--
 		left--
 	}
 
-	copy(slice, rightVec.ToSlice())
+	copy(slice[:n], rightVec)
+	return v
 }
 
 // 用于写入重复的值, 返回新的内存块, 来创建新的vec
