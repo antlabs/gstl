@@ -1,6 +1,6 @@
 package vec
 
-// 参考文件如下
+// 参考文档如下
 // https://doc.rust-lang.org/src/alloc/vec/mod.rs.html
 // https://doc.rust-lang.org/std/vec/struct.Vec.html
 import (
