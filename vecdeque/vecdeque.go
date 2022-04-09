@@ -33,7 +33,7 @@ type VecDeque[T any] struct {
 
 // 初始化
 func New[T any]() *VecDeque[T] {
-	return &VecDeque[T]{}
+	return WithCapacity[T](int(INITIAL_CAPACITY))
 }
 
 // 初始VecDeque, 并设置实际需要的容量
@@ -49,11 +49,57 @@ func (v *VecDeque[T]) IsFull() bool {
 
 // TODO
 func (v *VecDeque[T]) Len() int {
-	return 0
+	return int(count(v.tail, v.head, uint(v.cap())))
 }
 
+func count(tail, head, size uint) uint {
+	// 结果和 math.Abs(head - tail) & (size -1) 一样
+	return (head - tail) & (size - 1)
+}
+
+// 扩容
 func (v *VecDeque[T]) grow() *VecDeque[T] {
+	if v.IsFull() {
+		oldCap := v.cap()
+		newBuf := make([]T, oldCap*2)
+		copy(newBuf, v.buf)
+		v.buf = newBuf
+		v.handleCapIncrease(uint(oldCap))
+	}
 	return v
+}
+
+// 扩容
+func (v *VecDeque[T]) handleCapIncrease(oldCap uint) {
+	// Move the shortest contiguous section of the ring buffer
+	//    T             H
+	//   [o o o o o o o . ]
+	//    T             H
+	// A [o o o o o o o . . . . . . . . . ]
+	//        H T
+	//   [o o . o o o o o ]
+	//          T             H
+	// B [. . . o o o o o o o . . . . . . ]
+	//              H T
+	//   [o o o o o . o o ]
+	//              H                 T
+	// C [o o o o o . . . . . . . . . o o ]
+	if v.tail <= v.head {
+		// 不需要做啥
+		return
+	}
+
+	// 把前面的数据移到后面, 合并起来, 中间没有空隙
+	if v.head < oldCap-v.tail {
+		copy(v.buf[oldCap:], v.buf[:v.head])
+		v.head += oldCap
+		return
+	}
+
+	// 把老的cap右边的数据放到新的cap的最右端
+	newTail := oldCap + v.tail
+	copy(v.buf[newTail:], v.buf[v.tail:oldCap])
+	v.tail = newTail
 }
 
 // 判断VecDeque
@@ -61,7 +107,7 @@ func (v *VecDeque[T]) IsEmpty() bool {
 	return v.tail == v.head
 }
 
-//
+// 删除最后一个元素, 并且返回它. 如果为空, 返回ErrNoData
 func (v *VecDeque[T]) PopBack() (value T, err error) {
 	if v.IsEmpty() {
 		err = ErrNoData
@@ -73,6 +119,7 @@ func (v *VecDeque[T]) PopBack() (value T, err error) {
 	return
 }
 
+// 删除第一个元素, 并且返回它, 如果为空, 返回ErrNoData
 func (v *VecDeque[T]) PopFront() (value T, err error) {
 	if v.IsEmpty() {
 		err = ErrNoData
@@ -92,6 +139,7 @@ func (v *VecDeque[T]) PushBack(value T) {
 		// 满了就扩容
 		v.grow()
 	}
+
 	head := v.head
 
 	// 修改head的值
@@ -101,8 +149,20 @@ func (v *VecDeque[T]) PushBack(value T) {
 	// 修改head值
 }
 
-func (v *VecDeque[T]) Get(i int) {
+// 将一个元素添加到VecDeque的前面
+func (v *VecDeque[T]) PushFront(value T) {
+	if v.IsFull() {
+		v.grow()
+	}
 
+	v.tail = v.wrapSub(v.tail, 1)
+	v.buf[v.tail] = value
+}
+
+// 根据索引获取指定的值
+func (v *VecDeque[T]) Get(i uint) T {
+	idx := v.wrapAdd(v.tail, uint(i))
+	return v.buf[idx]
 }
 
 func (v *VecDeque[T]) cap() int {
