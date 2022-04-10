@@ -349,14 +349,62 @@ func (v *VecDeque[T]) MakeContiguous() []T {
 		return v.buf[v.tail:v.head]
 	}
 
-	cap := v.cap()          //取出物理容量
+	cap := uint(v.cap())    //取出物理容量
 	length := uint(v.Len()) // 取出已存元素个数
 	free := v.tail - v.head // 空间的空间个数
 	tailLen := cap - v.tail // tail到右顶边的个数
 
 	if free >= tailLen {
+		// 有足够的可用空间来一次性复制尾部，这意味着我们先将头向后移动，然后再将尾部复制到正确的位置。
+		//
+		//
+		// 从: DEFGH....ABC 到: ABCDEFGH....
 
+		// ...DEFGH.ABC
+		copy(v.buf[tailLen:], v.buf[:v.head])
+		// ABCDEFGH....
+		copy(v.buf, v.buf[v.tail:])
+		v.tail = 0
+		v.head = length
+		return v.buf[:v.head]
 	}
+
+	if free > v.head {
+		// 有足够的自由空间可以一次性复制头部，这意味着我们先将尾部向前移动，然后再将头部复制到正确的位置。
+		//
+		//
+		// 从: FGH....ABCDE 到: ...ABCDEFGH。
+		//
+		//
+
+		// FGHABCDE....
+		copy(v.buf[v.head], v.buf[v.tail])
+
+		// ...ABCDEFGH.
+		copy(v.buf[v.head+v.tail:], v.buf[:v.head])
+		v.tail = v.head
+		v.head = v.wrapAdd(v.tail, length)
+	}
+
+    // free 小于头和尾，这意味着我们必须缓慢地 "swap" 尾和头。
+    //
+    //
+    // 从: EFGHI...ABCD  或 HIJK.ABCDEFG 到: ABCDEFGHI... or ABCDEFGHIJK.
+    //
+
+    leftEdge = 0
+    rightEdge = v.tail
+
+    // 一般问题如下所示: GHIJKLM ... ABCDEF - 进行任何交换之前 ABCDEFM ... GHIJKL - 进行 1 次交换之后 ABCDEFGHIJM ... KL - 交换直到左 edge 到达临时存储
+    //                  - 然后使用新的 (smaller) 存储区重新启动算法。有时，当右边缘位于缓冲区的末尾时，便达到了临时存储区 - 这意味着我们以更少的交换找到了正确的顺序！
+    //
+    // E.g
+    // EF..ABCD ABCDEF.. - 仅四次交换后，我们就完成了
+    //
+    //
+    //
+    //
+    //
 }
 
 func (v *VecDeque[T]) BinarySearch() {
