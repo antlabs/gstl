@@ -47,11 +47,12 @@ func (v *VecDeque[T]) IsFull() bool {
 	return v.Cap()-v.Len() == 1
 }
 
-// TODO
+// 返回当前使用的容量
 func (v *VecDeque[T]) Len() int {
 	return int(count(v.tail, v.head, uint(v.cap())))
 }
 
+// 统计数据
 func count(tail, head, size uint) uint {
 	// 结果和 math.Abs(head - tail) & (size -1) 一样
 	return (head - tail) & (size - 1)
@@ -165,26 +166,32 @@ func (v *VecDeque[T]) Get(i uint) T {
 	return v.buf[idx]
 }
 
+// 内存里面的容量
 func (v *VecDeque[T]) cap() int {
 	return len(v.buf)
 }
 
+// 业务意义上的容量, 有一个格式是空的
 func (v *VecDeque[T]) Cap() int {
 	return v.cap() - 1
 }
 
+// 对index 减去一些值
 func (v *VecDeque[T]) wrapSub(index uint, subtrahend uint) uint {
 	return v.wrapIndex(index - subtrahend)
 }
 
+// 对index 增加一些值
 func (v *VecDeque[T]) wrapAdd(index uint, addend uint) uint {
 	return v.wrapIndex(index + addend)
 }
 
+// 操作index的包装函数
 func (v *VecDeque[T]) wrapIndex(index uint) uint {
 	return wrapIndex(index, uint(v.cap()))
 }
 
+// 操作index的核心函数
 func wrapIndex(index uint, size uint) uint {
 	// 判断size是否是2的n次方
 	if n := (size & (size - 1)); n != 0 {
@@ -206,4 +213,104 @@ func nextPowOfTwo(n uint) uint {
 	}
 
 	return 0
+}
+
+// 交换索引为i和j的元素
+func (v *VecDeque[T])Swap(i, j uint) {
+    ri := v.wrapAdd(v.tail, i)
+    rj := v.wrapAdd(v.tail, j)
+    v.buf[ri], v.buf[rj] = v.buf[rj], v.buf[ri]
+}
+
+// 向左旋转
+func (v *VecDeque[T]) RotateLeft() {
+
+}
+
+// 向右旋转
+func (v *VecDeque[T]) RotateRight() {
+
+}
+
+// 缩容
+func (v *Vecdeque[T]) ShrinkToFit() {
+
+}
+
+// 缩容
+func (v *VecDeque[T]) ShrinkTo(minCapacity uint) {
+
+}
+
+func (v *VecDeque[T]) Truncate() {
+
+}
+
+func (v *VecDeque[T]) ToSlices() (first []T, second []T){
+
+}
+
+func (v *VecDeque[T]) wrapCopy() {
+
+}
+
+func (v *VecDeque[T]) ReserveExact() {
+
+}
+
+func (v *VecDeque[T]) Reserve() {
+
+}
+
+func (v *VecDeque[T])  Contains(x T) bool{
+
+}
+
+func (v *VecDeque[T]) Front() {
+
+}
+
+func (v *VecDeque[T]) Back() {
+
+}
+
+func (v *VecDeque[T]) SwapRemoveFront(){
+
+}
+
+func (v *VecDeque[T]) SwapRemoveBack() {
+
+}
+
+// 在VecDeque内的index处插入一个元素, 所有索引大于或者等于'index'的元素向后移动
+func (v *VecDeque[T]) Insert(index uint, value T) {
+
+}
+
+func (v *VecDeque[T]) Remove(index int) {
+
+}
+
+func (v *VecDeque[T]) SplitOff() {
+
+}
+
+func (v *VecDeque[T]) Append(other *VecDeque[T]) {
+
+}
+
+func (v *VecDeque[T]) Retain() {
+
+}
+
+func (v *VecDeque[T]) ResizeWith() {
+
+}
+
+func (v *VecDeque[T]) MakeContiguous() {
+
+}
+
+func (v *VecDeque[T]) BinarySearch() {
+
 }
