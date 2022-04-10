@@ -10,6 +10,7 @@ import (
 // 参考文档如下
 // https://doc.rust-lang.org/std/collections/struct.VecDeque.html
 // https://doc.rust-lang.org/src/alloc/collections/vec_deque/mod.rs.html
+// https://doc.rust-lang.org/beta/src/alloc/collections/vec_deque/ring_slices.rs.html
 // 翻译好的中文文档
 // https://rustwiki.org/zh-CN/src/alloc/collections/vec_deque/mod.rs.html
 
@@ -166,7 +167,7 @@ func (v *VecDeque[T]) Get(i uint) T {
 	return v.buf[idx]
 }
 
-// 内存里面的容量
+// 内存里面的物理容量
 func (v *VecDeque[T]) cap() int {
 	return len(v.buf)
 }
@@ -216,24 +217,53 @@ func nextPowOfTwo(n uint) uint {
 }
 
 // 交换索引为i和j的元素
-func (v *VecDeque[T])Swap(i, j uint) {
-    ri := v.wrapAdd(v.tail, i)
-    rj := v.wrapAdd(v.tail, j)
-    v.buf[ri], v.buf[rj] = v.buf[rj], v.buf[ri]
+func (v *VecDeque[T]) Swap(i, j uint) {
+	ri := v.wrapAdd(v.tail, i)
+	rj := v.wrapAdd(v.tail, j)
+	v.buf[ri], v.buf[rj] = v.buf[rj], v.buf[ri]
+}
+
+//
+func (v *VecDeque[T]) RotateLeftInner(k uint) {
+	v.head = v.wrapAdd(v.head, k)
+	v.tail = v.wrapAdd(v.tail, k)
 }
 
 // 向左旋转
-func (v *VecDeque[T]) RotateLeft() {
+func (v *VecDeque[T]) RotateLeft(k uint) {
+	other := uint(v.Len()) - k
 
+	if k <= other {
+		v.RotateLeftInner(k)
+		return
+	}
+
+	v.RotateRightInner(other)
+}
+
+func (v *VecDeque[T]) RotateRightInner(k uint) {
+	//v.wrapCopy()
+	v.head = v.wrapSub(v.head, k)
+	v.tail = v.wrapSub(v.tail, k)
 }
 
 // 向右旋转
-func (v *VecDeque[T]) RotateRight() {
+func (v *VecDeque[T]) RotateRight(k uint) {
+	other := uint(v.Len()) - k
+	if k <= other {
+		// k = k
+		// other = o
+		// kkkkkkkkkkooo
+		v.RotateRightInner(k)
+		return
+	}
+
+	v.RotateLeftInner(other)
 
 }
 
 // 缩容
-func (v *Vecdeque[T]) ShrinkToFit() {
+func (v *VecDeque[T]) ShrinkToFit() {
 
 }
 
@@ -246,11 +276,14 @@ func (v *VecDeque[T]) Truncate() {
 
 }
 
-func (v *VecDeque[T]) ToSlices() (first []T, second []T){
-
+func (v *VecDeque[T]) ToSlices() (first []T, second []T) {
+	return
 }
 
-func (v *VecDeque[T]) wrapCopy() {
+func (v *VecDeque[T]) wrapCopy(dst, src, length uint) {
+	if src == dst || length == 0 {
+		return
+	}
 
 }
 
@@ -262,8 +295,8 @@ func (v *VecDeque[T]) Reserve() {
 
 }
 
-func (v *VecDeque[T])  Contains(x T) bool{
-
+func (v *VecDeque[T]) Contains(x T) bool {
+	return false
 }
 
 func (v *VecDeque[T]) Front() {
@@ -274,7 +307,7 @@ func (v *VecDeque[T]) Back() {
 
 }
 
-func (v *VecDeque[T]) SwapRemoveFront(){
+func (v *VecDeque[T]) SwapRemoveFront() {
 
 }
 
@@ -307,8 +340,23 @@ func (v *VecDeque[T]) ResizeWith() {
 
 }
 
-func (v *VecDeque[T]) MakeContiguous() {
+func (v *VecDeque[T]) isContiguous() bool {
+	return v.tail <= v.head
+}
 
+func (v *VecDeque[T]) MakeContiguous() []T {
+	if v.isContiguous() {
+		return v.buf[v.tail:v.head]
+	}
+
+	cap := v.cap()          //取出物理容量
+	length := uint(v.Len()) // 取出已存元素个数
+	free := v.tail - v.head // 空间的空间个数
+	tailLen := cap - v.tail // tail到右顶边的个数
+
+	if free >= tailLen {
+
+	}
 }
 
 func (v *VecDeque[T]) BinarySearch() {
