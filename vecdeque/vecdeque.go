@@ -378,7 +378,7 @@ func (v *VecDeque[T]) MakeContiguous() []T {
 		//
 
 		// FGHABCDE....
-		copy(v.buf[v.head], v.buf[v.tail])
+		copy(v.buf[v.head:], v.buf[v.tail:])
 
 		// ...ABCDEFGH.
 		copy(v.buf[v.head+v.tail:], v.buf[:v.head])
@@ -386,25 +386,42 @@ func (v *VecDeque[T]) MakeContiguous() []T {
 		v.head = v.wrapAdd(v.tail, length)
 	}
 
-    // free 小于头和尾，这意味着我们必须缓慢地 "swap" 尾和头。
-    //
-    //
-    // 从: EFGHI...ABCD  或 HIJK.ABCDEFG 到: ABCDEFGHI... or ABCDEFGHIJK.
-    //
+	// free 小于头和尾，这意味着我们必须缓慢地 "swap" 尾和头。
+	//
+	// 从: EFGHI...ABCD 或 HIJK.ABCDEFG
+	// 到:   ABCDEFGHI... 或 ABCDEFGHIJK.
+	leftEdge := uint(0)
+	rightEdge := v.tail
 
-    leftEdge = 0
-    rightEdge = v.tail
+	// The general problem looks like this
+	// GHIJKLM...ABCDEF - before any swaps
+	// ABCDEFM...GHIJKL - after 1 pass of swaps
+	// ABCDEFGHIJM...KL - swap until the left edge reaches the temp store
+	//                  - then restart the algorithm with a new (smaller) store
+	// Sometimes the temp store is reached when the right edge is at the end
+	// of the buffer - this means we've hit the right order with fewer swaps!
+	// E.g
+	// EF..ABCD
+	// ABCDEF.. - after four only swaps we've finished
 
-    // 一般问题如下所示: GHIJKLM ... ABCDEF - 进行任何交换之前 ABCDEFM ... GHIJKL - 进行 1 次交换之后 ABCDEFGHIJM ... KL - 交换直到左 edge 到达临时存储
-    //                  - 然后使用新的 (smaller) 存储区重新启动算法。有时，当右边缘位于缓冲区的末尾时，便达到了临时存储区 - 这意味着我们以更少的交换找到了正确的顺序！
-    //
-    // E.g
-    // EF..ABCD ABCDEF.. - 仅四次交换后，我们就完成了
-    //
-    //
-    //
-    //
-    //
+	// TODO 再仔细捋一捋逻辑
+	for leftEdge < length && rightEdge != cap {
+		rightOffset := uint(0)
+		for i := leftEdge; i < rightEdge; i++ {
+			rightOffset = (i - leftEdge) % (cap - rightEdge)
+			src := (rightEdge + rightOffset)
+			v.buf[i], v.buf[src] = v.buf[src], v.buf[i]
+		}
+
+		nOps := rightEdge - leftEdge
+		leftEdge += nOps
+		rightEdge += rightOffset + 1
+	}
+
+	v.tail = 0
+	v.head = length
+
+	return v.buf[v.tail:v.head]
 }
 
 func (v *VecDeque[T]) BinarySearch() {
