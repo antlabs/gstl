@@ -299,15 +299,41 @@ func (v *VecDeque[T]) Contains(x T) bool {
 	return false
 }
 
-func (v *VecDeque[T]) Front() {
+// 获取第1个元素, 第二个参数返回错误
+func (v *VecDeque[T]) Front() (e T, err error) {
+	if v.Len() == 0 {
+		err = ErrNoData
+		return
+	}
 
+	return v.Get(0), nil
 }
 
-func (v *VecDeque[T]) Back() {
+// 获取最后一个元素, 第二个参数返回错误
+func (v *VecDeque[T]) Back() (e T, err error) {
+	if v.Len() == 0 {
+		err = ErrNoData
+		return
+	}
 
+	newIndex := v.wrapSub(uint(v.Len()), uint(1))
+	return v.Get(newIndex), nil
 }
 
-func (v *VecDeque[T]) SwapRemoveFront() {
+// 从 `VecDeque` 的任何位置删除一个元素并返回，并用第一个元素替换它。
+func (v *VecDeque[T]) SwapRemoveFront(index uint) (e T, err error) {
+	length := uint(v.Len())
+
+	if index >= length {
+		err = ErrNoData
+		return
+	}
+
+	if length > 0 && index < length && index != 0 {
+		v.Swap(index, 0)
+	}
+
+	return v.PopFront()
 
 }
 
