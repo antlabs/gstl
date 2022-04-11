@@ -223,7 +223,7 @@ func (v *VecDeque[T]) Swap(i, j uint) {
 	v.buf[ri], v.buf[rj] = v.buf[rj], v.buf[ri]
 }
 
-//
+// 向左旋转
 func (v *VecDeque[T]) RotateLeftInner(k uint) {
 	v.head = v.wrapAdd(v.head, k)
 	v.tail = v.wrapAdd(v.tail, k)
@@ -241,6 +241,7 @@ func (v *VecDeque[T]) RotateLeft(k uint) {
 	v.RotateRightInner(other)
 }
 
+// 向右旋转
 func (v *VecDeque[T]) RotateRightInner(k uint) {
 	//v.wrapCopy()
 	v.head = v.wrapSub(v.head, k)
@@ -262,14 +263,69 @@ func (v *VecDeque[T]) RotateRight(k uint) {
 
 }
 
-// 缩容
+// 尽可能缩小VecDeque的容量
+// 它将尽可能接近Len的位置
 func (v *VecDeque[T]) ShrinkToFit() {
-
+	v.ShrinkTo(0)
 }
 
 // 缩容
 func (v *VecDeque[T]) ShrinkTo(minCapacity uint) {
+	minCapacity = cmp.Min(minCapacity, uint(v.Cap()))
+	minCapacity = cmp.Max(minCapacity, uint(v.Len()))
+	targetCap := nextPowOfTwo(cmp.Max(minCapacity+1, MINIMUM_CAPACITY+1))
 
+	if targetCap < uint(v.cap()) {
+
+		//有三种情况值得关注：
+
+		//所有元素都超出了预期范围
+
+		//元素是连续的，head超出了所需的边界
+
+		//元素是不连续的，尾部超出了期望的界限
+
+		//
+
+		//在所有其他时间，元素位置不受影响。
+
+		//
+
+		//指示应移动头部的元素。
+		headOutside := v.head == 0 || v.head >= targetCap
+		if v.tail >= targetCap && headOutside {
+			//                    T             H
+			//   [. . . . . . . . o o o o o o o . ]
+			//    T             H
+			//   [o o o o o o o . ]
+			copy(v.buf, v.buf[v.tail:v.head])
+			v.tail = 0
+			v.head = uint(v.Len())
+		} else if v.tail != 0 && v.tail < targetCap && headOutside {
+
+			//          T             H
+			//   [. . . o o o o o o o . . . . . . ]
+			//        H T
+			//   [o o . o o o o o ]
+			length := v.wrapSub(v.head, targetCap)
+			copy(v.buf, v.buf[targetCap:v.head])
+			v.head = length
+		} else if v.tail >= targetCap {
+
+			//              H                 T
+			//   [o o o o o . . . . . . . . . o o ]
+			//              H T
+			//   [o o o o o . o o ]
+			length := uint(len(v.buf)) - v.tail
+			newTail := targetCap - length
+			copy(v.buf[newTail:], v.buf[v.tail:])
+			v.tail = newTail
+		}
+
+		newBuf := make([]T, targetCap)
+		copy(newBuf, v.buf)
+		v.buf = newBuf
+	}
 }
 
 func (v *VecDeque[T]) Truncate() {
