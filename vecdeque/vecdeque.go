@@ -398,8 +398,57 @@ func (v *VecDeque[T]) SwapRemoveBack() {
 }
 
 // 在VecDeque内的index处插入一个元素, 所有索引大于或者等于'index'的元素向后移动
+// TODO
 func (v *VecDeque[T]) Insert(index uint, value T) {
+	if v.IsFull() {
+		v.grow()
+	}
 
+	// 移动环形缓冲区中最少的元素并插入
+	// 给定对象
+	//
+	// 最多会移动len/2-1元素。O(min(n, n-i))
+	//
+	// 主要有三种情况：
+	//  元素是连续的
+	//      -尾部为0时的特殊情况
+	//  元素不连续，插入部分位于尾部
+	//  元素不连续，插入部分位于头部
+	//
+	// 对于每一种情况，还有两种情况：
+	//  插入物更靠近尾部
+	//  插入物更靠近头部
+	//
+	// key：H - v.head
+	//      T - v.tail
+	//      o - 有效元素
+	//      I - 插入元素
+	//      A - 应位于插入点之后的元素
+	//      M - 表示元素已移动
+
+	//idx := v.wrapAdd(v.tail, index)
+	distanceToTail := index
+	distanceToHead := uint(v.Len()) - index
+	contiguous := v.isContiguous()
+
+	if contiguous && distanceToTail < distanceToHead {
+
+		if index == 0 {
+			// push_front
+			//
+			//       T I             H
+			//      [A o o o o o o . . . . . . .
+			//      .
+			//      .]
+			//
+			//                       H         T
+			//      [A o o o o o o o . . . . . I]
+
+			v.tail = v.wrapSub(v.tail, 1)
+		} else {
+
+		}
+	}
 }
 
 func (v *VecDeque[T]) Remove(index int) {
