@@ -1,5 +1,11 @@
 package linkedlist
 
+import (
+	"errors"
+)
+
+var ErrListElemEmpty = errors.New("list is empty")
+
 // https://cs.opensource.google/go/go/+/go1.18.1:src/container/list/list.go
 // https://github.com/torvalds/linux/blob/master/tools/include/linux/list.h
 type LinkedList[T any] struct {
@@ -7,6 +13,7 @@ type LinkedList[T any] struct {
 	length int
 }
 
+// 每个Node节点, 包含前向和后向两个指针和数据域
 type Node[T any] struct {
 	next    *Node[T]
 	prev    *Node[T]
@@ -57,15 +64,37 @@ func (l *LinkedList[T]) Append(other LinkedList[T]) {
 }
 
 // 往头位置插入
-func (l *LinkedList[T]) PushFront(e T) {
+func (l *LinkedList[T]) PushFront(elems ...T) {
 	l.lazyInit()
-	l.insert(&l.root, &Node[T]{element: e})
+	for _, e := range elems {
+		l.insert(&l.root, &Node[T]{element: e})
+	}
 }
 
 // 往尾部的位置插入
-func (l *LinkedList[T]) PushBack(e T) {
+func (l *LinkedList[T]) PushBack(elems ...T) {
 	l.lazyInit()
-	l.insert(l.root.prev, &Node[T]{element: e})
+	for _, e := range elems {
+		l.insert(l.root.prev, &Node[T]{element: e})
+	}
+}
+
+// 返回第1个元素
+func (l *LinkedList[T]) First() (e T, err error) {
+	if l.length == 0 {
+		err = ErrListElemEmpty
+		return
+	}
+	return l.root.next.element, nil
+}
+
+// 返回最后1个元素
+func (l *LinkedList[T]) Last() (e T, err error) {
+	if l.length == 0 {
+		err = ErrListElemEmpty
+		return
+	}
+	return l.root.prev.element, nil
 }
 
 // 链表是否为空
