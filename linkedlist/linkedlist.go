@@ -215,3 +215,17 @@ func (l *LinkedList[T]) Remove(index int) {
 		}
 	}
 }
+
+// list 转成slice , 效率O(n)
+func (l *LinkedList[T]) ToSlice() []T {
+	if l.length == 0 {
+		return nil
+	}
+
+	rv := make([]T, 0, l.length)
+	for pos := l.root.next; pos != &l.root; pos = pos.next {
+		rv = append(rv, pos.element)
+	}
+
+	return rv
+}
