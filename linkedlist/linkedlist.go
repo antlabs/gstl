@@ -169,6 +169,32 @@ func (l *LinkedList[T]) RemFunc(value T, count int, cb func(value T) bool) {
 	}
 }
 
+// 类型redis lset命令
+// index >= 0 正着数
+// index < 0 倒着数
+func (l *LinkedList[T]) Set(index int, value T) {
+	i := 0
+
+	idx := l.index(index)
+
+	if idx < 0 {
+		return
+	}
+	for pos := l.root.next; pos != &l.root; pos, i = pos.next, i+1 {
+		if i == idx {
+			pos.element = value
+			return
+		}
+	}
+}
+
+func (l *LinkedList[T]) index(idx int) int {
+	if idx >= 0 {
+		return idx
+	}
+	return idx + l.length
+}
+
 // 删除指定索引的元素
 func (l *LinkedList[T]) Remove(index int) {
 	var (
@@ -177,9 +203,15 @@ func (l *LinkedList[T]) Remove(index int) {
 		i   int
 	)
 
+	idx := l.index(index)
+
+	if idx < 0 {
+		return
+	}
 	for pos, n = l.root.next, pos.next; pos != &l.root; pos, n, i = n, pos.next, i+1 {
-		if i == index {
+		if i == idx {
 			l.remove(pos)
+			return
 		}
 	}
 }
