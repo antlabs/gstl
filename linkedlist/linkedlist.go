@@ -102,14 +102,84 @@ func (l *LinkedList[T]) IsEmpty() bool {
 	return l.length == 0
 }
 
+// 清空链表 O(n)
 func (l *LinkedList[T]) Clear() {
 
+	var (
+		pos *Node[T]
+		n   *Node[T]
+		i   int
+	)
+	for pos, n = l.root.next, pos.next; pos != &l.root; pos, n, i = n, pos.next, i+1 {
+		l.remove(pos)
+	}
 }
 
-func (l *LinkedList[T]) Contains() bool {
+// 查找是否包含这个value
+func (l *LinkedList[T]) ContainsFunc(value T, cb func(value T) bool) bool {
+	for pos := l.root.next; pos != &l.root; pos = pos.next {
+		if cb(pos.element) {
+			return true
+		}
+	}
 	return false
 }
 
-func (l *LinkedList[T]) Remove(index int) {
+// 删除这个元素
+// n.prev n n.next
+// n.prev --> n.next
+// n.prev <-- n.next
+func (l *LinkedList[T]) remove(n *Node[T]) {
+	n.prev.next = n.next
+	n.next.prev = n.prev
+	n.prev = nil
+	n.next = nil
+	l.length--
+}
 
+// 类似redis lrem命令
+// count > 0 : 从表头开始向表尾搜索，移除与 VALUE 相等的元素，数量为 COUNT 。
+// count < 0 : 从表尾开始向表头搜索，移除与 VALUE 相等的元素，数量为 COUNT 的绝对值。
+// count = 0 : 移除表中所有与 VALUE 相等的值。
+func (l *LinkedList[T]) RemFunc(value T, count int, cb func(value T) bool) {
+	var (
+		pos *Node[T]
+		n   *Node[T]
+		i   int
+	)
+
+	if count >= 0 {
+		for pos, n = l.root.next, pos.next; pos != &l.root; pos, n = n, pos.next {
+			if count == 0 || i <= count {
+				cb(pos.element)
+				l.remove(pos)
+				i++
+			}
+		}
+		return
+	}
+
+	count = -count
+	for pos, n = l.root.prev, pos.prev; pos != &l.root; pos, n = n, pos.prev {
+		if count == 0 || i <= count {
+			cb(pos.element)
+			l.remove(pos)
+			i++
+		}
+	}
+}
+
+// 删除指定索引的元素
+func (l *LinkedList[T]) Remove(index int) {
+	var (
+		pos *Node[T]
+		n   *Node[T]
+		i   int
+	)
+
+	for pos, n = l.root.next, pos.next; pos != &l.root; pos, n, i = n, pos.next, i+1 {
+		if i == index {
+			l.remove(pos)
+		}
+	}
 }
