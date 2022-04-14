@@ -5,6 +5,7 @@ import (
 )
 
 var ErrListElemEmpty = errors.New("list is empty")
+var ErrNotFound = errors.New("element not found")
 
 // https://cs.opensource.google/go/go/+/go1.18.1:src/container/list/list.go
 // https://github.com/torvalds/linux/blob/master/tools/include/linux/list.h
@@ -123,6 +124,19 @@ func (l *LinkedList[T]) ContainsFunc(value T, cb func(value T) bool) bool {
 		}
 	}
 	return false
+}
+
+// 查找是否包含这个value
+func (l *LinkedList[T]) Get(idx int) (e T, err error) {
+	for pos, i := l.root.next, 0; pos != &l.root; pos, i = pos.next, i+1 {
+		if i == idx {
+			return pos.element, nil
+		}
+	}
+
+	err = ErrNotFound
+	return
+
 }
 
 // 删除这个元素
