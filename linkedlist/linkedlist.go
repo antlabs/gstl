@@ -72,6 +72,15 @@ func (l *LinkedList[T]) PushFront(elems ...T) {
 	}
 }
 
+func (l *LinkedList[T]) RPop() {
+
+}
+
+// RPush是PushBack的同义词, 类似redis的RPush命令
+func (l *LinkedList[T]) RPush(elems ...T) {
+	l.PushBack(elems...)
+}
+
 // 往尾部的位置插入
 func (l *LinkedList[T]) PushBack(elems ...T) {
 	l.lazyInit()
@@ -126,17 +135,13 @@ func (l *LinkedList[T]) ContainsFunc(value T, cb func(value T) bool) bool {
 	return false
 }
 
-// 查找是否包含这个value
+// 通过索引查找是否包含这个value
 func (l *LinkedList[T]) Get(idx int) (e T, err error) {
-	for pos, i := l.root.next, 0; pos != &l.root; pos, i = pos.next, i+1 {
-		if i == idx {
-			return pos.element, nil
-		}
+	if idx >= 0 {
+		return l.Index(idx)
 	}
-
 	err = ErrNotFound
 	return
-
 }
 
 // 删除这个元素
@@ -155,7 +160,10 @@ func (l *LinkedList[T]) remove(n *Node[T]) {
 // count > 0 : 从表头开始向表尾搜索，移除与 VALUE 相等的元素，数量为 COUNT 。
 // count < 0 : 从表尾开始向表头搜索，移除与 VALUE 相等的元素，数量为 COUNT 的绝对值。
 // count = 0 : 移除表中所有与 VALUE 相等的值。
-func (l *LinkedList[T]) RemFunc(value T, count int, cb func(value T) bool) {
+
+// 返回值
+// 被删除元素个数
+func (l *LinkedList[T]) RemFunc(value T, count int, cb func(value T) bool) (ndel int) {
 	var (
 		pos *Node[T]
 		n   *Node[T]
@@ -165,70 +173,101 @@ func (l *LinkedList[T]) RemFunc(value T, count int, cb func(value T) bool) {
 	if count >= 0 {
 		for pos, n = l.root.next, pos.next; pos != &l.root; pos, n = n, pos.next {
 			if count == 0 || i <= count {
-				cb(pos.element)
-				l.remove(pos)
+				if cb(pos.element) {
+					l.remove(pos)
+					ndel++
+				}
 				i++
 			}
 		}
+
 		return
 	}
 
 	count = -count
 	for pos, n = l.root.prev, pos.prev; pos != &l.root; pos, n = n, pos.prev {
 		if count == 0 || i <= count {
-			cb(pos.element)
-			l.remove(pos)
+			if cb(pos.element) {
+				l.remove(pos)
+				ndel++
+			}
 			i++
 		}
 	}
+
+	return
+}
+
+// Index 通过索引查找是否包含这个value
+// 和redis lindex命令类似,
+// idx >= 0 形为和Get(idx int) 一样, 获取指向索引的元素
+// idx < 0 获取倒数第几个元素
+func (l *LinkedList[T]) Index(idx int) (e T, err error) {
+	var n *Node[T]
+	n, err = l.indexInner(idx)
+	if err != nil {
+		return
+	}
+	return n.element, nil
 }
 
 // 类型redis lset命令
 // index >= 0 正着数
 // index < 0 倒着数
 func (l *LinkedList[T]) Set(index int, value T) {
-	i := 0
-
-	idx := l.index(index)
-
-	if idx < 0 {
+	n, err := l.indexInner(index)
+	if err != nil {
 		return
 	}
-	for pos := l.root.next; pos != &l.root; pos, i = pos.next, i+1 {
-		if i == idx {
-			pos.element = value
-			return
+	n.element = value
+}
+
+func (l *LinkedList[T]) indexInner(idx int) (*Node[T], error) {
+	idx, front := l.index(idx)
+
+	if front {
+		for pos, i := l.root.next, 0; pos != &l.root; pos, i = pos.next, i+1 {
+			if i == idx {
+				return pos, nil
+			}
 		}
+	} else {
+		for pos, i := l.root.prev, idx; pos != &l.root; pos, i = pos.prev, i-1 {
+			if i == 0 {
+				return pos, nil
+			}
+		}
+
 	}
+
+	return nil, ErrNotFound
+
 }
 
-func (l *LinkedList[T]) index(idx int) int {
-	if idx >= 0 {
-		return idx
+func (l *LinkedList[T]) index(idx int) (newIdx int, front bool) {
+	length := l.length
+
+	// 转正索引
+	if idx < 0 {
+		idx = idx + length
 	}
-	return idx + l.length
+
+	// 如果倒序遍历元素更少
+	other := length - idx
+	if idx > other {
+		return other, false
+	}
+
+	// 如果正序遍历元素更少
+	return idx, true
 }
 
-// 删除指定索引的元素
+// 删除指定索引的元素, 效率 min(O(index), O(n/2))
 func (l *LinkedList[T]) Remove(index int) {
-	var (
-		pos *Node[T]
-		n   *Node[T]
-		i   int
-	)
-
-	idx := l.index(index)
-
-	if idx < 0 {
-		return
-	}
-	for pos, n = l.root.next, pos.next; pos != &l.root; pos, n, i = n, pos.next, i+1 {
-		if i == idx {
-			l.remove(pos)
-			return
-		}
-	}
+	l.removeInner(index)
 }
+
+// 删除指定
 
 // list 转成slice , 效率O(n)
 func (l *LinkedList[T]) ToSlice() []T {
@@ -242,4 +281,39 @@ func (l *LinkedList[T]) ToSlice() []T {
 	}
 
 	return rv
+}
+
+func (l *LinkedList[T]) removeInner(index int) {
+	var (
+		pos *Node[T]
+		n   *Node[T]
+		i   int
+	)
+
+	idx, front := l.index(index)
+
+	if front {
+		for pos, n = l.root.next, pos.next; pos != &l.root; pos, n, i = n, pos.next, i+1 {
+			if i == idx {
+				l.remove(pos)
+				return
+			}
+		}
+	}
+
+	i = idx
+	for pos, n = l.root.prev, pos.prev; pos != &l.root; pos, n, i = n, pos.prev, i-1 {
+		if i == 0 {
+			l.remove(pos)
+			return
+		}
+	}
+
+}
+
+// 打印
+func (l *LinkedList[T]) Range(pr func(value T)) {
+	for pos := l.root.next; pos != &l.root; pos = pos.next {
+		pr(pos.element)
+	}
 }
