@@ -2,6 +2,7 @@ package linkedlist
 
 import (
 	"errors"
+	"github.com/guonaihong/gstl/cmp"
 )
 
 var ErrListElemEmpty = errors.New("list is empty")
@@ -72,8 +73,76 @@ func (l *LinkedList[T]) PushFront(elems ...T) {
 	}
 }
 
-func (l *LinkedList[T]) RPop() {
+// 类似redis lpop命令
+// O(n)
+func (l LinkedList[T]) LPop(count int) []T {
+	if count <= 0 {
+		return nil
+	}
 
+	count = cmp.Min(count, l.length)
+	all := make([]T, count)
+	i := 0
+
+	l.RangeSafe(func(n *Node[T]) bool {
+		if i == count {
+			return true
+		}
+
+		all[i] = n.element
+		l.remove(n)
+		i++
+		return false
+	})
+	return all
+}
+
+// 类似redis rpop命令
+// O(n)
+func (l *LinkedList[T]) RPop(count int) []T {
+	if count <= 0 {
+		return nil
+	}
+
+	count = cmp.Min(count, l.length)
+	all := make([]T, count)
+	l.RangePrevSafe(func(n *Node[T]) bool {
+		if count <= 0 {
+			return true
+		}
+
+		all[count-1] = n.element
+		l.remove(n)
+		count--
+		return false
+	})
+	return all
+}
+
+// 从后向前遍历
+func (l *LinkedList[T]) RangePrevSafe(callback func(n *Node[T]) bool) {
+
+	var pos *Node[T]
+	var n *Node[T]
+
+	for pos, n = l.root.prev, pos.next; pos != &l.root; pos, n = n, pos.next {
+		if callback(pos) {
+			break
+		}
+	}
+}
+
+// 从前向后遍历
+func (l *LinkedList[T]) RangeSafe(callback func(n *Node[T]) bool) {
+
+	var pos *Node[T]
+	var n *Node[T]
+
+	for pos, n = l.root.next, pos.next; pos != &l.root; pos, n = n, pos.next {
+		if callback(pos) {
+			break
+		}
+	}
 }
 
 // RPush是PushBack的同义词, 类似redis的RPush命令
@@ -115,14 +184,10 @@ func (l *LinkedList[T]) IsEmpty() bool {
 // 清空链表 O(n)
 func (l *LinkedList[T]) Clear() {
 
-	var (
-		pos *Node[T]
-		n   *Node[T]
-		i   int
-	)
-	for pos, n = l.root.next, pos.next; pos != &l.root; pos, n, i = n, pos.next, i+1 {
-		l.remove(pos)
-	}
+	l.RangeSafe(func(n *Node[T]) bool {
+		l.remove(n)
+		return false
+	})
 }
 
 // 查找是否包含这个value
@@ -244,6 +309,7 @@ func (l *LinkedList[T]) indexInner(idx int) (*Node[T], error) {
 
 }
 
+// 计算索引
 func (l *LinkedList[T]) index(idx int) (newIdx int, front bool) {
 	length := l.length
 
