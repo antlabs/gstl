@@ -10,6 +10,22 @@ var ErrNotFound = errors.New("element not found")
 
 // https://cs.opensource.google/go/go/+/go1.18.1:src/container/list/list.go
 // https://github.com/torvalds/linux/blob/master/tools/include/linux/list.h
+// https://redis.io/commands/?group=list
+// LTRIM
+// LINDEX -->done
+// LINSERT
+// LLEN -->done
+// LMOVE
+// LMPOP
+// LPOP -->done
+// LPOS
+// LPUSH LPUSHX -->done
+// LRANGE
+// LREM -->done
+// LSET -->done
+// RPOP -->done
+// RPOPLPUSH
+// RPUSH RPUSHX -->done
 type LinkedList[T any] struct {
 	root   Node[T]
 	length int
@@ -63,14 +79,6 @@ func (l *LinkedList[T]) insert(at, e *Node[T]) {
 func (l *LinkedList[T]) Append(other LinkedList[T]) {
 	l.lazyInit()
 
-}
-
-// 往头位置插入
-func (l *LinkedList[T]) PushFront(elems ...T) {
-	l.lazyInit()
-	for _, e := range elems {
-		l.insert(&l.root, &Node[T]{element: e})
-	}
 }
 
 // 类似redis lpop命令
@@ -142,6 +150,19 @@ func (l *LinkedList[T]) RangeSafe(callback func(n *Node[T]) bool) {
 		if callback(pos) {
 			break
 		}
+	}
+}
+
+// 类似redis lpush命令
+func (l *LinkedList[T]) LPush(elems ...T) {
+	l.PushFront(elems...)
+}
+
+// 往头位置插入
+func (l *LinkedList[T]) PushFront(elems ...T) {
+	l.lazyInit()
+	for _, e := range elems {
+		l.insert(&l.root, &Node[T]{element: e})
 	}
 }
 
