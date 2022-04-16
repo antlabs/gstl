@@ -55,45 +55,67 @@ func Test_RangePrevSafe(t *testing.T) {
 }
 
 func Test_First(t *testing.T) {
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4").First()), "1")
-	assert.Equal(t, must.One(New[int]().RPush(1, 2).First()), 1)
+	// 没有值
+	assert.Error(t, must.TakeOneErr(New[string]().First()))
+	// 有值
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").First()), "1")
+	assert.Equal(t, must.TakeOne(New[int]().RPush(1, 2).First()), 1)
 }
 
 func Test_Last(t *testing.T) {
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4").Last()), "4")
-	assert.Equal(t, must.One(New[int]().RPush(1, 2).Last()), 2)
+	// 没有值
+	assert.Error(t, must.TakeOneErr(New[string]().Last()))
+	//有值
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Last()), "4")
+	assert.Equal(t, must.TakeOne(New[int]().RPush(1, 2).Last()), 2)
 }
 
 func Test_Get(t *testing.T) {
 	// 正索引
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4").Get(0)), "1")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4").Get(1)), "2")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4").Get(2)), "3")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4").Get(3)), "4")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(0)), "1")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(1)), "2")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(2)), "3")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(3)), "4")
 
 	// 负索引
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4").Get(-1)), "4")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4").Get(-2)), "3")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4").Get(-3)), "2")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4").Get(-4)), "1")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(-1)), "4")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(-2)), "3")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(-3)), "2")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(-4)), "1")
+}
+
+func Test_Set(t *testing.T) {
+	assert.Equal(t, New[string]().RPush("1", "2", "3", "4", "5", "6").Set(11, "1991").ToSlice(), []string{"1", "2", "3", "4", "5", "6"})
+
+	// 正索引
+	assert.Equal(t, New[string]().RPush("1", "2", "3", "4", "5", "6").Set(0, "1991").ToSlice(), []string{"1991", "2", "3", "4", "5", "6"})
+	assert.Equal(t, New[string]().RPush("1", "2", "3", "4", "5", "6").Set(1, "1991").ToSlice(), []string{"1", "1991", "3", "4", "5", "6"})
+	assert.Equal(t, New[string]().RPush("1", "2", "3", "4", "5", "6").Set(2, "1991").ToSlice(), []string{"1", "2", "1991", "4", "5", "6"})
+	assert.Equal(t, New[string]().RPush("1", "2", "3", "4", "5", "6").Set(3, "1991").ToSlice(), []string{"1", "2", "3", "1991", "5", "6"})
+	assert.Equal(t, New[string]().RPush("1", "2", "3", "4", "5", "6").Set(4, "1991").ToSlice(), []string{"1", "2", "3", "4", "1991", "6"})
+	assert.Equal(t, New[string]().RPush("1", "2", "3", "4", "5", "6").Set(5, "1991").ToSlice(), []string{"1", "2", "3", "4", "5", "1991"})
+
+	// 负索引
 }
 
 func Test_Index(t *testing.T) {
+	assert.Error(t, must.TakeOneErr(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(11)))
+
 	// 正索引
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(0)), "1")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(1)), "2")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(2)), "3")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(3)), "4")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(4)), "5")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(5)), "6")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(0)), "1")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(1)), "2")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(2)), "3")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(3)), "4")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(4)), "5")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(5)), "6")
 
 	// 负索引
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(-1)), "6")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(-2)), "5")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(-3)), "4")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(-4)), "3")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(-5)), "2")
-	assert.Equal(t, must.One(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(-6)), "1")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(-1)), "6")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(-2)), "5")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(-3)), "4")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(-4)), "3")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(-5)), "2")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4", "5", "6").Index(-6)), "1")
 }
 
 func Test_Remove(t *testing.T) {
@@ -128,4 +150,19 @@ func Test_PushFront(t *testing.T) {
 	assert.Equal(t, New[string]().PushFront("2", "1").ToSlice(), []string{"1", "2"})
 	assert.Equal(t, New[string]().PushFront("3", "2", "1").ToSlice(), []string{"1", "2", "3"})
 	assert.Equal(t, New[string]().PushFront("4", "3", "2", "1").ToSlice(), []string{"1", "2", "3", "4"})
+}
+
+func Test_Clear(t *testing.T) {
+	assert.Equal(t, New[string]().PushFront("1").Clear().ToSlice(), []string(nil))
+	assert.Equal(t, New[string]().PushFront("2", "1").Clear().ToSlice(), []string(nil))
+	assert.Equal(t, New[string]().PushFront("3", "2", "1").Clear().ToSlice(), []string(nil))
+	assert.Equal(t, New[string]().PushFront("4", "3", "2", "1").Clear().ToSlice(), []string(nil))
+}
+
+func Test_IsEmpty(t *testing.T) {
+	assert.True(t, New[string]().IsEmpty())
+	assert.True(t, New[string]().PushFront("1").Clear().IsEmpty())
+	assert.True(t, New[string]().PushFront("2", "1").Clear().IsEmpty())
+	assert.True(t, New[string]().PushFront("3", "2", "1").Clear().IsEmpty())
+	assert.True(t, New[string]().PushFront("4", "3", "2", "1").Clear().IsEmpty())
 }
