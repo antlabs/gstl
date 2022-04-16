@@ -11,19 +11,17 @@ var ErrNotFound = errors.New("element not found")
 // https://cs.opensource.google/go/go/+/go1.18.1:src/container/list/list.go
 // https://github.com/torvalds/linux/blob/master/tools/include/linux/list.h
 // https://redis.io/commands/?group=list
-// LTRIM
+// LTRIM -->done
 // LINDEX -->done
 // LINSERT -->done
 // LLEN -->done
-// LMOVE
 // LPOP -->done
-// LPOS
+// LPOS #暂不实现
 // LPUSH LPUSHX -->done
 // LRANGE -->done
 // LREM -->done
 // LSET -->done
 // RPOP -->done
-// RPOPLPUSH
 // RPUSH RPUSHX -->done
 type LinkedList[T any] struct {
 	root   Node[T]
@@ -158,6 +156,17 @@ func (l *LinkedList[T]) LPush(elems ...T) {
 	l.PushFront(elems...)
 }
 
+// PushFrontList在列表l前面插入一个新的列表other的副本
+func (l *LinkedList[T]) PushFrontList(other *LinkedList[T]) *LinkedList[T] {
+	other.RangePrevSafe(func(n *Node[T]) bool {
+		l.insert(l.root.prev, &Node[T]{element: n.element})
+		return false
+	})
+
+	return l
+
+}
+
 // 往头位置插入
 func (l *LinkedList[T]) PushFront(elems ...T) {
 	l.lazyInit()
@@ -169,6 +178,17 @@ func (l *LinkedList[T]) PushFront(elems ...T) {
 // RPush是PushBack的同义词, 类似redis的RPush命令
 func (l *LinkedList[T]) RPush(elems ...T) {
 	l.PushBack(elems...)
+}
+
+// PushBackList往尾部的位置插入一个新的列表other的副本
+func (l *LinkedList[T]) PushBackList(other *LinkedList[T]) *LinkedList[T] {
+	l.lazyInit()
+
+	l.RangeSafe(func(n *Node[T]) bool {
+		l.insert(&l.root, &Node[T]{element: n.element})
+		return false
+	})
+	return l
 }
 
 // 往尾部的位置插入
