@@ -32,7 +32,7 @@ type LinkedList[T any] struct {
 type Node[T any] struct {
 	next    *Node[T]
 	prev    *Node[T]
-	element T
+	Element T
 }
 
 // 返回一个双向循环链表
@@ -101,7 +101,7 @@ func (l LinkedList[T]) LPop(count int) []T {
 			return true
 		}
 
-		all[i] = n.element
+		all[i] = n.Element
 		l.remove(n)
 		i++
 		return false
@@ -123,7 +123,7 @@ func (l *LinkedList[T]) RPop(count int) []T {
 			return true
 		}
 
-		all[count-1] = n.element
+		all[count-1] = n.Element
 		l.remove(n)
 		count--
 		return false
@@ -171,7 +171,7 @@ func (l *LinkedList[T]) LPush(elems ...T) {
 // PushFrontList在列表l前面插入一个新的列表other的副本
 func (l *LinkedList[T]) PushFrontList(other *LinkedList[T]) *LinkedList[T] {
 	other.RangePrevSafe(func(n *Node[T]) bool {
-		l.insert(l.root.prev, &Node[T]{element: n.element})
+		l.insert(l.root.prev, &Node[T]{Element: n.Element})
 		return false
 	})
 
@@ -183,7 +183,7 @@ func (l *LinkedList[T]) PushFrontList(other *LinkedList[T]) *LinkedList[T] {
 func (l *LinkedList[T]) PushFront(elems ...T) *LinkedList[T] {
 	l.lazyInit()
 	for _, e := range elems {
-		l.insert(&l.root, &Node[T]{element: e})
+		l.insert(&l.root, &Node[T]{Element: e})
 	}
 	return l
 }
@@ -199,7 +199,7 @@ func (l *LinkedList[T]) PushBackList(other *LinkedList[T]) *LinkedList[T] {
 	l.lazyInit()
 
 	l.RangeSafe(func(n *Node[T]) bool {
-		l.insert(&l.root, &Node[T]{element: n.element})
+		l.insert(&l.root, &Node[T]{Element: n.Element})
 		return false
 	})
 	return l
@@ -209,7 +209,7 @@ func (l *LinkedList[T]) PushBackList(other *LinkedList[T]) *LinkedList[T] {
 func (l *LinkedList[T]) PushBack(elems ...T) *LinkedList[T] {
 	l.lazyInit()
 	for _, e := range elems {
-		l.insert(l.root.prev, &Node[T]{element: e})
+		l.insert(l.root.prev, &Node[T]{Element: e})
 	}
 	return l
 }
@@ -220,7 +220,7 @@ func (l *LinkedList[T]) First() (e T, err error) {
 		err = ErrListElemEmpty
 		return
 	}
-	return l.root.next.element, nil
+	return l.root.next.Element, nil
 }
 
 // 返回最后1个元素
@@ -229,7 +229,7 @@ func (l *LinkedList[T]) Last() (e T, err error) {
 		err = ErrListElemEmpty
 		return
 	}
-	return l.root.prev.element, nil
+	return l.root.prev.Element, nil
 }
 
 // 链表是否为空
@@ -250,8 +250,8 @@ func (l *LinkedList[T]) Clear() *LinkedList[T] {
 // 类似于redis linsert after 命令
 func (l *LinkedList[T]) InsertAfter(value T, equal func(value T) bool) *LinkedList[T] {
 	l.RangeSafe(func(n *Node[T]) bool {
-		if equal(n.element) {
-			l.insert(n, &Node[T]{element: value})
+		if equal(n.Element) {
+			l.insert(n, &Node[T]{Element: value})
 			return true
 		}
 		return false
@@ -262,8 +262,8 @@ func (l *LinkedList[T]) InsertAfter(value T, equal func(value T) bool) *LinkedLi
 //  类似于redis linsert before 命令
 func (l *LinkedList[T]) InsertBefore(value T, equal func(value T) bool) *LinkedList[T] {
 	l.RangeSafe(func(n *Node[T]) bool {
-		if equal(n.element) {
-			l.insert(n.prev, &Node[T]{element: value})
+		if equal(n.Element) {
+			l.insert(n.prev, &Node[T]{Element: value})
 			return true
 		}
 		return false
@@ -275,7 +275,7 @@ func (l *LinkedList[T]) InsertBefore(value T, equal func(value T) bool) *LinkedL
 // 查找是否包含这个value
 func (l *LinkedList[T]) ContainsFunc(value T, cb func(value T) bool) bool {
 	for pos := l.root.next; pos != &l.root; pos = pos.next {
-		if cb(pos.element) {
+		if cb(pos.Element) {
 			return true
 		}
 	}
@@ -322,7 +322,7 @@ func (l *LinkedList[T]) RemFunc(value T, count int, cb func(value T) bool) (ndel
 		n = pos.next
 		for pos != &l.root {
 			if count == 0 || i <= count {
-				if cb(pos.element) {
+				if cb(pos.Element) {
 					l.remove(pos)
 					ndel++
 				}
@@ -340,7 +340,7 @@ func (l *LinkedList[T]) RemFunc(value T, count int, cb func(value T) bool) (ndel
 	n = pos.prev
 	for pos != &l.root {
 		if count == 0 || i <= count {
-			if cb(pos.element) {
+			if cb(pos.Element) {
 				l.remove(pos)
 				ndel++
 			}
@@ -364,7 +364,7 @@ func (l *LinkedList[T]) Index(idx int) (e T, err error) {
 	if err != nil {
 		return
 	}
-	return n.element, nil
+	return n.Element, nil
 }
 
 // 类型redis lset命令
@@ -376,7 +376,7 @@ func (l *LinkedList[T]) Set(index int, value T) *LinkedList[T] {
 	if err != nil {
 		return l
 	}
-	n.element = value
+	n.Element = value
 	return l
 }
 
@@ -435,7 +435,7 @@ func (l *LinkedList[T]) ToSlice() []T {
 
 	rv := make([]T, 0, l.length)
 	for pos := l.root.next; pos != &l.root; pos = pos.next {
-		rv = append(rv, pos.element)
+		rv = append(rv, pos.Element)
 	}
 
 	return rv
@@ -501,7 +501,7 @@ func (l *LinkedList[T]) Range(pr func(value T), startAndEnd ...int) {
 
 		if len(startAndEnd) != 0 {
 			if i >= start && i <= end {
-				pr(n.element)
+				pr(n.Element)
 			}
 
 			if i > end {
@@ -510,7 +510,7 @@ func (l *LinkedList[T]) Range(pr func(value T), startAndEnd ...int) {
 			return false
 		}
 
-		pr(n.element)
+		pr(n.Element)
 		i++
 		return false
 	})
