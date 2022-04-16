@@ -399,8 +399,45 @@ func (l *LinkedList[T]) removeInner(index int) {
 }
 
 // 打印
-func (l *LinkedList[T]) Range(pr func(value T)) {
-	for pos := l.root.next; pos != &l.root; pos = pos.next {
+// range 类似redis lrange命令
+func (l *LinkedList[T]) Range(pr func(value T), startAndEnd ...int) {
+	start := 0
+	end := 0
+
+	if len(startAndEnd) > 0 {
+		start = startAndEnd[0]
+	}
+
+	if len(startAndEnd) > 1 {
+		start = startAndEnd[1]
+	}
+
+	if start < 0 {
+		start += l.length
+		if start < 0 {
+			start = 0
+		}
+	}
+
+	if end < 0 {
+		end += l.length
+	}
+
+	if end >= l.length || start >= l.length {
+		return
+	}
+
+	for pos, i := l.root.next, 0; pos != &l.root; pos, i = pos.next, i+1 {
+		if len(startAndEnd) != 0 {
+			if i >= start && i <= end {
+				pr(pos.element)
+			}
+			if i > end {
+				break
+			}
+			continue
+		}
+
 		pr(pos.element)
 	}
 }
