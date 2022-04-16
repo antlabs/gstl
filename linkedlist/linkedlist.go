@@ -173,7 +173,7 @@ func (l *LinkedList[T]) LPush(elems ...T) *LinkedList[T] {
 // PushFrontList在列表l前面插入一个新的列表other的副本
 func (l *LinkedList[T]) PushFrontList(other *LinkedList[T]) *LinkedList[T] {
 	other.RangePrevSafe(func(n *Node[T]) bool {
-		l.insert(l.root.prev, &Node[T]{Element: n.Element})
+		l.insert(&l.root, &Node[T]{Element: n.Element})
 		return false
 	})
 
@@ -200,8 +200,8 @@ func (l *LinkedList[T]) RPush(elems ...T) *LinkedList[T] {
 func (l *LinkedList[T]) PushBackList(other *LinkedList[T]) *LinkedList[T] {
 	l.lazyInit()
 
-	l.RangeSafe(func(n *Node[T]) bool {
-		l.insert(&l.root, &Node[T]{Element: n.Element})
+	other.RangeSafe(func(n *Node[T]) bool {
+		l.insert(l.root.prev, &Node[T]{Element: n.Element})
 		return false
 	})
 	return l

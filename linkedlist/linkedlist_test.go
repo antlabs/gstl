@@ -204,3 +204,11 @@ func Test_Range(t *testing.T) {
 
 	assert.Equal(t, all, []string{"one", "two"})
 }
+
+func Test_PushBackList(t *testing.T) {
+	assert.Equal(t, New[string]().RPush("one", "two", "three").PushBackList(New[string]().RPush("1", "2", "3")).ToSlice(), []string{"one", "two", "three", "1", "2", "3"})
+}
+
+func Test_PushFrontList(t *testing.T) {
+	assert.Equal(t, New[string]().RPush("one", "two", "three").PushFrontList(New[string]().RPush("1", "2", "3")).ToSlice(), []string{"1", "2", "3", "one", "two", "three"})
+}
