@@ -164,8 +164,10 @@ func (l *LinkedList[T]) RangeSafe(callback func(n *Node[T]) (exit bool)) {
 }
 
 // 类似redis lpush命令
-func (l *LinkedList[T]) LPush(elems ...T) {
+// PushFront的同义词
+func (l *LinkedList[T]) LPush(elems ...T) *LinkedList[T] {
 	l.PushFront(elems...)
+	return l
 }
 
 // PushFrontList在列表l前面插入一个新的列表other的副本
@@ -283,12 +285,9 @@ func (l *LinkedList[T]) ContainsFunc(value T, cb func(value T) bool) bool {
 }
 
 // 通过索引查找是否包含这个value
+// Get是Index的同义词
 func (l *LinkedList[T]) Get(idx int) (e T, err error) {
-	if idx >= 0 {
-		return l.Index(idx)
-	}
-	err = ErrNotFound
-	return
+	return l.Index(idx)
 }
 
 // 删除这个元素
@@ -412,7 +411,7 @@ func (l *LinkedList[T]) index(idx int) (newIdx int, front bool) {
 	}
 
 	// 如果倒序遍历元素更少
-	other := length - idx
+	other := length - idx - 1
 	if idx > other {
 		return other, false
 	}
@@ -476,7 +475,7 @@ func (l *LinkedList[T]) removeInner(index int) {
 		}
 		pos = n
 		n = pos.prev
-		i++
+		i--
 	}
 
 }
