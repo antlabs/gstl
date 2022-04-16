@@ -13,14 +13,13 @@ var ErrNotFound = errors.New("element not found")
 // https://redis.io/commands/?group=list
 // LTRIM
 // LINDEX -->done
-// LINSERT
+// LINSERT -->done
 // LLEN -->done
 // LMOVE
-// LMPOP
 // LPOP -->done
 // LPOS
 // LPUSH LPUSHX -->done
-// LRANGE
+// LRANGE -->done
 // LREM -->done
 // LSET -->done
 // RPOP -->done
@@ -141,7 +140,8 @@ func (l *LinkedList[T]) RangePrevSafe(callback func(n *Node[T]) bool) {
 }
 
 // 从前向后遍历
-func (l *LinkedList[T]) RangeSafe(callback func(n *Node[T]) bool) {
+// callback 返回truek就退出遍历
+func (l *LinkedList[T]) RangeSafe(callback func(n *Node[T]) (exit bool)) {
 
 	var pos *Node[T]
 	var n *Node[T]
@@ -207,6 +207,28 @@ func (l *LinkedList[T]) Clear() {
 
 	l.RangeSafe(func(n *Node[T]) bool {
 		l.remove(n)
+		return false
+	})
+}
+
+// 类似于redis linsert after 命令
+func (l *LinkedList[T]) InsertAfter(value T, equal func(value T) bool) {
+	l.RangeSafe(func(n *Node[T]) bool {
+		if equal(n.element) {
+			l.insert(n, &Node[T]{element: value})
+			return true
+		}
+		return false
+	})
+}
+
+//  类似于redis linsert before 命令
+func (l *LinkedList[T]) InsertBefore(value T, equal func(value T) bool) {
+	l.RangeSafe(func(n *Node[T]) bool {
+		if equal(n.element) {
+			l.insert(n.prev, &Node[T]{element: value})
+			return true
+		}
 		return false
 	})
 }
@@ -288,6 +310,7 @@ func (l *LinkedList[T]) RemFunc(value T, count int, cb func(value T) bool) (ndel
 // 和redis lindex命令类似,
 // idx >= 0 形为和Get(idx int) 一样, 获取指向索引的元素
 // idx < 0 获取倒数第几个元素
+// O(min(index, length - index))
 func (l *LinkedList[T]) Index(idx int) (e T, err error) {
 	var n *Node[T]
 	n, err = l.indexInner(idx)
@@ -300,6 +323,7 @@ func (l *LinkedList[T]) Index(idx int) (e T, err error) {
 // 类型redis lset命令
 // index >= 0 正着数
 // index < 0 倒着数
+// On(min(index, length - index))
 func (l *LinkedList[T]) Set(index int, value T) {
 	n, err := l.indexInner(index)
 	if err != nil {
@@ -349,12 +373,10 @@ func (l *LinkedList[T]) index(idx int) (newIdx int, front bool) {
 	return idx, true
 }
 
-// 删除指定索引的元素, 效率 min(O(index), O(n/2))
+// 删除指定索引的元素, 效率 min(O(index), O(len - index))
 func (l *LinkedList[T]) Remove(index int) {
 	l.removeInner(index)
 }
-
-// 删除指定
 
 // list 转成slice , 效率O(n)
 func (l *LinkedList[T]) ToSlice() []T {
@@ -401,6 +423,7 @@ func (l *LinkedList[T]) removeInner(index int) {
 // 打印
 // range 类似redis lrange命令
 func (l *LinkedList[T]) Range(pr func(value T), startAndEnd ...int) {
+
 	start := 0
 	end := 0
 
@@ -411,6 +434,28 @@ func (l *LinkedList[T]) Range(pr func(value T), startAndEnd ...int) {
 	if len(startAndEnd) > 1 {
 		start = startAndEnd[1]
 	}
+
+	i := 0
+	l.rangeStartEndSafe(start, end, func(n *Node[T]) bool {
+
+		if len(startAndEnd) != 0 {
+			if i >= start && i <= end {
+				pr(n.element)
+			}
+
+			if i > end {
+				return true
+			}
+			return false
+		}
+
+		pr(n.element)
+		i++
+		return false
+	})
+}
+
+func (l *LinkedList[T]) rangeStartEndSafe(start, end int, callback func(n *Node[T]) (exit bool)) {
 
 	if start < 0 {
 		start += l.length
@@ -423,21 +468,29 @@ func (l *LinkedList[T]) Range(pr func(value T), startAndEnd ...int) {
 		end += l.length
 	}
 
-	if end >= l.length || start >= l.length {
+	if start > end || start >= l.length {
 		return
 	}
+	var pos *Node[T]
+	var n *Node[T]
 
-	for pos, i := l.root.next, 0; pos != &l.root; pos, i = pos.next, i+1 {
-		if len(startAndEnd) != 0 {
-			if i >= start && i <= end {
-				pr(pos.element)
-			}
-			if i > end {
-				break
-			}
-			continue
+	for pos, n = l.root.next, pos.next; pos != &l.root; pos, n = n, pos.next {
+		if callback(pos) {
+			break
 		}
-
-		pr(pos.element)
 	}
+}
+
+// 类似于redis ltrim命令, 对列表进行裁剪
+func (l *LinkedList[T]) Trim(start, end int) *LinkedList[T] {
+
+	i := 0
+	l.rangeStartEndSafe(start, end, func(n *Node[T]) bool {
+		if i < start || i > end {
+			l.remove(n)
+		}
+		i++
+		return true
+	})
+	return l
 }
