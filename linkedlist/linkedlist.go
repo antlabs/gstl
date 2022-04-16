@@ -68,14 +68,21 @@ func (l *LinkedList[T]) lazyInit() {
 func (l *LinkedList[T]) insert(at, e *Node[T]) {
 	e.prev = at
 	e.next = at.next
+	e.next.prev = e
 	at.next = e
-	at.next.prev = e
 	l.length++
 }
 
-func (l *LinkedList[T]) Append(other LinkedList[T]) {
+//
+func (l *LinkedList[T]) MoveToBackList(other *LinkedList[T]) *LinkedList[T] {
 	l.lazyInit()
+	return l
+}
 
+//
+func (l *LinkedList[T]) MoveToFrontList(other *LinkedList[T]) *LinkedList[T] {
+	l.lazyInit()
+	return l
 }
 
 // 类似redis lpop命令
@@ -127,13 +134,15 @@ func (l *LinkedList[T]) RPop(count int) []T {
 // 从后向前遍历
 func (l *LinkedList[T]) RangePrevSafe(callback func(n *Node[T]) bool) {
 
-	var pos *Node[T]
-	var n *Node[T]
+	pos := l.root.prev
+	n := pos.prev
 
-	for pos, n = l.root.prev, pos.next; pos != &l.root; pos, n = n, pos.next {
+	for pos != &l.root {
 		if callback(pos) {
 			break
 		}
+		pos = n
+		n = pos.prev
 	}
 }
 
@@ -141,13 +150,16 @@ func (l *LinkedList[T]) RangePrevSafe(callback func(n *Node[T]) bool) {
 // callback 返回truek就退出遍历
 func (l *LinkedList[T]) RangeSafe(callback func(n *Node[T]) (exit bool)) {
 
-	var pos *Node[T]
-	var n *Node[T]
+	pos := l.root.next
+	n := pos.next
 
-	for pos, n = l.root.next, pos.next; pos != &l.root; pos, n = n, pos.next {
+	for pos != &l.root {
 		if callback(pos) {
 			break
 		}
+
+		pos = n
+		n = pos.next
 	}
 }
 
@@ -168,16 +180,18 @@ func (l *LinkedList[T]) PushFrontList(other *LinkedList[T]) *LinkedList[T] {
 }
 
 // 往头位置插入
-func (l *LinkedList[T]) PushFront(elems ...T) {
+func (l *LinkedList[T]) PushFront(elems ...T) *LinkedList[T] {
 	l.lazyInit()
 	for _, e := range elems {
 		l.insert(&l.root, &Node[T]{element: e})
 	}
+	return l
 }
 
 // RPush是PushBack的同义词, 类似redis的RPush命令
-func (l *LinkedList[T]) RPush(elems ...T) {
+func (l *LinkedList[T]) RPush(elems ...T) *LinkedList[T] {
 	l.PushBack(elems...)
+	return l
 }
 
 // PushBackList往尾部的位置插入一个新的列表other的副本
@@ -192,11 +206,12 @@ func (l *LinkedList[T]) PushBackList(other *LinkedList[T]) *LinkedList[T] {
 }
 
 // 往尾部的位置插入
-func (l *LinkedList[T]) PushBack(elems ...T) {
+func (l *LinkedList[T]) PushBack(elems ...T) *LinkedList[T] {
 	l.lazyInit()
 	for _, e := range elems {
 		l.insert(l.root.prev, &Node[T]{element: e})
 	}
+	return l
 }
 
 // 返回第1个元素
@@ -223,16 +238,17 @@ func (l *LinkedList[T]) IsEmpty() bool {
 }
 
 // 清空链表 O(n)
-func (l *LinkedList[T]) Clear() {
+func (l *LinkedList[T]) Clear() *LinkedList[T] {
 
 	l.RangeSafe(func(n *Node[T]) bool {
 		l.remove(n)
 		return false
 	})
+	return l
 }
 
 // 类似于redis linsert after 命令
-func (l *LinkedList[T]) InsertAfter(value T, equal func(value T) bool) {
+func (l *LinkedList[T]) InsertAfter(value T, equal func(value T) bool) *LinkedList[T] {
 	l.RangeSafe(func(n *Node[T]) bool {
 		if equal(n.element) {
 			l.insert(n, &Node[T]{element: value})
@@ -240,10 +256,11 @@ func (l *LinkedList[T]) InsertAfter(value T, equal func(value T) bool) {
 		}
 		return false
 	})
+	return l
 }
 
 //  类似于redis linsert before 命令
-func (l *LinkedList[T]) InsertBefore(value T, equal func(value T) bool) {
+func (l *LinkedList[T]) InsertBefore(value T, equal func(value T) bool) *LinkedList[T] {
 	l.RangeSafe(func(n *Node[T]) bool {
 		if equal(n.element) {
 			l.insert(n.prev, &Node[T]{element: value})
@@ -251,6 +268,8 @@ func (l *LinkedList[T]) InsertBefore(value T, equal func(value T) bool) {
 		}
 		return false
 	})
+
+	return l
 }
 
 // 查找是否包含这个value
@@ -299,7 +318,9 @@ func (l *LinkedList[T]) RemFunc(value T, count int, cb func(value T) bool) (ndel
 	)
 
 	if count >= 0 {
-		for pos, n = l.root.next, pos.next; pos != &l.root; pos, n = n, pos.next {
+		pos = l.root.next
+		n = pos.next
+		for pos != &l.root {
 			if count == 0 || i <= count {
 				if cb(pos.element) {
 					l.remove(pos)
@@ -307,13 +328,17 @@ func (l *LinkedList[T]) RemFunc(value T, count int, cb func(value T) bool) (ndel
 				}
 				i++
 			}
+			pos = n
+			n = pos.next
 		}
 
 		return
 	}
 
 	count = -count
-	for pos, n = l.root.prev, pos.prev; pos != &l.root; pos, n = n, pos.prev {
+	pos = l.root.prev
+	n = pos.prev
+	for pos != &l.root {
 		if count == 0 || i <= count {
 			if cb(pos.element) {
 				l.remove(pos)
@@ -321,6 +346,8 @@ func (l *LinkedList[T]) RemFunc(value T, count int, cb func(value T) bool) (ndel
 			}
 			i++
 		}
+		pos = n
+		n = pos.prev
 	}
 
 	return
@@ -344,12 +371,13 @@ func (l *LinkedList[T]) Index(idx int) (e T, err error) {
 // index >= 0 正着数
 // index < 0 倒着数
 // On(min(index, length - index))
-func (l *LinkedList[T]) Set(index int, value T) {
+func (l *LinkedList[T]) Set(index int, value T) *LinkedList[T] {
 	n, err := l.indexInner(index)
 	if err != nil {
-		return
+		return l
 	}
 	n.element = value
+	return l
 }
 
 func (l *LinkedList[T]) indexInner(idx int) (*Node[T], error) {
@@ -394,8 +422,9 @@ func (l *LinkedList[T]) index(idx int) (newIdx int, front bool) {
 }
 
 // 删除指定索引的元素, 效率 min(O(index), O(len - index))
-func (l *LinkedList[T]) Remove(index int) {
+func (l *LinkedList[T]) Remove(index int) *LinkedList[T] {
 	l.removeInner(index)
+	return l
 }
 
 // list 转成slice , 效率O(n)
@@ -422,20 +451,32 @@ func (l *LinkedList[T]) removeInner(index int) {
 	idx, front := l.index(index)
 
 	if front {
-		for pos, n = l.root.next, pos.next; pos != &l.root; pos, n, i = n, pos.next, i+1 {
+
+		pos = l.root.next
+		n = pos.next
+		for pos != &l.root {
 			if i == idx {
 				l.remove(pos)
 				return
 			}
+
+			pos = n
+			n = pos.next
+			i++
 		}
 	}
 
 	i = idx
-	for pos, n = l.root.prev, pos.prev; pos != &l.root; pos, n, i = n, pos.prev, i-1 {
+	pos = l.root.prev
+	n = pos.prev
+	for pos != &l.root {
 		if i == 0 {
 			l.remove(pos)
 			return
 		}
+		pos = n
+		n = pos.prev
+		i++
 	}
 
 }
@@ -494,10 +535,15 @@ func (l *LinkedList[T]) rangeStartEndSafe(start, end int, callback func(n *Node[
 	var pos *Node[T]
 	var n *Node[T]
 
-	for pos, n = l.root.next, pos.next; pos != &l.root; pos, n = n, pos.next {
+	pos = l.root.next
+	n = pos.next
+
+	for pos != &l.root {
 		if callback(pos) {
 			break
 		}
+		pos = n
+		n = pos.next
 	}
 }
 
