@@ -480,9 +480,8 @@ func (l *LinkedList[T]) removeInner(index int) {
 
 }
 
-// 打印
 // range 类似redis lrange命令
-func (l *LinkedList[T]) Range(pr func(value T), startAndEnd ...int) {
+func (l *LinkedList[T]) Range(callback func(value T), startAndEnd ...int) {
 
 	start := 0
 	end := 0
@@ -492,30 +491,30 @@ func (l *LinkedList[T]) Range(pr func(value T), startAndEnd ...int) {
 	}
 
 	if len(startAndEnd) > 1 {
-		start = startAndEnd[1]
+		end = startAndEnd[1]
 	}
 
 	i := 0
-	l.rangeStartEndSafe(start, end, func(n *Node[T]) bool {
-
+	l.rangeStartEndSafe(start, end, func(start, end int, n *Node[T]) bool {
 		if len(startAndEnd) != 0 {
 			if i >= start && i <= end {
-				pr(n.Element)
+				callback(n.Element)
 			}
 
 			if i > end {
 				return true
 			}
+			i++
 			return false
 		}
 
-		pr(n.Element)
 		i++
+		callback(n.Element)
 		return false
 	})
 }
 
-func (l *LinkedList[T]) rangeStartEndSafe(start, end int, callback func(n *Node[T]) (exit bool)) {
+func (l *LinkedList[T]) rangeStartEndSafe(start, end int, callback func(start, end int, n *Node[T]) (exit bool)) {
 
 	if start < 0 {
 		start += l.length
@@ -538,7 +537,7 @@ func (l *LinkedList[T]) rangeStartEndSafe(start, end int, callback func(n *Node[
 	n = pos.next
 
 	for pos != &l.root {
-		if callback(pos) {
+		if callback(start, end, pos) {
 			break
 		}
 		pos = n
@@ -550,12 +549,12 @@ func (l *LinkedList[T]) rangeStartEndSafe(start, end int, callback func(n *Node[
 func (l *LinkedList[T]) Trim(start, end int) *LinkedList[T] {
 
 	i := 0
-	l.rangeStartEndSafe(start, end, func(n *Node[T]) bool {
+	l.rangeStartEndSafe(start, end, func(start, end int, n *Node[T]) bool {
 		if i < start || i > end {
 			l.remove(n)
 		}
 		i++
-		return true
+		return false
 	})
 	return l
 }

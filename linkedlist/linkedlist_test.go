@@ -166,3 +166,41 @@ func Test_IsEmpty(t *testing.T) {
 	assert.True(t, New[string]().PushFront("3", "2", "1").Clear().IsEmpty())
 	assert.True(t, New[string]().PushFront("4", "3", "2", "1").Clear().IsEmpty())
 }
+
+func Test_Trim(t *testing.T) {
+	// 返回空值的情况
+	assert.Equal(t, New[string]().RPush("one", "two", "three").Trim(100, -2).ToSlice(), []string{"one", "two", "three"})
+
+	assert.Equal(t, New[string]().RPush("one", "two", "three").Trim(1, -1).ToSlice(), []string{"two", "three"})
+	assert.Equal(t, New[string]().RPush("one", "two", "three").Trim(0, 1).ToSlice(), []string{"one", "two"})
+	assert.Equal(t, New[string]().RPush("one", "two", "three").Trim(-2, -1).ToSlice(), []string{"two", "three"})
+	assert.Equal(t, New[string]().RPush("one", "two", "three").Trim(-100, -2).ToSlice(), []string{"one", "two"})
+}
+
+func Test_Range(t *testing.T) {
+	var all []string
+
+	// 1.1遍历全部
+	all = make([]string, 0, 3)
+	New[string]().RPush("one", "two", "three").Range(func(s string) {
+		all = append(all, s)
+	}, 0, -1)
+
+	assert.Equal(t, all, []string{"one", "two", "three"})
+
+	// 1.2遍历全部
+	all = make([]string, 0, 3)
+	New[string]().RPush("one", "two", "three").Range(func(s string) {
+		all = append(all, s)
+	})
+
+	assert.Equal(t, all, []string{"one", "two", "three"})
+
+	// 2.遍历部分
+	all = make([]string, 0, 3)
+	New[string]().RPush("one", "two", "three").Range(func(s string) {
+		all = append(all, s)
+	}, 0, -2)
+
+	assert.Equal(t, all, []string{"one", "two"})
+}
