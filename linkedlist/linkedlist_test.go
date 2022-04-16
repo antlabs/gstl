@@ -23,12 +23,18 @@ func Test_Len(t *testing.T) {
 }
 
 func Test_RPop(t *testing.T) {
+	// 不正常的索引
+	assert.Equal(t, New[string]().PushBack("1", "2", "3", "4").RPop(-3), []string(nil))
+
 	assert.Equal(t, New[string]().PushBack("1", "2", "3", "4").RPop(3), []string{"2", "3", "4"})
 	assert.Equal(t, New[int]().PushBack(1, 2, 3, 4).RPop(3), []int{2, 3, 4})
 	assert.Equal(t, New[string]().PushBack("1", "2", "3", "4").RPop(10), []string{"1", "2", "3", "4"})
 }
 
 func Test_LPop(t *testing.T) {
+	// 不正常的索引
+	assert.Equal(t, New[string]().PushBack("1", "2", "3", "4").LPop(-3), []string(nil))
+
 	assert.Equal(t, New[string]().PushBack("1", "2", "3", "4").LPop(3), []string{"1", "2", "3"})
 	assert.Equal(t, New[int]().PushBack(1, 2, 3, 4).LPop(3), []int{1, 2, 3})
 	assert.Equal(t, New[string]().PushBack("1", "2", "3", "4").LPop(10), []string{"1", "2", "3", "4"})
@@ -211,4 +217,40 @@ func Test_PushBackList(t *testing.T) {
 
 func Test_PushFrontList(t *testing.T) {
 	assert.Equal(t, New[string]().RPush("one", "two", "three").PushFrontList(New[string]().RPush("1", "2", "3")).ToSlice(), []string{"1", "2", "3", "one", "two", "three"})
+}
+
+func Test_ContainsFunc(t *testing.T) {
+	assert.True(t, New[string]().RPush("one", "two", "three").ContainsFunc(func(v string) bool {
+		return "one" == v
+	}))
+
+	assert.True(t, New[string]().RPush("one", "two", "three").ContainsFunc(func(v string) bool {
+		return "two" == v
+	}))
+
+	assert.True(t, New[string]().RPush("one", "two", "three").ContainsFunc(func(v string) bool {
+		return "three" == v
+	}))
+
+	assert.False(t, New[string]().RPush("one", "two", "three").ContainsFunc(func(v string) bool {
+		return "xx" == v
+	}))
+}
+
+func Test_InsertAfter(t *testing.T) {
+
+	assert.Equal(t, New[string]().RPush("one", "two").InsertAfter("three", func(s string) bool { return s == "two" }).ToSlice(), []string{"one", "two", "three"})
+	assert.Equal(t, New[string]().RPush("one", "three").InsertAfter("two", func(s string) bool { return s == "one" }).ToSlice(), []string{"one", "two", "three"})
+}
+
+func Test_InsertBefore(t *testing.T) {
+
+	assert.Equal(t, New[string]().RPush("one", "three").InsertBefore("two", func(s string) bool { return s == "three" }).ToSlice(), []string{"one", "two", "three"})
+	assert.Equal(t, New[string]().RPush("two", "three").InsertBefore("one", func(s string) bool { return s == "two" }).ToSlice(), []string{"one", "two", "three"})
+}
+
+func Test_RemFunc(t *testing.T) {
+
+	assert.Equal(t, New[int]().RPush(1, 1, 2, 2, 3, 3).RemFunc(2, func(v int) bool { return v == 1 }), 2)
+	assert.Equal(t, New[int]().RPush(1, 1, 2, 2, 3, 3).RemFunc(-2, func(v int) bool { return v == 3 }), 2)
 }

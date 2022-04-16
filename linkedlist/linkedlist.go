@@ -275,7 +275,7 @@ func (l *LinkedList[T]) InsertBefore(value T, equal func(value T) bool) *LinkedL
 }
 
 // 查找是否包含这个value
-func (l *LinkedList[T]) ContainsFunc(value T, cb func(value T) bool) bool {
+func (l *LinkedList[T]) ContainsFunc(cb func(value T) bool) bool {
 	for pos := l.root.next; pos != &l.root; pos = pos.next {
 		if cb(pos.Element) {
 			return true
@@ -309,7 +309,7 @@ func (l *LinkedList[T]) remove(n *Node[T]) {
 
 // 返回值
 // 被删除元素个数
-func (l *LinkedList[T]) RemFunc(value T, count int, cb func(value T) bool) (ndel int) {
+func (l *LinkedList[T]) RemFunc(count int, cb func(value T) bool) (ndel int) {
 	var (
 		pos *Node[T]
 		n   *Node[T]
