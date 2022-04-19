@@ -73,15 +73,49 @@ func (l *LinkedList[T]) insert(at, e *Node[T]) {
 	l.length++
 }
 
-//
-func (l *LinkedList[T]) MoveToBackList(other *LinkedList[T]) *LinkedList[T] {
+func (l *LinkedList[T]) OtherMoveToBackList(other *LinkedList[T]) *LinkedList[T] {
 	l.lazyInit()
+	if l == other || other.length == 0 {
+		return l
+	}
+
+	l.length += other.length
+
+	tail := l.root.prev
+	otherHead := other.root.next
+	otherTail := other.root.prev
+
+	// 第一个链表的尾巴next指针接上第二个链表的头
+	tail.next = otherHead
+	// 第二个链表的头prev指针接上第一个链表的尾部
+	otherHead.prev = tail
+
+	otherTail.next = &l.root
+	l.root.prev = otherTail
+
+	other.Init()
 	return l
 }
 
-//
-func (l *LinkedList[T]) MoveToFrontList(other *LinkedList[T]) *LinkedList[T] {
+func (l *LinkedList[T]) OtherMoveToFrontList(other *LinkedList[T]) *LinkedList[T] {
 	l.lazyInit()
+	if l == other || other.length == 0 {
+		return l
+	}
+
+	l.length += other.length
+
+	head := l.root.next
+	otherHead := other.root.next
+	otherTail := other.root.prev
+
+	otherTail.next = head
+	head.prev = otherTail
+
+	l.root.next = otherHead
+	otherHead.prev = &l.root
+
+	other.Init()
 	return l
 }
 
@@ -246,6 +280,7 @@ func (l *LinkedList[T]) Clear() *LinkedList[T] {
 		l.remove(n)
 		return false
 	})
+
 	return l
 }
 

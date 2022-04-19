@@ -254,3 +254,49 @@ func Test_RemFunc(t *testing.T) {
 	assert.Equal(t, New[int]().RPush(1, 1, 2, 2, 3, 3).RemFunc(2, func(v int) bool { return v == 1 }), 2)
 	assert.Equal(t, New[int]().RPush(1, 1, 2, 2, 3, 3).RemFunc(-2, func(v int) bool { return v == 3 }), 2)
 }
+
+func Test_OtherMoveToBackList(t *testing.T) {
+	// 第1个链表为空, 第2个链表有值
+	l := New[int]()
+	other := New[int]().PushBack(1, 2, 3, 4, 5, 6)
+	l.OtherMoveToBackList(other)
+	assert.Equal(t, l.ToSlice(), []int{1, 2, 3, 4, 5, 6})
+	assert.Equal(t, other.ToSlice(), []int(nil))
+
+	// 第1个链表有值, 第2个链表也有值
+	l = New[int]().PushBack(1, 2, 3)
+	other = New[int]().PushBack(4, 5, 6)
+	l.OtherMoveToBackList(other)
+	assert.Equal(t, l.ToSlice(), []int{1, 2, 3, 4, 5, 6})
+	assert.Equal(t, other.ToSlice(), []int(nil))
+
+	// 第1个链表有值, 第2个链表为空
+	l = New[int]().PushBack(1, 2, 3, 4, 5, 6)
+	other = New[int]()
+	l.OtherMoveToBackList(other)
+	assert.Equal(t, l.ToSlice(), []int{1, 2, 3, 4, 5, 6})
+	assert.Equal(t, other.ToSlice(), []int(nil))
+}
+
+func Test_OtherMoveToFrontList(t *testing.T) {
+	// 第1个链表为空, 第2个链表有值
+	l := New[int]()
+	other := New[int]().PushBack(1, 2, 3, 4, 5, 6)
+	l.OtherMoveToFrontList(other)
+	assert.Equal(t, l.ToSlice(), []int{1, 2, 3, 4, 5, 6})
+	assert.Equal(t, other.ToSlice(), []int(nil))
+
+	// 第1个链表有值, 第2个链表也有值
+	l = New[int]().PushBack(1, 2, 3)
+	other = New[int]().PushBack(4, 5, 6)
+	l.OtherMoveToFrontList(other)
+	assert.Equal(t, l.ToSlice(), []int{4, 5, 6, 1, 2, 3})
+	assert.Equal(t, other.ToSlice(), []int(nil))
+
+	// 第1个链表有值, 第2个链表为空
+	l = New[int]().PushBack(1, 2, 3, 4, 5, 6)
+	other = New[int]()
+	l.OtherMoveToFrontList(other)
+	assert.Equal(t, l.ToSlice(), []int{1, 2, 3, 4, 5, 6})
+	assert.Equal(t, other.ToSlice(), []int(nil))
+}
