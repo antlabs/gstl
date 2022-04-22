@@ -1,13 +1,6 @@
 package linkedlist
 
-import (
-	"errors"
-	"github.com/guonaihong/gstl/cmp"
-)
-
-var ErrListElemEmpty = errors.New("list is empty")
-var ErrNotFound = errors.New("element not found")
-
+// 参考文档如下
 // https://cs.opensource.google/go/go/+/go1.18.1:src/container/list/list.go
 // https://github.com/torvalds/linux/blob/master/tools/include/linux/list.h
 // https://redis.io/commands/?group=list
@@ -23,6 +16,15 @@ var ErrNotFound = errors.New("element not found")
 // LSET -->done
 // RPOP -->done
 // RPUSH RPUSHX -->done
+
+import (
+	"errors"
+	"github.com/guonaihong/gstl/cmp"
+)
+
+var ErrListElemEmpty = errors.New("list is empty")
+var ErrNotFound = errors.New("element not found")
+
 type LinkedList[T any] struct {
 	root   Node[T]
 	length int
