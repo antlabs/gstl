@@ -15,6 +15,7 @@ func intCmp(a, b float64) int {
 	return 0
 }
 
+// 五百万数据的Get操作时间
 func BenchmarkGet(b *testing.B) {
 	max := 1000000.0 * 5
 	set := New[float64](intCmp)

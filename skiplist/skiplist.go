@@ -21,7 +21,7 @@ type Node[T any] struct {
 	// 后退指针
 	backward  *Node[T]
 	NodeLevel []struct {
-		// 批向前进节点, 是指向tail的方向
+		// 指向前进节点, 是指向tail的方向
 		forward *Node[T]
 		span    int
 	}
@@ -173,10 +173,29 @@ func (s *SkipList[T]) Get(score float64) (elem T, err error) {
 		return x.elem, nil
 	}
 
+  err = ErrNotFound
 	return
 }
 
+// 根据score获取value值
 func (s *SkipList[T]) GetOrZero(score float64) (elem T) {
 	elem, _ = s.Get(score)
 	return elem
+}
+
+// 根据score删除元素
+func (s *SkipList[T]) Remove(score float64) *SkipList[T]{
+	x := s.head
+	for i := s.level - 1; i >= 0; i-- {
+		for x.NodeLevel[i].forward != nil && (x.NodeLevel[i].forward.score < score) {
+			x = x.NodeLevel[i].forward
+		}
+	}
+
+	x = x.NodeLevel[0].forward
+	if x != nil && score == x.score {
+		return x.elem, nil
+	}
+
+	return
 }
