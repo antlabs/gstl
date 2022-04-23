@@ -129,7 +129,7 @@ func (s *SkipList[T]) Insert(score float64, elem T) *SkipList[T] {
 	// 创建新节点
 	x = newNode[T](level, score, elem)
 	for i := 0; i < level; i++ {
-		// x.NodeLevel[i]的节点为如果等于a, 需要插入的节点x在a之后,
+		// x.NodeLevel[i]的节点假设等于a, 需要插入的节点x在a之后,
 		// a, x, a.forward三者的关系就是[a, x, a.forward]
 		// 那就变成了x.forward = a.forward, 修改x.forward的指向
 		// a.forward = x
