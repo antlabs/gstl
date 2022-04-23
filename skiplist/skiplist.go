@@ -11,11 +11,17 @@ const (
 	SKIPLIST_MAXLEVEL = 32
 )
 
+var (
+	ErrNotFound = "not found element"
+)
+
 type Node[T any] struct {
-	score     float64
-	elem      T
+	score float64
+	elem  T
+	// 后退指针
 	backward  *Node[T]
 	NodeLevel []struct {
+		// 批向前进节点, 是指向tail的方向
 		forward *Node[T]
 		span    int
 	}
@@ -30,16 +36,22 @@ type SkipList[T any] struct {
 	level  int
 
 	compare func(T, T) int
+
 }
 
 // 初始化skiplist
 func New[T any](compare func(T, T) int) *SkipList[T] {
 	s := &SkipList[T]{
-		r:     rand.New(rand.NewSource(time.Now().UnixNano())),
 		level: 1,
 	}
+	s.resetRand()
 	s.head = newNode[T](SKIPLIST_MAXLEVEL, 0, *new(T))
 	return s
+}
+
+func (s *SkipList[T]) resetRand() {
+
+	s.r = rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 
 func (s *SkipList[T]) rand() int {
@@ -70,7 +82,11 @@ func newNode[T any](level int, score float64, elem T) *Node[T] {
 	}
 }
 
-func (s *SkipList[T]) Insert(score float64, elem T) {
+func (s *SkipList[T]) Set(score float64, elem T) *SkipList[T] {
+	return s.Insert(score, elem)
+}
+
+func (s *SkipList[T]) Insert(score float64, elem T) *SkipList[T] {
 	var (
 		update [SKIPLIST_MAXLEVEL]*Node[T]
 		rank   [SKIPLIST_MAXLEVEL]int
@@ -113,8 +129,14 @@ func (s *SkipList[T]) Insert(score float64, elem T) {
 	// 创建新节点
 	x = newNode[T](level, score, elem)
 	for i := 0; i < level; i++ {
+		// x.NodeLevel[i]的节点为如果等于a, 需要插入的节点x在a之后,
+		// a, x, a.forward三者的关系就是[a, x, a.forward]
+		// 那就变成了x.forward = a.forward, 修改x.forward的指向
+		// a.forward = x
+		// 看如下两行代码
 		x.NodeLevel[i].forward = update[i].NodeLevel[i].forward
 		update[i].NodeLevel[i].forward = x
+
 		x.NodeLevel[i].span = update[i].NodeLevel[i].span - (rank[0] - rank[i])
 		update[i].NodeLevel[i].span = rank[0] - rank[i] + 1
 	}
@@ -134,4 +156,27 @@ func (s *SkipList[T]) Insert(score float64, elem T) {
 	}
 
 	s.length++
+	return s
+}
+
+func (s *SkipList[T]) Get(score float64) (elem T, err error) {
+
+	x := s.head
+	for i := s.level - 1; i >= 0; i-- {
+		for x.NodeLevel[i].forward != nil && (x.NodeLevel[i].forward.score < score) {
+			x = x.NodeLevel[i].forward
+		}
+	}
+
+	x = x.NodeLevel[0].forward
+	if x != nil && score == x.score {
+		return x.elem, nil
+	}
+
+	return
+}
+
+func (s *SkipList[T]) GetOrZero(score float64) (elem T) {
+	elem, _ = s.Get(score)
+	return elem
 }
