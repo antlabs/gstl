@@ -3,6 +3,7 @@ package skiplist
 // 参考文档如下
 // https://github.com/redis/redis/blob/unstable/src/t_zset.c
 import (
+	"errors"
 	"math/rand"
 	"time"
 )
@@ -12,7 +13,7 @@ const (
 )
 
 var (
-	ErrNotFound = "not found element"
+	ErrNotFound = errors.New("not found element")
 )
 
 type Node[T any] struct {
@@ -36,7 +37,6 @@ type SkipList[T any] struct {
 	level  int
 
 	compare func(T, T) int
-
 }
 
 // 初始化skiplist
@@ -173,7 +173,7 @@ func (s *SkipList[T]) Get(score float64) (elem T, err error) {
 		return x.elem, nil
 	}
 
-  err = ErrNotFound
+	err = ErrNotFound
 	return
 }
 
@@ -183,19 +183,47 @@ func (s *SkipList[T]) GetOrZero(score float64) (elem T) {
 	return elem
 }
 
+func (s *SkipList[T]) removeNode(x *Node[T], update []*Node[T]) {
+	for i := 0; i < s.level; i++ {
+		if update[i].NodeLevel[i].forward == x {
+			update[i].NodeLevel[i].span += x.NodeLevel[i].span - 1
+			update[i].NodeLevel[i].forward = x.NodeLevel[i].forward
+		} else {
+			update[i].NodeLevel[i].span -= 1
+		}
+	}
+
+	if x.NodeLevel[0].forward != nil {
+		// 原来右边节点backward指针直接指各左边节点, 现在指向左左节点
+		x.NodeLevel[0].forward.backward = x.backward
+	} else {
+		// 最后一个元素, 修改下尾指针的位置
+		s.tail = x.backward
+	}
+
+	for s.level > 1 && s.head.NodeLevel[s.level-1].forward == nil {
+		s.level--
+	}
+	s.level--
+}
+
 // 根据score删除元素
-func (s *SkipList[T]) Remove(score float64) *SkipList[T]{
+func (s *SkipList[T]) Remove(score float64) *SkipList[T] {
+
+	var update [SKIPLIST_MAXLEVEL]*Node[T]
 	x := s.head
 	for i := s.level - 1; i >= 0; i-- {
 		for x.NodeLevel[i].forward != nil && (x.NodeLevel[i].forward.score < score) {
 			x = x.NodeLevel[i].forward
 		}
+		update[i] = x
 	}
 
 	x = x.NodeLevel[0].forward
 	if x != nil && score == x.score {
-		return x.elem, nil
+		s.removeNode(x, update[:])
+		return s
 	}
 
-	return
+	return s
 }
