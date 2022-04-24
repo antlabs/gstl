@@ -45,3 +45,15 @@ func MinSlice[T constraints.Ordered](s []T) int {
 	}
 	return minIndex
 }
+
+func Compare[T constraints.Ordered](a, b T) int {
+	switch {
+	case a < b:
+		return -1
+	case a > b:
+		return 1
+	}
+
+	return 0
+
+}
