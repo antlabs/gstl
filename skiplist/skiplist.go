@@ -44,6 +44,8 @@ func New[T any](compare func(T, T) int) *SkipList[T] {
 	s := &SkipList[T]{
 		level: 1,
 	}
+
+	s.compare = compare
 	s.resetRand()
 	s.head = newNode[T](SKIPLIST_MAXLEVEL, 0, *new(T))
 	return s
@@ -82,10 +84,12 @@ func newNode[T any](level int, score float64, elem T) *Node[T] {
 	}
 }
 
+// 设置值, 和Insert是同义词
 func (s *SkipList[T]) Set(score float64, elem T) *SkipList[T] {
 	return s.Insert(score, elem)
 }
 
+// 设置值
 func (s *SkipList[T]) Insert(score float64, elem T) *SkipList[T] {
 	var (
 		update [SKIPLIST_MAXLEVEL]*Node[T]
@@ -204,7 +208,7 @@ func (s *SkipList[T]) removeNode(x *Node[T], update []*Node[T]) {
 	for s.level > 1 && s.head.NodeLevel[s.level-1].forward == nil {
 		s.level--
 	}
-	s.level--
+	s.length--
 }
 
 // 根据score删除元素
@@ -226,4 +230,8 @@ func (s *SkipList[T]) Remove(score float64) *SkipList[T] {
 	}
 
 	return s
+}
+
+func (s *SkipList[T]) Len() int {
+	return s.length
 }

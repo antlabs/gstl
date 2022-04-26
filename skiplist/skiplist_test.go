@@ -30,18 +30,23 @@ func Test_SetGet(t *testing.T) {
 func Test_SetGetRemove(t *testing.T) {
 	zset := New[float64](cmp.Compare[float64])
 
-	for i := 0.0; i < 100.0; i++ {
+	max := 100.0
+	for i := 0.0; i < max; i++ {
 		zset.Set(i, i)
 	}
 
-	for i := 0.0; i < 100.0; i++ {
+	for i := 0.0; i < max; i++ {
 		zset.Remove(i)
-		for j := 0.0; i < 100.0; j++ {
+		assert.Equal(t, float64(zset.Len()), max-1)
+		for j := 0.0; j < max; j++ {
 			if j == i {
 				continue
 			}
 			v, err := zset.Get(j)
-			assert.NoError(t, err)
+			assert.NoError(t, err, fmt.Sprintf("score:%f, i:%f, j:%f", j, i, j))
+			if err != nil {
+				return
+			}
 			assert.Equal(t, v, j)
 		}
 		zset.Set(i, i)
