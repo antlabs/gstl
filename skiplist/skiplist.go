@@ -2,6 +2,37 @@ package skiplist
 
 // 参考文档如下
 // https://github.com/redis/redis/blob/unstable/src/t_zset.c
+// https://redis.io/commands/zcount/
+// ZADD
+// ZCARD
+// ZCOUNT
+// ZDIFFSTORE
+// ZINCRBY
+// ZINTER
+// ZINTERCARD
+// ZINTERSTORE
+// ZLEXCOUNT
+// ZMPOP
+// ZMSCORE
+// ZPOPMAX
+// ZPOPMIN
+// ZRANDMEMBER
+// ZRANGE
+// ZRANGEBYLEX
+// ZRANGEBYSCORE
+// ZRANGESTORE
+// ZRANK
+// ZREM
+// ZREMRANGEBYLEX
+// ZREMRANGEBYRANK
+// ZREMRANGEBYSCORE
+// ZREVRANGE
+// ZREVRANGEBYLEX
+// ZREVRANGEBYSCORE
+// ZREVRANK
+// ZSCAN
+// ZUNION
+// ZUNIONSTORE
 import (
 	"errors"
 	"math/rand"
