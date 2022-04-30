@@ -22,7 +22,6 @@ package skiplist
 // ZRANGEBYSCORE
 // ZRANGESTORE
 // ZRANK
-// ZREM
 // ZREMRANGEBYLEX
 // ZREMRANGEBYRANK
 // ZREMRANGEBYSCORE
@@ -194,6 +193,7 @@ func (s *SkipList[T]) Insert(score float64, elem T) *SkipList[T] {
 	return s
 }
 
+// 获取
 func (s *SkipList[T]) Get(score float64) (elem T, err error) {
 
 	x := s.head
