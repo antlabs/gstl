@@ -1,6 +1,7 @@
 package rhash
 
 import (
+	"errors"
 	"github.com/cespare/xxhash/v2"
 	"math"
 	"reflect"
@@ -8,8 +9,12 @@ import (
 )
 
 const (
-	HT_INITIAL_EXP = 2
+	HT_INITIAL_EXP  = 2
+	HT_INITIAL_SIZE = (1 << (HT_INITIAL_EXP))
 )
+
+var ErrHashing = errors.New("rehashing...")
+var ErrSize = errors.New("wrong size")
 
 // 元素
 type entry[K comparable, V any] struct {
@@ -77,13 +82,6 @@ func (h *Hash[K, V]) isRehashing() bool {
 	return h.rehashidx != -1
 }
 
-func (h *Hash[K, V]) Set(k K, v V) {
-}
-
-func (h *Hash[K, V]) Delete(key K) {
-
-}
-
 // TODO 这个函数可以优化下
 func nextExp(size uint64) uint64 {
 	if size >= math.MaxUint64 {
@@ -99,23 +97,23 @@ func nextExp(size uint64) uint64 {
 	return e
 }
 
-// 手动扩容
-func (h *Hash[K, V]) Expand(size int) {
+// 手动修改hashtable的大小
+func (h *Hash[K, V]) Resize(size uint64) error {
 	// 如果正在扩容中, 或者需要扩容的数据小于已存在的元素, 直接返回
 	if h.isRehashing() || h.used[0] > uint64(size) {
-		return
+		return ErrHashing
 	}
 
 	newSizeExp := nextExp(uint64(size))
 	// 新大小比需要的大小还小
-	newSize := 1 << newSizeExp
+	newSize := uint64(1 << newSizeExp)
 	if newSize < size {
-		return
+		return ErrSize
 	}
 
 	// 新扩容大小和以前的一样
 	if uint64(newSizeExp) == h.sizeExp[0] {
-		return
+		return nil
 	}
 
 	newTable := make([]entry[K, V], newSize)
@@ -124,7 +122,7 @@ func (h *Hash[K, V]) Expand(size int) {
 	if h.table[0] == nil {
 		h.sizeExp[0] = newSizeExp
 		h.table[0] = newTable
-		return
+		return nil
 	}
 
 	// 把新hash表放到table[1]里面
@@ -132,7 +130,21 @@ func (h *Hash[K, V]) Expand(size int) {
 	h.used[1] = 0
 	h.table[1] = newTable
 	h.rehashidx = 0
-	return
+	return nil
+}
+
+// 收缩hash table
+func (h *Hash[K, V]) ShrinkToFit() error {
+	if h.isRehashing() {
+		return ErrHashing
+	}
+
+	minimal := h.used[0]
+	if minimal < HT_INITIAL_SIZE {
+		minimal = HT_INITIAL_SIZE
+	}
+
+	return h.Resize(minimal)
 }
 
 // 返回索引值和entry
@@ -141,15 +153,27 @@ func (h *Hash[K, V]) findIndexAndEntry() (i int, e *entry[K, V]) {
 	return
 }
 
+// 获取
 func (h *Hash[K, V]) Get(key K) (v V, err error) {
 
 	return
 }
 
+// 获取
 func (h *Hash[K, V]) GetOrZero(key K) (v V) {
 	return
 }
 
+// 遍历
 func (h *Hash[K, V]) Range() {
+
+}
+
+// 设置
+func (h *Hash[K, V]) Set(k K, v V) {
+}
+
+// 删除
+func (h *Hash[K, V]) Delete(key K) {
 
 }
