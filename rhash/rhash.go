@@ -170,9 +170,9 @@ func (h *Hash[K, V]) ShrinkToFit() error {
 }
 
 // 返回索引值和entry
-func (h *Hash[K, V]) findIndexAndEntry(key K) (i uint64, e *entry[K, V]) {
+func (h *Hash[K, V]) findIndexAndEntry(key K) (i uint64, e *entry[K, V], err error) {
 	if err := h.expand(); err != nil {
-		return 0, nil
+		return 0, nil, err
 	}
 
 	hashCode := h.calHash(key)
@@ -182,8 +182,9 @@ func (h *Hash[K, V]) findIndexAndEntry(key K) (i uint64, e *entry[K, V]) {
 		head := h.table[table][idx]
 		for head != nil {
 			if key == head.key {
-				return idx, head
+				return idx, head, nil
 			}
+
 			head = head.next
 		}
 
@@ -192,7 +193,7 @@ func (h *Hash[K, V]) findIndexAndEntry(key K) (i uint64, e *entry[K, V]) {
 		}
 	}
 
-	return idx, nil
+	return idx, nil, nil
 }
 
 func (h *Hash[K, V]) rehash(n int) error {
@@ -279,10 +280,32 @@ func (h *Hash[K, V]) Range() {
 }
 
 // 设置
-func (h *Hash[K, V]) Set(k K, v V) {
+func (h *Hash[K, V]) Set(k K, v V) error {
 	if h.isRehashing() {
 		h.rehash(1)
 	}
+
+	index, e, err := h.findIndexAndEntry(k)
+	if err != nil {
+		return err
+	}
+
+	idx := 0
+	if h.isRehashing() {
+		idx = 1
+	}
+
+	if e != nil {
+		e.key = k
+		e.val = v
+		return nil
+	}
+
+	e = &entry[K, V]{key: k, val: v}
+	e.next = h.table[idx][index]
+	h.table[idx][index] = e
+	h.used[idx]++
+	return nil
 }
 
 // 删除
