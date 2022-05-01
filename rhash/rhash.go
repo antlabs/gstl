@@ -13,8 +13,12 @@ const (
 	HT_INITIAL_SIZE = (1 << (HT_INITIAL_EXP))
 )
 
-var ErrHashing = errors.New("rehashing...")
-var ErrSize = errors.New("wrong size")
+var forceResizeRatio = 5
+
+var (
+	ErrHashing = errors.New("rehashing...")
+	ErrSize    = errors.New("wrong size")
+)
 
 // 元素
 type entry[K comparable, V any] struct {
@@ -87,6 +91,7 @@ func nextExp(size uint64) int8 {
 	if size >= math.MaxUint64 {
 		return 63
 	}
+
 	e := int8(HT_INITIAL_EXP)
 	for {
 		if 1<<e >= size {
@@ -94,7 +99,24 @@ func nextExp(size uint64) int8 {
 		}
 		e++
 	}
+
 	return e
+}
+
+func (h *Hash[K, V]) expand() error {
+	if h.isRehashing() {
+		return nil
+	}
+
+	if hashSize(h.sizeExp[0]) == 0 {
+		return h.Resize(HT_INITIAL_SIZE)
+	}
+
+	if h.used[0] >= hashSize(h.sizeExp[0]) || h.used[0]/hashSize(h.sizeExp[0]) > uint64(forceResizeRatio) {
+		return h.Resize(h.used[0] + 1)
+	}
+
+	return nil
 }
 
 // 手动修改hashtable的大小
@@ -203,6 +225,13 @@ func (h *Hash[K, V]) reset(idx int) {
 	h.table[idx] = nil
 	h.sizeExp[idx] = -1
 	h.used[idx] = 0
+}
+
+func hashSize(exp int8) uint64 {
+	if exp == -1 {
+		return 0
+	}
+	return 1 << exp
 }
 
 func sizeMask(exp int8) uint64 {
