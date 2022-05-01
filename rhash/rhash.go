@@ -1,5 +1,7 @@
 package rhash
 
+// 参考资料
+// https://github.com/redis/redis/blob/unstable/src/dict.c
 import (
 	"errors"
 	"github.com/cespare/xxhash/v2"
@@ -34,7 +36,7 @@ type Hash[K comparable, V any] struct {
 	used    [2]uint64         // 记录每个table里面存在的元素个数
 	sizeExp [2]int8           //记录exp
 
-	rehashidx int
+	rehashidx int // rehashid目前的槽位
 	keySize   int //key的长度
 	hashFunc  func(str string) uint64
 	isKeyStr  bool //是string类型的key, 或者不是
@@ -302,8 +304,32 @@ func (h *Hash[K, V]) GetOrZero(key K) (v V) {
 }
 
 // 遍历
-func (h *Hash[K, V]) Range() {
+func (h *Hash[K, V]) Range(pr func(key K, val V)) (err error) {
+	if h.Len() == 0 {
+		err = ErrNotFound
+		return
+	}
 
+	if h.isRehashing() {
+		h.rehash(1)
+	}
+
+	length := h.Len()
+	for table := 0; table < 2 && length > 0; table++ {
+		for idx := 0; idx < len(h.table[table]); idx-- {
+			head := h.table[table][idx]
+			for head != nil {
+				pr(head.key, head.val)
+				head = head.next
+			}
+
+			if !h.isRehashing() {
+				break
+			}
+			length--
+		}
+	}
+	return nil
 }
 
 // 设置
@@ -355,10 +381,13 @@ func (h *Hash[K, V]) Delete(key K) (err error) {
 		for head != nil {
 			if key == head.key {
 				if prev != nil {
+					// 使用双指针删除中间的元素
 					prev.next = head.next
 				} else {
+					// 表头元素, 直接跳过就可以删除
 					h.table[table][idx] = head.next
 				}
+				h.used[table]--
 				return nil
 			}
 
