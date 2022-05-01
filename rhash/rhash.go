@@ -25,9 +25,9 @@ type entry[K comparable, V any] struct {
 
 // hash 表头
 type Hash[K comparable, V any] struct {
-	table   [2][]entry[K, V] //hash table
-	used    [2]uint64        // 记录每个table里面存在的元素个数
-	sizeExp [2]uint64        //记录exp
+	table   [2][]*entry[K, V] //hash table
+	used    [2]uint64         // 记录每个table里面存在的元素个数
+	sizeExp [2]int8           //记录exp
 
 	rehashidx int
 	keySize   int //key的长度
@@ -83,11 +83,11 @@ func (h *Hash[K, V]) isRehashing() bool {
 }
 
 // TODO 这个函数可以优化下
-func nextExp(size uint64) uint64 {
+func nextExp(size uint64) int8 {
 	if size >= math.MaxUint64 {
 		return 63
 	}
-	e := uint64(HT_INITIAL_EXP)
+	e := int8(HT_INITIAL_EXP)
 	for {
 		if 1<<e >= size {
 			return e
@@ -112,11 +112,11 @@ func (h *Hash[K, V]) Resize(size uint64) error {
 	}
 
 	// 新扩容大小和以前的一样
-	if uint64(newSizeExp) == h.sizeExp[0] {
+	if uint64(newSizeExp) == uint64(h.sizeExp[0]) {
 		return nil
 	}
 
-	newTable := make([]entry[K, V], newSize)
+	newTable := make([]*entry[K, V], newSize)
 
 	// 第一次初始化
 	if h.table[0] == nil {
@@ -151,6 +151,66 @@ func (h *Hash[K, V]) ShrinkToFit() error {
 func (h *Hash[K, V]) findIndexAndEntry() (i int, e *entry[K, V]) {
 
 	return
+}
+
+func (h *Hash[K, V]) rehash(n int) error {
+	// 控制桶的个数
+	emptyVisits := n * 10
+
+	// 正在rehashing 就退出
+	if h.isRehashing() {
+		return ErrHashing
+	}
+
+	// n是控制桶数
+	for ; n > 0 && h.used[0] != 0; n-- {
+
+		for h.table[0][h.rehashidx] == nil {
+			h.rehashidx++
+			emptyVisits--
+			if emptyVisits == 0 {
+				return nil
+			}
+		}
+
+		// 取出hash槽中第一个元素
+		head := h.table[0][h.rehashidx]
+		for head != nil {
+			next := head.next
+			newIdx := h.calHash(head.key) & sizeMask(h.sizeExp[1])
+			head.next = h.table[1][newIdx]
+			h.table[1][newIdx] = head
+			h.used[0]--
+			h.used[1]++
+			head = next
+		}
+
+		h.table[0][h.rehashidx] = nil
+		h.rehashidx++
+	}
+
+	if h.used[0] == 0 {
+		h.table[0] = h.table[1]
+		h.used[0] = h.used[1]
+		h.sizeExp[0] = h.sizeExp[1]
+		h.reset(1)
+		h.rehashidx = -1
+	}
+	return nil
+}
+
+func (h *Hash[K, V]) reset(idx int) {
+	h.table[idx] = nil
+	h.sizeExp[idx] = -1
+	h.used[idx] = 0
+}
+
+func sizeMask(exp int8) uint64 {
+	if exp == -1 {
+		return 0
+	}
+
+	return (1 << exp) - 1
 }
 
 // 获取
