@@ -16,8 +16,9 @@ const (
 var forceResizeRatio = 5
 
 var (
-	ErrHashing = errors.New("rehashing...")
-	ErrSize    = errors.New("wrong size")
+	ErrHashing  = errors.New("rehashing...")
+	ErrSize     = errors.New("wrong size")
+	ErrNotFound = errors.New("not found")
 )
 
 // 元素
@@ -177,7 +178,7 @@ func (h *Hash[K, V]) findIndexAndEntry(key K) (i uint64, e *entry[K, V], err err
 
 	hashCode := h.calHash(key)
 	idx := uint64(0)
-	for table := 0; table <= 1; table++ {
+	for table := 0; table < 2; table++ {
 		idx = hashCode & sizeMask(h.sizeExp[table])
 		head := h.table[table][idx]
 		for head != nil {
@@ -200,7 +201,7 @@ func (h *Hash[K, V]) rehash(n int) error {
 	// 控制访问空槽位的个数
 	emptyVisits := n * 10
 
-	// 正在rehashing 就退出
+	// 没有rehashing 就退出
 	if !h.isRehashing() {
 		return ErrHashing
 	}
@@ -265,12 +266,38 @@ func sizeMask(exp int8) uint64 {
 
 // 获取
 func (h *Hash[K, V]) Get(key K) (v V, err error) {
+	if h.Len() == 0 {
+		err = ErrNotFound
+		return
+	}
 
+	if h.isRehashing() {
+		h.rehash(1)
+	}
+
+	hashCode := h.calHash(key)
+	idx := uint64(0)
+	for table := 0; table < 2; table++ {
+		idx = hashCode & sizeMask(h.sizeExp[table])
+		head := h.table[table][idx]
+		for head != nil {
+			if key == head.key {
+				return head.val, nil
+			}
+
+			head = head.next
+		}
+
+		if !h.isRehashing() {
+			break
+		}
+	}
 	return
 }
 
 // 获取
 func (h *Hash[K, V]) GetOrZero(key K) (v V) {
+	v, _ = h.Get(key)
 	return
 }
 
@@ -306,6 +333,10 @@ func (h *Hash[K, V]) Set(k K, v V) error {
 	h.table[idx][index] = e
 	h.used[idx]++
 	return nil
+}
+
+func (h *Hash[K, V]) Len() int {
+	return int(h.used[0] + h.used[1])
 }
 
 // 删除
