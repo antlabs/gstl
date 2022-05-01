@@ -154,7 +154,7 @@ func (h *Hash[K, V]) findIndexAndEntry() (i int, e *entry[K, V]) {
 }
 
 func (h *Hash[K, V]) rehash(n int) error {
-	// 控制桶的个数
+	// 控制访问空槽位的个数
 	emptyVisits := n * 10
 
 	// 正在rehashing 就退出
