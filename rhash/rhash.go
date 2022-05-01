@@ -335,11 +335,44 @@ func (h *Hash[K, V]) Set(k K, v V) error {
 	return nil
 }
 
-func (h *Hash[K, V]) Len() int {
-	return int(h.used[0] + h.used[1])
+// 删除
+func (h *Hash[K, V]) Delete(key K) (err error) {
+	if h.Len() == 0 {
+		err = ErrNotFound
+		return
+	}
+
+	if h.isRehashing() {
+		h.rehash(1)
+	}
+
+	hashCode := h.calHash(key)
+	idx := uint64(0)
+	for table := 0; table < 2; table++ {
+		idx = hashCode & sizeMask(h.sizeExp[table])
+		var prev *entry[K, V]
+		head := h.table[table][idx]
+		for head != nil {
+			if key == head.key {
+				if prev != nil {
+					prev.next = head.next
+				} else {
+					h.table[table][idx] = head.next
+				}
+				return nil
+			}
+
+			prev = head
+			head = head.next
+		}
+
+		if !h.isRehashing() {
+			break
+		}
+	}
+	return nil
 }
 
-// 删除
-func (h *Hash[K, V]) Delete(key K) {
-
+func (h *Hash[K, V]) Len() int {
+	return int(h.used[0] + h.used[1])
 }
