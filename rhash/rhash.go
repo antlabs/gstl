@@ -44,10 +44,15 @@ type Hash[K comparable, V any] struct {
 
 // 初始化一个hashtable
 func New[K comparable, V any]() *Hash[K, V] {
-	return &Hash[K, V]{
+	h := &Hash[K, V]{
 		rehashidx: -1,
 		hashFunc:  xxhash.Sum64String,
 	}
+
+	h.reset(0)
+	h.reset(1)
+	h.keyTypeAndKeySize()
+	return h
 }
 
 // 初始化一个hashtable并且可以设置值
@@ -62,6 +67,7 @@ func (h *Hash[K, V]) keyTypeAndKeySize() {
 	var k K
 	switch (interface{})(k).(type) {
 	case string:
+		h.isKeyStr = true
 	default:
 		h.keySize = int(unsafe.Sizeof(k))
 	}
