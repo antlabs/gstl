@@ -1,4 +1,4 @@
-package rhash
+package rhashmap
 
 // 参考资料
 // https://github.com/redis/redis/blob/unstable/src/dict.c
@@ -30,35 +30,62 @@ type entry[K comparable, V any] struct {
 	next *entry[K, V]
 }
 
+type config struct {
+	hashFunc func(str string) uint64
+	cap      int
+}
+
 // hash 表头
 type Hash[K comparable, V any] struct {
+	// 大多数情况, table[0]里就存在hash表元素的数据
+	// 大小一尘不变hash随着数据的增强效率会降低, rhashmap的实现是超过某阈值时
+	// table[1] 会先放新申请的hash表元素, 当table[0]都移动到table[1]时, table[1]赋值给table[0], 完成一次hash扩容
+	// 移动的操作都分摊到Get, Set, Delete操作中, 每次移动一个槽位, 或者跳运100个空桶(TODO修改代码, 需要修改这边的注释)
 	table   [2][]*entry[K, V] //hash table
 	used    [2]uint64         // 记录每个table里面存在的元素个数
 	sizeExp [2]int8           //记录exp
 
 	rehashidx int // rehashid目前的槽位
 	keySize   int //key的长度
-	hashFunc  func(str string) uint64
-	isKeyStr  bool //是string类型的key, 或者不是
+	config
+	isKeyStr bool //是string类型的key, 或者不是
+	init     bool
 }
 
 // 初始化一个hashtable
 func New[K comparable, V any]() *Hash[K, V] {
-	h := &Hash[K, V]{
-		rehashidx: -1,
-		hashFunc:  xxhash.Sum64String,
-	}
+	h := &Hash[K, V]{}
+	h.Init()
+	return h
+}
+
+func (h *Hash[K, V]) Init() {
+
+	h.rehashidx = -1
+	h.hashFunc = xxhash.Sum64String
+	h.init = true
 
 	h.reset(0)
 	h.reset(1)
 	h.keyTypeAndKeySize()
-	return h
+}
+
+func (h *Hash[K, V]) lazyinit() {
+	if !h.init {
+		h.Init()
+	}
 }
 
 // 初始化一个hashtable并且可以设置值
-func NewWithHashFunc[K comparable, V any](hashFunc func(str string) uint64) *Hash[K, V] {
+func NewWithOpt[K comparable, V any](opts ...Option) *Hash[K, V] {
 	h := New[K, V]()
-	h.hashFunc = hashFunc
+	for _, o := range opts {
+		o.apply(&h.config)
+	}
+
+	if h.cap > 0 {
+		h.Resize(uint64(h.cap))
+	}
 	return h
 }
 
@@ -130,6 +157,7 @@ func (h *Hash[K, V]) expand() error {
 
 // 手动修改hashtable的大小
 func (h *Hash[K, V]) Resize(size uint64) error {
+	h.lazyinit()
 	// 如果正在扩容中, 或者需要扩容的数据小于已存在的元素, 直接返回
 	if h.isRehashing() || h.used[0] > uint64(size) {
 		return ErrHashing
@@ -166,6 +194,7 @@ func (h *Hash[K, V]) Resize(size uint64) error {
 
 // 收缩hash table
 func (h *Hash[K, V]) ShrinkToFit() error {
+	h.lazyinit()
 	if h.isRehashing() {
 		return ErrHashing
 	}
@@ -246,6 +275,7 @@ func (h *Hash[K, V]) rehash(n int) error {
 		h.used[0] = h.used[1]
 		h.sizeExp[0] = h.sizeExp[1]
 		h.reset(1)
+		// 这里重装置为-1
 		h.rehashidx = -1
 	}
 	return nil
@@ -322,17 +352,18 @@ func (h *Hash[K, V]) Range(pr func(key K, val V)) (err error) {
 
 	length := h.Len()
 	for table := 0; table < 2 && length > 0; table++ {
-		for idx := 0; idx < len(h.table[table]); idx-- {
+
+		for idx := 0; idx < len(h.table[table]); idx++ {
 			head := h.table[table][idx]
 			for head != nil {
 				pr(head.key, head.val)
 				head = head.next
 			}
 
-			if !h.isRehashing() {
-				break
-			}
 			length--
+		}
+		if !h.isRehashing() {
+			break
 		}
 	}
 	return nil
@@ -340,6 +371,7 @@ func (h *Hash[K, V]) Range(pr func(key K, val V)) (err error) {
 
 // 设置
 func (h *Hash[K, V]) Set(k K, v V) error {
+	h.lazyinit()
 	if h.isRehashing() {
 		h.rehash(1)
 	}
@@ -365,6 +397,11 @@ func (h *Hash[K, V]) Set(k K, v V) error {
 	h.table[idx][index] = e
 	h.used[idx]++
 	return nil
+}
+
+// Remove是delete别名
+func (h *Hash[K, V]) Remove(key K) (err error) {
+	return h.Delete(key)
 }
 
 // 删除
@@ -408,6 +445,7 @@ func (h *Hash[K, V]) Delete(key K) (err error) {
 	return nil
 }
 
+// 测试长度
 func (h *Hash[K, V]) Len() int {
 	return int(h.used[0] + h.used[1])
 }
