@@ -36,7 +36,7 @@ type config struct {
 }
 
 // hash 表头
-type Hash[K comparable, V any] struct {
+type HashMap[K comparable, V any] struct {
 	// 大多数情况, table[0]里就存在hash表元素的数据
 	// 大小一尘不变hash随着数据的增强效率会降低, rhashmap的实现是超过某阈值时
 	// table[1] 会先放新申请的hash表元素, 当table[0]都移动到table[1]时, table[1]赋值给table[0], 完成一次hash扩容
@@ -53,13 +53,13 @@ type Hash[K comparable, V any] struct {
 }
 
 // 初始化一个hashtable
-func New[K comparable, V any]() *Hash[K, V] {
-	h := &Hash[K, V]{}
+func New[K comparable, V any]() *HashMap[K, V] {
+	h := &HashMap[K, V]{}
 	h.Init()
 	return h
 }
 
-func (h *Hash[K, V]) Init() {
+func (h *HashMap[K, V]) Init() {
 
 	h.rehashidx = -1
 	h.hashFunc = xxhash.Sum64String
@@ -70,14 +70,14 @@ func (h *Hash[K, V]) Init() {
 	h.keyTypeAndKeySize()
 }
 
-func (h *Hash[K, V]) lazyinit() {
+func (h *HashMap[K, V]) lazyinit() {
 	if !h.init {
 		h.Init()
 	}
 }
 
 // 初始化一个hashtable并且可以设置值
-func NewWithOpt[K comparable, V any](opts ...Option) *Hash[K, V] {
+func NewWithOpt[K comparable, V any](opts ...Option) *HashMap[K, V] {
 	h := New[K, V]()
 	for _, o := range opts {
 		o.apply(&h.config)
@@ -90,7 +90,7 @@ func NewWithOpt[K comparable, V any](opts ...Option) *Hash[K, V] {
 }
 
 // 保存key的类型和key的长度
-func (h *Hash[K, V]) keyTypeAndKeySize() {
+func (h *HashMap[K, V]) keyTypeAndKeySize() {
 	var k K
 	switch (interface{})(k).(type) {
 	case string:
@@ -101,7 +101,7 @@ func (h *Hash[K, V]) keyTypeAndKeySize() {
 }
 
 // 计算hash值
-func (h *Hash[K, V]) calHash(k K) uint64 {
+func (h *HashMap[K, V]) calHash(k K) uint64 {
 	var key string
 
 	if h.isKeyStr {
@@ -118,7 +118,7 @@ func (h *Hash[K, V]) calHash(k K) uint64 {
 	return xxhash.Sum64String(key)
 }
 
-func (h *Hash[K, V]) isRehashing() bool {
+func (h *HashMap[K, V]) isRehashing() bool {
 	return h.rehashidx != -1
 }
 
@@ -139,7 +139,7 @@ func nextExp(size uint64) int8 {
 	return e
 }
 
-func (h *Hash[K, V]) expand() error {
+func (h *HashMap[K, V]) expand() error {
 	if h.isRehashing() {
 		return nil
 	}
@@ -156,7 +156,7 @@ func (h *Hash[K, V]) expand() error {
 }
 
 // 手动修改hashtable的大小
-func (h *Hash[K, V]) Resize(size uint64) error {
+func (h *HashMap[K, V]) Resize(size uint64) error {
 	h.lazyinit()
 	// 如果正在扩容中, 或者需要扩容的数据小于已存在的元素, 直接返回
 	if h.isRehashing() || h.used[0] > uint64(size) {
@@ -193,7 +193,7 @@ func (h *Hash[K, V]) Resize(size uint64) error {
 }
 
 // 收缩hash table
-func (h *Hash[K, V]) ShrinkToFit() error {
+func (h *HashMap[K, V]) ShrinkToFit() error {
 	h.lazyinit()
 	if h.isRehashing() {
 		return ErrHashing
@@ -208,7 +208,7 @@ func (h *Hash[K, V]) ShrinkToFit() error {
 }
 
 // 返回索引值和entry
-func (h *Hash[K, V]) findIndexAndEntry(key K) (i uint64, e *entry[K, V], err error) {
+func (h *HashMap[K, V]) findIndexAndEntry(key K) (i uint64, e *entry[K, V], err error) {
 	if err := h.expand(); err != nil {
 		return 0, nil, err
 	}
@@ -234,7 +234,7 @@ func (h *Hash[K, V]) findIndexAndEntry(key K) (i uint64, e *entry[K, V], err err
 	return idx, nil, nil
 }
 
-func (h *Hash[K, V]) rehash(n int) error {
+func (h *HashMap[K, V]) rehash(n int) error {
 	// 控制访问空槽位的个数
 	emptyVisits := n * 10
 
@@ -281,7 +281,7 @@ func (h *Hash[K, V]) rehash(n int) error {
 	return nil
 }
 
-func (h *Hash[K, V]) reset(idx int) {
+func (h *HashMap[K, V]) reset(idx int) {
 	h.table[idx] = nil
 	h.sizeExp[idx] = -1
 	h.used[idx] = 0
@@ -303,7 +303,7 @@ func sizeMask(exp int8) uint64 {
 }
 
 // 获取
-func (h *Hash[K, V]) Get(key K) (v V, err error) {
+func (h *HashMap[K, V]) Get(key K) (v V, err error) {
 	if h.Len() == 0 {
 		err = ErrNotFound
 		return
@@ -334,13 +334,13 @@ func (h *Hash[K, V]) Get(key K) (v V, err error) {
 }
 
 // 获取
-func (h *Hash[K, V]) GetOrZero(key K) (v V) {
+func (h *HashMap[K, V]) GetOrZero(key K) (v V) {
 	v, _ = h.Get(key)
 	return
 }
 
 // 遍历
-func (h *Hash[K, V]) Range(pr func(key K, val V)) (err error) {
+func (h *HashMap[K, V]) Range(pr func(key K, val V)) (err error) {
 	if h.Len() == 0 {
 		err = ErrNotFound
 		return
@@ -370,7 +370,7 @@ func (h *Hash[K, V]) Range(pr func(key K, val V)) (err error) {
 }
 
 // 设置
-func (h *Hash[K, V]) Set(k K, v V) error {
+func (h *HashMap[K, V]) Set(k K, v V) error {
 	h.lazyinit()
 	if h.isRehashing() {
 		h.rehash(1)
@@ -400,12 +400,12 @@ func (h *Hash[K, V]) Set(k K, v V) error {
 }
 
 // Remove是delete别名
-func (h *Hash[K, V]) Remove(key K) (err error) {
+func (h *HashMap[K, V]) Remove(key K) (err error) {
 	return h.Delete(key)
 }
 
 // 删除
-func (h *Hash[K, V]) Delete(key K) (err error) {
+func (h *HashMap[K, V]) Delete(key K) (err error) {
 	if h.Len() == 0 {
 		err = ErrNotFound
 		return
@@ -446,6 +446,6 @@ func (h *Hash[K, V]) Delete(key K) (err error) {
 }
 
 // 测试长度
-func (h *Hash[K, V]) Len() int {
+func (h *HashMap[K, V]) Len() int {
 	return int(h.used[0] + h.used[1])
 }

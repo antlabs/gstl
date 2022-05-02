@@ -53,6 +53,20 @@ func Test_SetGet_IntString(t *testing.T) {
 }
 
 // 1. set get测试
+func Test_SetGet_IntString_Lazyinit(t *testing.T) {
+	var hm HashMap[int, string]
+	hm.Set(1, "hello")
+	hm.Set(2, "world")
+	hm.Set(3, "ni")
+	hm.Set(4, "hao")
+
+	assert.Equal(t, hm.GetOrZero(1), "hello")
+	assert.Equal(t, hm.GetOrZero(2), "world")
+	assert.Equal(t, hm.GetOrZero(3), "ni")
+	assert.Equal(t, hm.GetOrZero(4), "hao")
+}
+
+// 1. set get测试
 // 设计重复key
 func Test_SetGet_Replace_IntString(t *testing.T) {
 	hm := New[int, string]()
