@@ -91,6 +91,36 @@ func Test_SetGet_Zero(t *testing.T) {
 	}
 }
 
+// 1. set get测试
+// 测试重复key
+func Test_SetGet_NotFound(t *testing.T) {
+	hm := New[int, string]()
+	hm.Set(1, "hello")
+	hm.Set(1, "world")
+
+	_, err := hm.Get(3)
+
+	assert.Error(t, err)
+	assert.Equal(t, hm.GetOrZero(1), "world")
+}
+
+// 1. set get测试
+// 测试
+func Test_SetGet_Rehashing(t *testing.T) {
+	hm := New[int, string]()
+	hm.Set(1, "hello")
+	hm.Set(2, "world")
+	hm.Set(3, "hello")
+	hm.Set(4, "world")
+	hm.Set(5, "world")
+
+	_, err := hm.Get(7)
+
+	assert.Error(t, err)
+	assert.Equal(t, hm.GetOrZero(1), "hello")
+
+}
+
 // 测试Len接口
 func Test_Len(t *testing.T) {
 	hm := New[int, int]()
@@ -117,6 +147,23 @@ func Test_Delete(t *testing.T) {
 }
 
 // 2. 测试删除功能
+func Test_Delete_NotFound(t *testing.T) {
+	hm := New[int, int]()
+
+	max := 4 //不要修改4
+	for i := 0; i < max; i++ {
+		hm.Set(i, i)
+	}
+
+	hm.Delete(max + 1)
+	for i := 0; i < max; i++ {
+		hm.Delete(i)
+	}
+
+	assert.Equal(t, hm.Len(), 0)
+}
+
+// 2. 测试删除功能
 func Test_Delete_Empty(t *testing.T) {
 	hm := New[int, int]()
 
@@ -125,6 +172,7 @@ func Test_Delete_Empty(t *testing.T) {
 	assert.Equal(t, hm.Len(), 0)
 }
 
+// 3. 测试Range
 func Test_Range(t *testing.T) {
 	max := 100
 	hm := NewWithOpt[int, int](WithCap(max))
@@ -142,4 +190,56 @@ func Test_Range(t *testing.T) {
 
 	sort.Ints(got)
 	assert.Equal(t, need, got)
+}
+
+// 3. 测试Range
+func Test_Range_Zero(t *testing.T) {
+	max := 0
+	hm := New[int, int]()
+	need := []int{}
+
+	assert.Equal(t, hm.Len(), max)
+	got := make([]int, 0, max)
+	hm.Range(func(key int, val int) {
+		got = append(got, key, val)
+	})
+
+	sort.Ints(got)
+	assert.Equal(t, need, got)
+}
+func Test_Range_Rehasing(t *testing.T) {
+	max := 5
+	hm := New[int, int]()
+	need := []int{}
+	for i := 0; i < max; i++ {
+		hm.Set(i, i)
+		need = append(need, i, i)
+	}
+
+	assert.Equal(t, hm.Len(), max)
+	got := make([]int, 0, max)
+	hm.Range(func(key int, val int) {
+		got = append(got, key, val)
+	})
+
+	sort.Ints(got)
+	assert.Equal(t, need, got)
+}
+
+// 测试shrink
+func Test_Range_ShrinkToFit(t *testing.T) {
+	hm := New[int, int]()
+
+	max := 3333
+	for i := 0; i < max; i++ {
+		hm.Set(i, i)
+	}
+
+	for i := 0; i < max; i++ {
+		hm.Delete(i)
+	}
+
+	err := hm.ShrinkToFit()
+	assert.NoError(t, err)
+	assert.Equal(t, hm.Len(), 0)
 }

@@ -330,6 +330,7 @@ func (h *HashMap[K, V]) Get(key K) (v V, err error) {
 			break
 		}
 	}
+	err = ErrNotFound
 	return
 }
 
