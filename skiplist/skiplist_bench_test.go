@@ -5,6 +5,15 @@ import (
 	"testing"
 )
 
+// goos: darwin
+// goarch: amd64
+// pkg: github.com/guonaihong/gstl/skiplist
+// cpu: Intel(R) Core(TM) i7-1068NG7 CPU @ 2.30GHz
+// BenchmarkGet-8
+// 1000000000	         0.7430 ns/op	       0 B/op	       0 allocs/op
+// PASS
+// ok  	github.com/guonaihong/gstl/skiplist	114.326s
+
 func intCmp(a, b float64) int {
 	switch {
 	case a < b:
