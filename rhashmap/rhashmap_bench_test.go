@@ -15,7 +15,6 @@ import (
 // ok   github.com/guonaihong/gstl/rhashmap 130.007s.
 // 比标准库快一倍.
 
-
 // 五百万数据的Get操作时间
 func BenchmarkGet(b *testing.B) {
 	max := 1000000.0 * 5
