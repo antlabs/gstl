@@ -384,11 +384,13 @@ func (h *HashMap[K, V]) Set(k K, v V) error {
 
 	idx := 0
 	if h.isRehashing() {
+		//如果在rehasing过程中, 如果这个key是第一次存入到hash table, 优先写入到新hash table中
 		idx = 1
 	}
 
+	// element存在, 这里是替换
 	if e != nil {
-		e.key = k
+		//e.key = k
 		e.val = v
 		return nil
 	}
