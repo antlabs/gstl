@@ -7,8 +7,10 @@ import (
 
 //btree头结点
 type Btree[K constraints.Ordered, V any] struct {
-	count int         //当前元素个数
-	root  *node[K, V] // root结点指针
+	count    int         //当前元素个数
+	root     *node[K, V] // root结点指针
+	maxItems int
+	minItems int
 }
 
 // 元素
@@ -21,6 +23,23 @@ type pair[K constraints.Ordered, V any] struct {
 type node[K constraints.Ordered, V any] struct {
 	items    *vec.Vec[pair[K, V]]  //存放元素的节点
 	children *vec.Vec[*node[K, V]] //孩子节点
+}
+
+func (n *node[K, V]) leaf() bool {
+	return n.children == nil || n.children.Len() == 0
+}
+
+func New[K constraints.Ordered, V any](degree int) *Btree[K, V] {
+
+	if degree == 0 {
+		degree = 128 //拍脑袋给的
+	}
+
+	maxItems := degree*2 - 1 // max items per node. max children is +1
+	return &Btree[K, V]{
+		maxItems: maxItems,
+		minItems: maxItems / 2,
+	}
 }
 
 // 设置接口, 如果有这个值, 有值就替换, 没有就新加
@@ -55,7 +74,20 @@ func (b *Btree[K, V]) find(n *node[K, V], key K) (index int, found bool) {
 }
 
 //
-func (b *Btree[K, V]) nodeSet() (old V, needSplit bool) {
+func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (old V, needSplit bool) {
+	i, found := b.find(n, item.key)
+	// 找到位置直接替换
+	if found {
+		oldPtr := n.items.Get(i)
+		old = oldPtr.val
+		oldPtr.val = item.val
+	}
+
+	// 如果是叶子节点
+	if n.leaf() {
+
+	}
+
 	return
 }
 

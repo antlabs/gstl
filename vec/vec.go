@@ -161,6 +161,12 @@ func (v *Vec[T]) Get(index int) (e T) {
 	return slice[index]
 }
 
+// 获取指定索引的指针
+func (v *Vec[T]) GetPtr(index int) (e *T) {
+	slice := v.ToSlice()
+	return &slice[index]
+}
+
 // 设置指定索引的值
 func (v *Vec[T]) Set(index int, value T) *Vec[T] {
 	v.ToSlice()[index] = value
