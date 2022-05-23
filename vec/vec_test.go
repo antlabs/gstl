@@ -258,3 +258,14 @@ func Test_ExtendWith(t *testing.T) {
 func Test_Resize(t *testing.T) {
 	assert.Equal(t, WithCapacity[string](10).Push("goto").Resize(3, "hello").ToSlice(), []string{"goto", "hello", "hello"})
 }
+
+func Test_Search(t *testing.T) {
+
+	assert.Equal(t, New(1, 2, 3, 4, 5, 6, 7).SearchFunc(func(e int) bool { return 7 <= e }), 6)
+	assert.Equal(t, New(1, 2, 3, 4, 5, 6, 7).SearchFunc(func(e int) bool { return 6 <= e }), 5)
+	assert.Equal(t, New(1, 2, 3, 4, 5, 6, 7).SearchFunc(func(e int) bool { return 5 <= e }), 4)
+	assert.Equal(t, New(1, 2, 3, 4, 5, 6, 7).SearchFunc(func(e int) bool { return 4 <= e }), 3)
+	assert.Equal(t, New(1, 2, 3, 4, 5, 6, 7).SearchFunc(func(e int) bool { return 3 <= e }), 2)
+	assert.Equal(t, New(1, 2, 3, 4, 5, 6, 7).SearchFunc(func(e int) bool { return 2 <= e }), 1)
+	assert.Equal(t, New(1, 2, 3, 4, 5, 6, 7).SearchFunc(func(e int) bool { return 1 <= e }), 0)
+}

@@ -24,10 +24,10 @@ type node[K constraints.Ordered, V any] struct {
 }
 
 // 设置接口, 如果有这个值, 有值就替换, 没有就新加
-func (b *Btree[K, V]) Set(k K, v V) (err error) {
+func (b *Btree[K, V]) Set(k K, v V) *Btree[K, V] {
 
-	_, err = b.SetWithOld(k, v)
-	return err
+	_, _ = b.SetWithOld(k, v)
+	return b
 }
 
 // 新建一个节点
@@ -44,8 +44,13 @@ func (b *Btree[K, V]) newLeaf() *node[K, V] {
 	return b.newNode(true)
 }
 
+//
+func (b *Btree[K, V]) nodeSet() (old V, needSplit bool) {
+	return
+}
+
 // 设置接口, 如果有值, 把old值带返回, 并且被替换, 没有就新加
-func (b *Btree[K, V]) SetWithOld(k K, v V) (old V, err error) {
+func (b *Btree[K, V]) SetWithOld(k K, v V) (old V, replaced bool) {
 
 	// 如果是每一个节点, 直接加入到root节点
 	if b.root == nil {
