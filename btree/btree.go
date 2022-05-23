@@ -44,6 +44,16 @@ func (b *Btree[K, V]) newLeaf() *node[K, V] {
 	return b.newNode(true)
 }
 
+func (b *Btree[K, V]) find(n *node[K, V], key K) (index int, found bool) {
+
+	index = n.items.SearchFunc(func(elem pair[K, V]) bool { return key <= elem.key })
+	if index > 0 && n.items.Get(index-1).key > key {
+		return index - 1, true
+	}
+
+	return index, false
+}
+
 //
 func (b *Btree[K, V]) nodeSet() (old V, needSplit bool) {
 	return
