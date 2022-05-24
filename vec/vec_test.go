@@ -88,6 +88,8 @@ func Test_Delete(t *testing.T) {
 func Test_Insert(t *testing.T) {
 	assert.Equal(t, New[int](1, 7).Insert(1, 2, 3, 4, 5, 6).ToSlice(), []int{1, 2, 3, 4, 5, 6, 7})
 	assert.Equal(t, New("world", "12345").Insert(0, "hello").ToSlice(), []string{"hello", "world", "12345"})
+	assert.Equal(t, New("hello", "12345").Insert(1, "world").ToSlice(), []string{"hello", "world", "12345"})
+	assert.Equal(t, New("hello", "12345").Insert(2, "world").ToSlice(), []string{"hello", "12345", "world"})
 }
 
 // map函数, 修改函数里面的值, 不修改长度

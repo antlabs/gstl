@@ -32,7 +32,7 @@ func (n *node[K, V]) leaf() bool {
 func New[K constraints.Ordered, V any](degree int) *Btree[K, V] {
 
 	if degree == 0 {
-		degree = 128 //拍脑袋给的
+		degree = 128 //拍脑袋给的, 需要压测下
 	}
 
 	maxItems := degree*2 - 1 // max items per node. max children is +1
@@ -73,21 +73,54 @@ func (b *Btree[K, V]) find(n *node[K, V], key K) (index int, found bool) {
 	return index, false
 }
 
+// 分裂结点
+func (b *Btree[K, V]) nodeSplit(n *node[K, V]) (right *node[K, V], median pair[K, V]) {
+	i := b.maxItems / 2
+	median = n.items.Get(i)
+
+	// 新的左孩子就是n节点
+	rightItems := n.items.SplitOff(i + 1)
+	n.items.SetLen(n.items.Len() - 1)
+	// 当前节点还有下层节点, 也要左右分家
+	right = b.newNode(n.leaf())
+	right.items = rightItems
+	if !n.leaf() {
+		right.children = n.children.SplitOff(i + 2)
+	}
+
+	return
+}
+
 //
-func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (old V, needSplit bool) {
+func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (old V, replaced bool, needSplit bool) {
 	i, found := b.find(n, item.key)
 	// 找到位置直接替换
 	if found {
-		oldPtr := n.items.Get(i)
+		oldPtr := n.items.GetPtr(i)
 		old = oldPtr.val
 		oldPtr.val = item.val
+		return old, true, false
 	}
 
 	// 如果是叶子节点
 	if n.leaf() {
-
+		// 没有位置插入新元素, 上层节点需要分裂
+		if n.items.Len() == b.maxItems {
+			needSplit = true
+			return
+		}
+		n.items.Insert(i, item)
+		return
 	}
 
+	if needSplit {
+		// 没有位置插入新元素, 上层节点需要分裂
+		if n.items.Len() == b.maxItems {
+
+			needSplit = true
+			return
+		}
+	}
 	return
 }
 

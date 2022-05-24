@@ -119,10 +119,11 @@ func (v *Vec[T]) ToSlice() []T {
 }
 
 // 往指定位置插入元素, 后面的元素往右移动
-// i是索引位置, es可以是单个值和多个值
+// i是位置, es可以是单个值和多个值
 func (v *Vec[T]) Insert(i int, es ...T) *Vec[T] {
 	l := v.Len()
 	if i == l {
+		// slice=1 2 3 4 insert(4, 5), result=1 2 3 4 5
 		v.Push(es...)
 		return v
 	}
@@ -138,11 +139,13 @@ func (v *Vec[T]) Insert(i int, es ...T) *Vec[T] {
 
 	slice := v.ToSlice()
 
-	//重置下newSlice len
-	newSlice := slice[:l+len(es)]
-	copy(newSlice[i+len(es):], slice[i:])
-	copy(newSlice[i:], es)
+	// 插入之前: hello world
+	// 插入之后: hello es world
+	newSlice := slice[:need]
+	copy(newSlice[i+len(es):], slice[i:]) //先往后挪
+	copy(newSlice[i:], es)                //拷贝到i指定的位置
 
+	// TODO 需要压测下, 这种写法是否慢
 	*v = *New(newSlice...)
 	return v
 }
