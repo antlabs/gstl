@@ -113,6 +113,7 @@ func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (old V, replaced b
 		return
 	}
 
+	old, replaced, needSplit = b.nodeSet(n.children.Get(i), item)
 	if needSplit {
 		// 没有位置插入新元素, 上层节点需要分裂
 		if n.items.Len() == b.maxItems {
@@ -120,6 +121,10 @@ func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (old V, replaced b
 			needSplit = true
 			return
 		}
+
+		right, median := b.nodeSplit(n.children.Get(i))
+		n.children.Insert(i, right) // TODO debug
+		n.items.Insert(i, median)   // TODO debug
 	}
 	return
 }
