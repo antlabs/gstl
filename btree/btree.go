@@ -1,9 +1,12 @@
 package btree
 
 import (
+	"errors"
 	"github.com/guonaihong/gstl/vec"
 	"golang.org/x/exp/constraints"
 )
+
+var ErrNotFound = errors.New("btree not found")
 
 //btree头结点
 type Btree[K constraints.Ordered, V any] struct {
@@ -143,6 +146,26 @@ func (b *Btree[K, V]) SetWithOld(k K, v V) (old V, replaced bool) {
 	return
 }
 
-func (b *Btree[K, V]) Get() {
+// 找到err为nil
+// 找不到err为ErrNotFound
+func (b *Btree[K, V]) Get(k K) (v V, err error) {
+	if b.root == nil {
+		err = ErrNotFound
+		return
+	}
 
+	n := b.root
+	for {
+		i, found := b.find(n, k)
+		if found {
+			return n.items.Get(i).val, nil
+		}
+
+		if n.leaf() {
+			err = ErrNotFound
+			return
+		}
+
+		n = (*n.children)[i]
+	}
 }
