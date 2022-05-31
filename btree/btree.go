@@ -2,7 +2,6 @@ package btree
 
 import (
 	"errors"
-	"github.com/guonaihong/gstl/must"
 	"github.com/guonaihong/gstl/vec"
 	"golang.org/x/exp/constraints"
 )
@@ -198,6 +197,38 @@ func (b *Btree[K, V]) rebalance(n *node[K, V], i int) {
 	} else if left.items.Len() > right.items.Len() {
 
 		right.items.Insert(0, n.items.Get(i))
-		n.items.Set(i, must.Take(left.items.Last()))
+		last, err := left.items.Pop()
+		if err != nil {
+			panic(err.Error())
+		}
+
+		n.items.Set(i, last)
+
+		if !left.leaf() {
+
+			last, err := left.children.Pop()
+			if err != nil {
+				panic(err.Error())
+			}
+			right.children.Insert(0, last)
+		}
+	} else {
+
+		left.items.Push(n.items.Get(i))
+		first, err := right.items.PopFront()
+		if err != nil {
+			panic(err.Error())
+		}
+
+		n.items.Set(i, first)
+
+		if !left.leaf() {
+			first, err := right.children.PopFront()
+			if err != nil {
+				panic(err.Error())
+			}
+
+			left.children.Push(first)
+		}
 	}
 }

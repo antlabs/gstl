@@ -92,6 +92,11 @@ func (v *Vec[T]) Append(other *Vec[T]) *Vec[T] {
 	return v
 }
 
+// 删除vec第一个元素, 并返回它, 和TakeFirst是同义词的关系
+func (v *Vec[T]) PopFront() (e T, err error) {
+	return v.TakeFirst()
+}
+
 // 从尾巴弹出
 func (v *Vec[T]) Pop() (e T, err error) {
 	l := v.Len()
