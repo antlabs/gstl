@@ -178,6 +178,14 @@ func (b *Btree[K, V]) Delete(k K) *Btree[K, V] {
 	return b
 }
 
+func (b *Btree[K, V]) delete(n *node[K, V]) {
+
+	var i int
+	if n.children.Get(i).items.Len() < b.minItems {
+		b.rebalance(n, i)
+	}
+}
+
 func (b *Btree[K, V]) rebalance(n *node[K, V], i int) {
 	if i == n.items.Len() {
 		panic("看下什么情况会触发")
@@ -231,4 +239,25 @@ func (b *Btree[K, V]) rebalance(n *node[K, V], i int) {
 			left.children.Push(first)
 		}
 	}
+}
+
+func (b *Btree[K, V]) Range(callback func(k K, v V) bool) *Btree[K, V] {
+	if b.root == nil {
+		return b
+	}
+
+	b.root.rangeInner(callback)
+	return b
+}
+
+func (n *node[K, V]) rangeInner(callback func(k K, v V) bool) bool {
+
+	if n.leaf() {
+		n.items.Range(func(_ int, p pair[K, V]) bool {
+			return callback(p.key, p.val)
+		})
+		return true
+	}
+
+	return false
 }

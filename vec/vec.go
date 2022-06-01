@@ -481,6 +481,17 @@ func (v *Vec[T]) SearchFunc(f func(T) bool) int {
 	return i
 }
 
+// 遍历
+func (v *Vec[T]) Range(callback func(index int, v T) bool) *Vec[T] {
+	slice := v.ToSlice()
+	for i, val := range slice {
+		if !callback(i, val) {
+			return v
+		}
+	}
+	return v
+}
+
 func getCap(l int) int {
 	return int(float64(l) * coefficient)
 }
