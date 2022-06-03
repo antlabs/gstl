@@ -179,12 +179,51 @@ func (b *Btree[K, V]) Delete(k K) *Btree[K, V] {
 	return b
 }
 
-func (b *Btree[K, V]) delete(n *node[K, V]) {
+func (b *Btree[K, V]) delete(n *node[K, V], max bool, k K) (prev pair[K, V], deleted bool) {
 
 	var i int
+	var found bool
+
+	var emptykv pair[K, V]
+	if max {
+		i, found = n.items.Len()-1, true
+	} else {
+		i, found = b.find(n, k)
+	}
+
+	if n.leaf() && !found {
+		return emptykv, false
+	}
+
+	if found {
+		if n.leaf() {
+			prev = n.items.Get(i)
+			n.items.Remove(i)
+			return prev, true
+		}
+
+		var emptyKey K
+		if max {
+			prev, deleted = b.delete(n.children.Get(i), true, emptyKey)
+			i++
+		} else {
+			prev = n.items.Get(i)
+			maxItems, _ := b.delete(n.children.Get(i), true, emptyKey)
+			deleted = false
+			n.items.Set(i, maxItems)
+
+		}
+	} else {
+		prev, deleted = b.delete(n.children.Get(i), max, k)
+	}
+	if !deleted {
+		return emptykv, false
+	}
+
 	if n.children.Get(i).items.Len() < b.minItems {
 		b.rebalance(n, i)
 	}
+	return prev, true
 }
 
 func (b *Btree[K, V]) rebalance(n *node[K, V], i int) {
