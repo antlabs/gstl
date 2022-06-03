@@ -2,6 +2,7 @@ package btree
 
 import (
 	"errors"
+	"github.com/guonaihong/gstl/must"
 	"github.com/guonaihong/gstl/vec"
 	"golang.org/x/exp/constraints"
 )
@@ -241,7 +242,9 @@ func (b *Btree[K, V]) rebalance(n *node[K, V], i int) {
 	}
 }
 
+// 遍历b tree
 func (b *Btree[K, V]) Range(callback func(k K, v V) bool) *Btree[K, V] {
+	// 遍历
 	if b.root == nil {
 		return b
 	}
@@ -250,14 +253,38 @@ func (b *Btree[K, V]) Range(callback func(k K, v V) bool) *Btree[K, V] {
 	return b
 }
 
+// 遍历b tree
 func (n *node[K, V]) rangeInner(callback func(k K, v V) bool) bool {
 
 	if n.leaf() {
-		n.items.Range(func(_ int, p pair[K, V]) bool {
+
+		cycle := false
+		n.items.Range(func(_ int, p pair[K, V]) (rv bool) {
+			defer func() {
+				cycle = rv
+			}()
+
 			return callback(p.key, p.val)
 		})
-		return true
+
+		return cycle
 	}
 
-	return false
+	cycle := false
+	n.items.Range(func(index int, p pair[K, V]) (rv bool) {
+		defer func() {
+			cycle = rv
+		}()
+		// 这里不停递归向叶子节点的方向走去
+		return n.children.Get(index).rangeInner(func(k K, v V) bool {
+			return callback(p.key, p.val)
+		})
+
+	})
+
+	if !cycle {
+		return false
+	}
+
+	return must.TakeOne(n.children.Last()).rangeInner(callback)
 }

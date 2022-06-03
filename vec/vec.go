@@ -481,7 +481,7 @@ func (v *Vec[T]) SearchFunc(f func(T) bool) int {
 	return i
 }
 
-// 遍历
+// 遍历, callback 返回false就停止遍历, 返回true继续遍历
 func (v *Vec[T]) Range(callback func(index int, v T) bool) *Vec[T] {
 	slice := v.ToSlice()
 	for i, val := range slice {
