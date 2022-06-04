@@ -96,14 +96,14 @@ func (b *Btree[K, V]) nodeSplit(n *node[K, V]) (right *node[K, V], median pair[K
 }
 
 //
-func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (old V, replaced bool, needSplit bool) {
+func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (prev V, replaced bool, needSplit bool) {
 	i, found := b.find(n, item.key)
 	// 找到位置直接替换
 	if found {
-		oldPtr := n.items.GetPtr(i)
-		old = oldPtr.val
-		oldPtr.val = item.val
-		return old, true, false
+		prevPtr := n.items.GetPtr(i)
+		prev = prevPtr.val
+		prevPtr.val = item.val
+		return prev, true, false
 	}
 
 	// 如果是叶子节点
@@ -117,7 +117,7 @@ func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (old V, replaced b
 		return
 	}
 
-	old, replaced, needSplit = b.nodeSet(n.children.Get(i), item)
+	prev, replaced, needSplit = b.nodeSet(n.children.Get(i), item)
 	if needSplit {
 		// 没有位置插入新元素, 上层节点需要分裂
 		if n.items.Len() == b.maxItems {
@@ -134,16 +134,35 @@ func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (old V, replaced b
 }
 
 // 设置接口, 如果有值, 把prev值带返回, 并且被替换, 没有就新加
-func (b *Btree[K, V]) SetWithPrev(k K, v V) (old V, replaced bool) {
-
+func (b *Btree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
+	item := pair[K, V]{key: k, val: v}
 	// 如果是每一个节点, 直接加入到root节点
 	if b.root == nil {
 		b.root = b.newLeaf()
-		b.root.items.Push(pair[K, V]{key: k, val: v})
+		if b.root.items == nil {
+			b.root.items = vec.New[pair[K, V]]()
+		}
+		b.root.items.Push(item)
 		b.count = 1
 		return
 	}
 
+	prev, replaced, needSplit := b.nodeSet(b.root, item)
+	if needSplit {
+		left := b.root
+		right, median := b.nodeSplit(left)
+		b.root = b.newNode(false)
+		if b.root.children == nil {
+			b.root.children = vec.WithCapacity[*node[K, V]](b.maxItems + 1)
+		}
+		b.root.children.Push(left, right)
+		b.root.items.Push(median)
+		return b.SetWithPrev(item.key, item.val)
+	}
+
+	if replaced {
+		return prev, true
+	}
 	return
 }
 
@@ -184,6 +203,14 @@ func (b *Btree[K, V]) DeleteWithPrev(k K) (prev V, deleted bool) {
 	prevPair, deleted := b.delete(b.root, false, k)
 	if !deleted {
 		return
+	}
+
+	if b.root.items.Len() == 0 && !b.root.leaf() {
+		var err error
+		b.root, err = b.root.children.PopFront()
+		if err != nil {
+			panic(err.Error())
+		}
 	}
 
 	b.count--
