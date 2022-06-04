@@ -2,6 +2,7 @@ package btree
 
 import (
 	"errors"
+	"fmt"
 	"github.com/guonaihong/gstl/must"
 	"github.com/guonaihong/gstl/vec"
 	"golang.org/x/exp/constraints"
@@ -82,6 +83,7 @@ func (b *Btree[K, V]) nodeSplit(n *node[K, V]) (right *node[K, V], median pair[K
 	i := b.maxItems / 2
 	median = n.items.Get(i)
 
+	fmt.Printf("nodeSplit:%#v ##%d:%d\n", n.items, i, n.items.Len())
 	// 新的左孩子就是n节点
 	rightItems := n.items.SplitOff(i + 1)
 	n.items.SetLen(n.items.Len() - 1)
@@ -157,7 +159,11 @@ func (b *Btree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 			b.root.children = vec.WithCapacity[*node[K, V]](b.maxItems + 1)
 		}
 		b.root.children.Push(left, right)
-		b.root.items.Push(median)
+		if b.root.items == nil {
+			b.root.items = vec.New(median)
+		} else {
+			b.root.items.Push(median)
+		}
 		return b.SetWithPrev(item.key, item.val)
 	}
 
