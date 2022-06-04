@@ -196,7 +196,7 @@ func (v *Vec[T]) SwapRemove(index int) (rv T) {
 
 // 在给定索引处将vec拆分为两个
 // 返回一个新的vec, 范围是[at, len), 这里需要注意
-// 原始的vec的范围是[0, at], 不改变原先的容量
+// 原始的vec的范围是[0, at), 不改变原先的容量
 func (v *Vec[T]) SplitOff(at int) (new *Vec[T]) {
 	l := v.Len()
 

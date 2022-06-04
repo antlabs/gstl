@@ -1,6 +1,7 @@
 package btree
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -24,11 +25,15 @@ func Test_SetAndGet(t *testing.T) {
 
 // 测试get set
 func Test_SetAndGet_Split(t *testing.T) {
-	b := New[int, int](0)
+	b := New[int, int](2)
 
-	max := 1000
+	max := 10
 	for i := 0; i < max; i++ {
-		b.Set(i, i)
+		b.Set(i, i).Range(func(k int, v int) bool {
+			fmt.Println("index:", i, k, " ", v)
+			return true
+		})
+
 	}
 
 	for i := 0; i < max; i++ {
