@@ -69,8 +69,8 @@ func (b *Btree[K, V]) newLeaf() *node[K, V] {
 
 func (b *Btree[K, V]) find(n *node[K, V], key K) (index int, found bool) {
 
-	index = n.items.SearchFunc(func(elem pair[K, V]) bool { return key <= elem.key })
-	if index > 0 && n.items.Get(index-1).key > key {
+	index = n.items.SearchFunc(func(elem pair[K, V]) bool { return key < elem.key })
+	if index > 0 && n.items.Get(index-1).key >= key {
 		return index - 1, true
 	}
 
@@ -114,6 +114,7 @@ func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (prev V, replaced 
 			return
 		}
 		n.items.Insert(i, item)
+		//fmt.Printf("i:%d, item:%#v, %#v\n", i, item, n.items)
 		return
 	}
 
