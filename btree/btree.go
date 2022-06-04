@@ -49,7 +49,7 @@ func New[K constraints.Ordered, V any](degree int) *Btree[K, V] {
 // 设置接口, 如果有这个值, 有值就替换, 没有就新加
 func (b *Btree[K, V]) Set(k K, v V) *Btree[K, V] {
 
-	_, _ = b.SetWithOld(k, v)
+	_, _ = b.SetWithPrev(k, v)
 	return b
 }
 
@@ -133,8 +133,8 @@ func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (old V, replaced b
 	return
 }
 
-// 设置接口, 如果有值, 把old值带返回, 并且被替换, 没有就新加
-func (b *Btree[K, V]) SetWithOld(k K, v V) (old V, replaced bool) {
+// 设置接口, 如果有值, 把prev值带返回, 并且被替换, 没有就新加
+func (b *Btree[K, V]) SetWithPrev(k K, v V) (old V, replaced bool) {
 
 	// 如果是每一个节点, 直接加入到root节点
 	if b.root == nil {
@@ -172,11 +172,25 @@ func (b *Btree[K, V]) Get(k K) (v V, err error) {
 }
 
 func (b *Btree[K, V]) Delete(k K) *Btree[K, V] {
+	b.DeleteWithPrev(k)
+	return b
+}
+
+func (b *Btree[K, V]) DeleteWithPrev(k K) (prev V, deleted bool) {
 	if b.root == nil {
-		return b
+		return
 	}
 
-	return b
+	prevPair, deleted := b.delete(b.root, false, k)
+	if !deleted {
+		return
+	}
+
+	b.count--
+	if b.count == 0 {
+		b.root = nil
+	}
+	return prevPair.val, false
 }
 
 func (b *Btree[K, V]) delete(n *node[K, V], max bool, k K) (prev pair[K, V], deleted bool) {
