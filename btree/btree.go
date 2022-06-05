@@ -2,7 +2,6 @@ package btree
 
 import (
 	"errors"
-	"fmt"
 	"github.com/guonaihong/gstl/must"
 	"github.com/guonaihong/gstl/vec"
 	"golang.org/x/exp/constraints"
@@ -85,12 +84,15 @@ func (b *Btree[K, V]) nodeSplit(n *node[K, V]) (right *node[K, V], median pair[K
 	median = n.items.Get(i)
 
 	// 新的左孩子就是n节点
+	// n.items包含 左孩子和median节点
 	rightItems := n.items.SplitOff(i + 1)
+	// 删除median节点
 	n.items.SetLen(n.items.Len() - 1)
+
 	// 当前节点还有下层节点, 也要左右分家
 	right = b.newNode(n.leaf())
 	right.items = rightItems
-	fmt.Printf("%p, left:%v, median:%v %p, right:%v\n", n.items, n.items, median, right, rightItems)
+	//fmt.Printf("nodeSplit: %p, left:%v, median:%v %p, right:%v\n", n.items, n.items, median, right, rightItems)
 	if !n.leaf() {
 		right.children = n.children.SplitOff(i + 2)
 	}
@@ -117,7 +119,7 @@ func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (prev V, replaced 
 			return
 		}
 		n.items.Insert(i, item)
-		//fmt.Printf("i:%d, item:%#v, %#v\n", i, item, n.items)
+		//fmt.Printf("<<<i:%d, item:%#v, %#v\n", i, item, n.items)
 		return
 	}
 
@@ -131,9 +133,13 @@ func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (prev V, replaced 
 		}
 
 		right, median := b.nodeSplit(n.children.Get(i))
-		n.children.Insert(i+1, right) // TODO debug
-		n.items.Insert(i, median)     // TODO debug
+
+		n.children.Insert(i+1, right)
+		n.items.Insert(i, median)
+
+		return b.nodeSet(n, item)
 	}
+
 	return
 }
 
@@ -165,6 +171,7 @@ func (b *Btree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 		} else {
 			b.root.items.Push(median)
 		}
+
 		return b.SetWithPrev(item.key, item.val)
 	}
 

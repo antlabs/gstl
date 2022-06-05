@@ -28,17 +28,13 @@ func Test_SetAndGet_Split(t *testing.T) {
 	b := New[int, int](2)
 
 	max := 10
-	for i := 0; i < max; i++ {
-		b.Set(i, i).Range(func(k int, v int) bool {
-			fmt.Println("index:", i, k, " ", v)
-			return true
-		})
-
+	for i := 1; i < max; i++ {
+		b.Set(i, i)
 	}
 
-	for i := 0; i < max; i++ {
+	for i := 1; i < max; i++ {
 		v, err := b.Get(i)
-		assert.NoError(t, err)
-		assert.Equal(t, v, i)
+		assert.NoError(t, err, fmt.Sprintf("index:%d", i))
+		assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
 	}
 }
