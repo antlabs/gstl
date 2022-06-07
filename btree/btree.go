@@ -2,6 +2,7 @@ package btree
 
 import (
 	"errors"
+
 	"github.com/guonaihong/gstl/must"
 	"github.com/guonaihong/gstl/vec"
 	"golang.org/x/exp/constraints"
@@ -94,7 +95,7 @@ func (b *Btree[K, V]) nodeSplit(n *node[K, V]) (right *node[K, V], median pair[K
 	right.items = rightItems
 	//fmt.Printf("nodeSplit: %p, left:%v, median:%v %p, right:%v\n", n.items, n.items, median, right, rightItems)
 	if !n.leaf() {
-		right.children = n.children.SplitOff(i + 2)
+		right.children = n.children.SplitOff(i + 1)
 	}
 
 	return
@@ -119,7 +120,6 @@ func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (prev V, replaced 
 			return
 		}
 		n.items.Insert(i, item)
-		//fmt.Printf("<<<i:%d, item:%#v, %#v\n", i, item, n.items)
 		return
 	}
 
