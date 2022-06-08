@@ -58,6 +58,7 @@ func Test_Btree_SetAndGet_Split_Big(t *testing.T) {
 	}
 }
 
+// 测试Range, 小数据量测试
 func Test_Btree_Range(t *testing.T) {
 	b := New[int, int](2)
 	max := 100
@@ -81,6 +82,63 @@ func Test_Btree_Range(t *testing.T) {
 	})
 
 	assert.Equal(t, key, need)
+}
+
+// 测试TopMin, 它返回最小的几个值
+func Test_Btree_TopMin(t *testing.T) {
+
+	need := []int{}
+	count10 := 10
+	count100 := 100
+	count1000 := 1000
+
+	for i := 0; i < count1000; i++ {
+		need = append(need, i)
+	}
+
+	needCount := []int{count10, count100, count100}
+	for i, b := range []*Btree[int, int]{
+		// btree里面元素 少于 TopMin 需要返回的值
+		func() *Btree[int, int] {
+			b := New[int, int](2)
+			for i := 0; i < count10; i++ {
+				b.Set(i, i)
+			}
+
+			assert.Equal(t, b.Len(), count10)
+			return b
+		}(),
+		// btree里面元素 等于 TopMin 需要返回的值
+		func() *Btree[int, int] {
+
+			b := New[int, int](2)
+			for i := 0; i < count100; i++ {
+				b.Set(i, i)
+			}
+			assert.Equal(t, b.Len(), count100)
+			return b
+		}(),
+		// btree里面元素 大于 TopMin 需要返回的值
+		func() *Btree[int, int] {
+
+			b := New[int, int](2)
+			for i := 0; i < count1000; i++ {
+				b.Set(i, i)
+			}
+			assert.Equal(t, b.Len(), count1000)
+			return b
+		}(),
+	} {
+		var key, val []int
+		b.TopMin(count100, func(k, v int) bool {
+			key = append(key, k)
+			val = append(val, v)
+			return true
+		})
+		assert.Equal(t, key, need[:needCount[i]])
+		assert.Equal(t, val, need[:needCount[i]])
+	}
+
 }
 
 // 测试Find接口

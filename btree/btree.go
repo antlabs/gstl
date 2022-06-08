@@ -47,6 +47,11 @@ func New[K constraints.Ordered, V any](degree int) *Btree[K, V] {
 	}
 }
 
+// 返回btree中元素的个数
+func (b *Btree[K, V]) Len() int {
+	return b.count
+}
+
 // 设置接口, 如果有这个值, 有值就替换, 没有就新加
 func (b *Btree[K, V]) Set(k K, v V) *Btree[K, V] {
 
@@ -178,6 +183,7 @@ func (b *Btree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 	if replaced {
 		return prev, true
 	}
+	b.count++
 	return
 }
 
@@ -348,6 +354,19 @@ func (b *Btree[K, V]) Range(callback func(k K, v V) bool) *Btree[K, V] {
 	return b
 }
 
+// 返回最小的n个值
+func (b *Btree[K, V]) TopMin(min int, callback func(k K, v V) bool) *Btree[K, V] {
+	b.Range(func(k K, v V) bool {
+		if min <= 0 {
+			return false
+		}
+		callback(k, v)
+		min--
+		return true
+	})
+	return b
+}
+
 // 遍历b tree
 func (n *node[K, V]) rangeInner(callback func(k K, v V) bool) bool {
 
@@ -375,5 +394,6 @@ func (n *node[K, V]) rangeInner(callback func(k K, v V) bool) bool {
 		}
 	}
 
+	// n.children比n.items多一个元素. 这里不能漏掉
 	return must.TakeOne(n.children.Last()).rangeInner(callback)
 }
