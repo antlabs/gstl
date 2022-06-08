@@ -30,11 +30,11 @@ func Test_Btree_SetAndGet_Split(t *testing.T) {
 	b := New[int, int](2)
 
 	max := 10
-	for i := 1; i < max; i++ {
+	for i := 0; i < max; i++ {
 		b.Set(i, i)
 	}
 
-	for i := 1; i < max; i++ {
+	for i := 0; i < max; i++ {
 		v, err := b.Get(i)
 		assert.NoError(t, err, fmt.Sprintf("index:%d", i))
 		assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
@@ -60,19 +60,27 @@ func Test_Btree_SetAndGet_Split_Big(t *testing.T) {
 
 func Test_Btree_Range(t *testing.T) {
 	b := New[int, int](2)
-	max := 10
-	for i := 0; i < max; i++ {
+	max := 100
+	key := make([]int, 0, max)
+	val := make([]int, 0, max)
+	need := make([]int, 0, max)
+	for i := max - 1; i >= 0; i-- {
 		assert.NotPanics(t, func() {
 			b.Set(i, i)
 		}, fmt.Sprintf("index:%d", i))
 	}
 
-	/*
-		b.Range(func(k, v int) bool {
-			fmt.Println(k, v)
-			return true
-		})
-	*/
+	for i := 0; i < max; i++ {
+		need = append(need, i)
+	}
+
+	b.Range(func(k, v int) bool {
+		key = append(key, k)
+		val = append(val, k)
+		return true
+	})
+
+	assert.Equal(t, key, need)
 }
 
 // 测试Find接口

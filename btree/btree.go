@@ -351,34 +351,28 @@ func (b *Btree[K, V]) Range(callback func(k K, v V) bool) *Btree[K, V] {
 // 遍历b tree
 func (n *node[K, V]) rangeInner(callback func(k K, v V) bool) bool {
 
+	// 如果是叶子节点
 	if n.leaf() {
+		// 直接遍历n.items里面的元素
+		for i, l := 0, n.items.Len(); i < l; i++ {
+			item := n.items.Get(i)
+			if !callback(item.key, item.val) {
+				return false
+			}
+		}
 
-		cycle := false
-		n.items.Range(func(_ int, p pair[K, V]) (rv bool) {
-			defer func() {
-				cycle = rv
-			}()
-
-			return callback(p.key, p.val)
-		})
-
-		return cycle
+		return true
 	}
 
-	cycle := false
-	n.items.Range(func(index int, p pair[K, V]) (rv bool) {
-		defer func() {
-			cycle = rv
-		}()
-		// 这里不停递归向叶子节点的方向走去
-		return n.children.Get(index).rangeInner(func(k K, v V) bool {
-			return callback(p.key, p.val)
-		})
+	for i, l := 0, n.items.Len(); i < l; i++ {
+		if !n.children.Get(i).rangeInner(callback) {
+			return false
+		}
 
-	})
-
-	if !cycle {
-		return false
+		item := n.items.Get(i)
+		if !callback(item.key, item.val) {
+			return false
+		}
 	}
 
 	return must.TakeOne(n.children.Last()).rangeInner(callback)
