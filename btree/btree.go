@@ -354,14 +354,14 @@ func (b *Btree[K, V]) Range(callback func(k K, v V) bool) *Btree[K, V] {
 	return b
 }
 
-// 返回最小的n个值
-func (b *Btree[K, V]) TopMin(min int, callback func(k K, v V) bool) *Btree[K, V] {
+// 返回最小的n个值, 升序返回
+func (b *Btree[K, V]) TopMin(limit int, callback func(k K, v V) bool) *Btree[K, V] {
 	b.Range(func(k K, v V) bool {
-		if min <= 0 {
+		if limit <= 0 {
 			return false
 		}
 		callback(k, v)
-		min--
+		limit--
 		return true
 	})
 	return b
@@ -396,4 +396,55 @@ func (n *node[K, V]) rangeInner(callback func(k K, v V) bool) bool {
 
 	// n.children比n.items多一个元素. 这里不能漏掉
 	return must.TakeOne(n.children.Last()).rangeInner(callback)
+}
+
+// 从后向前倒序遍历b tree
+func (b *Btree[K, V]) RangePrev(callback func(k K, v V) bool) *Btree[K, V] {
+	// 遍历
+	if b.root == nil {
+		return b
+	}
+
+	b.root.rangePrevInner(callback)
+	return b
+}
+
+// 返回最大的n个值, 降序返回, 10, 9, 8, 7
+func (b *Btree[K, V]) TopMax(limit int, callback func(k K, v V) bool) *Btree[K, V] {
+	b.RangePrev(func(k K, v V) bool {
+		if limit <= 0 {
+			return false
+		}
+		callback(k, v)
+		limit--
+		return true
+	})
+	return b
+}
+
+func (n *node[K, V]) rangePrevInner(callback func(k K, v V) bool) bool {
+
+	// 先右
+	if n.children != nil {
+		if !must.TakeOne(n.children.Last()).rangePrevInner(callback) {
+			return false
+		}
+	}
+
+	for i := n.items.Len() - 1; i >= 0; i-- {
+
+		// 后根
+		item := n.items.Get(i)
+		if !callback(item.key, item.val) {
+			return false
+		}
+		// 最后左
+		if n.children != nil {
+			if !n.children.Get(i).rangePrevInner(callback) {
+				return false
+			}
+		}
+	}
+
+	return true
 }
