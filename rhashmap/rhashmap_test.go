@@ -16,10 +16,10 @@ func Test_SetGet_StringBool(t *testing.T) {
 	hm.Set("ni", true)
 	hm.Set("hao", true)
 
-	assert.True(t, hm.GetOrZero("hello"))
-	assert.True(t, hm.GetOrZero("world"))
-	assert.True(t, hm.GetOrZero("ni"))
-	assert.True(t, hm.GetOrZero("hao"))
+	assert.True(t, hm.Get("hello"))
+	assert.True(t, hm.Get("world"))
+	assert.True(t, hm.Get("ni"))
+	assert.True(t, hm.Get("hao"))
 }
 
 // 1. set get测试
@@ -31,10 +31,10 @@ func Test_SetGet_StringString(t *testing.T) {
 	hm.Set("ni", "ni")
 	hm.Set("hao", "hao")
 
-	assert.Equal(t, hm.GetOrZero("hello"), "hello")
-	assert.Equal(t, hm.GetOrZero("world"), "world")
-	assert.Equal(t, hm.GetOrZero("ni"), "ni")
-	assert.Equal(t, hm.GetOrZero("hao"), "hao")
+	assert.Equal(t, hm.Get("hello"), "hello")
+	assert.Equal(t, hm.Get("world"), "world")
+	assert.Equal(t, hm.Get("ni"), "ni")
+	assert.Equal(t, hm.Get("hao"), "hao")
 }
 
 // 1. set get测试
@@ -46,10 +46,10 @@ func Test_SetGet_IntString(t *testing.T) {
 	hm.Set(3, "ni")
 	hm.Set(4, "hao")
 
-	assert.Equal(t, hm.GetOrZero(1), "hello")
-	assert.Equal(t, hm.GetOrZero(2), "world")
-	assert.Equal(t, hm.GetOrZero(3), "ni")
-	assert.Equal(t, hm.GetOrZero(4), "hao")
+	assert.Equal(t, hm.Get(1), "hello")
+	assert.Equal(t, hm.Get(2), "world")
+	assert.Equal(t, hm.Get(3), "ni")
+	assert.Equal(t, hm.Get(4), "hao")
 }
 
 // 1. set get测试
@@ -60,10 +60,10 @@ func Test_SetGet_IntString_Lazyinit(t *testing.T) {
 	hm.Set(3, "ni")
 	hm.Set(4, "hao")
 
-	assert.Equal(t, hm.GetOrZero(1), "hello")
-	assert.Equal(t, hm.GetOrZero(2), "world")
-	assert.Equal(t, hm.GetOrZero(3), "ni")
-	assert.Equal(t, hm.GetOrZero(4), "hao")
+	assert.Equal(t, hm.Get(1), "hello")
+	assert.Equal(t, hm.Get(2), "world")
+	assert.Equal(t, hm.Get(3), "ni")
+	assert.Equal(t, hm.Get(4), "hao")
 }
 
 // 1. set get测试
@@ -73,7 +73,7 @@ func Test_SetGet_Replace_IntString(t *testing.T) {
 	hm.Set(1, "hello")
 	hm.Set(1, "world")
 
-	assert.Equal(t, hm.GetOrZero(1), "world")
+	assert.Equal(t, hm.Get(1), "world")
 }
 
 // 1. set get测试
@@ -81,11 +81,11 @@ func Test_SetGet_Replace_IntString(t *testing.T) {
 func Test_SetGet_Zero(t *testing.T) {
 	hm := New[int, int]()
 	for i := 0; i < 10; i++ {
-		assert.Equal(t, hm.GetOrZero(i), 0)
+		assert.Equal(t, hm.Get(i), 0)
 	}
 
 	for i := 0; i < 10; i++ {
-		v, err := hm.Get(i)
+		v, err := hm.GetWithErr(i)
 		assert.Error(t, err)
 		assert.Equal(t, v, 0)
 	}
@@ -98,10 +98,10 @@ func Test_SetGet_NotFound(t *testing.T) {
 	hm.Set(1, "hello")
 	hm.Set(1, "world")
 
-	_, err := hm.Get(3)
+	_, err := hm.GetWithErr(3)
 
 	assert.Error(t, err)
-	assert.Equal(t, hm.GetOrZero(1), "world")
+	assert.Equal(t, hm.Get(1), "world")
 }
 
 // 1. set get测试
@@ -114,10 +114,10 @@ func Test_SetGet_Rehashing(t *testing.T) {
 	hm.Set(4, "world")
 	hm.Set(5, "world")
 
-	_, err := hm.Get(7)
+	_, err := hm.GetWithErr(7)
 
 	assert.Error(t, err)
-	assert.Equal(t, hm.GetOrZero(1), "hello")
+	assert.Equal(t, hm.Get(1), "hello")
 
 }
 

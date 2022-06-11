@@ -4,10 +4,11 @@ package rhashmap
 // https://github.com/redis/redis/blob/unstable/src/dict.c
 import (
 	"errors"
-	"github.com/cespare/xxhash/v2"
 	"math"
 	"reflect"
 	"unsafe"
+
+	"github.com/cespare/xxhash/v2"
 )
 
 const (
@@ -303,7 +304,7 @@ func sizeMask(exp int8) uint64 {
 }
 
 // 获取
-func (h *HashMap[K, V]) Get(key K) (v V, err error) {
+func (h *HashMap[K, V]) GetWithErr(key K) (v V, err error) {
 	if h.Len() == 0 {
 		err = ErrNotFound
 		return
@@ -335,8 +336,8 @@ func (h *HashMap[K, V]) Get(key K) (v V, err error) {
 }
 
 // 获取
-func (h *HashMap[K, V]) GetOrZero(key K) (v V) {
-	v, _ = h.Get(key)
+func (h *HashMap[K, V]) Get(key K) (v V) {
+	v, _ = h.GetWithErr(key)
 	return
 }
 

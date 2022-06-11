@@ -34,7 +34,7 @@ func BenchmarkGet(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0.0; i < max; i++ {
-		v := set.GetOrZero(i)
+		v := set.Get(i)
 		if v != i {
 			panic(fmt.Sprintf("need:%f, got:%f", i, v))
 		}
