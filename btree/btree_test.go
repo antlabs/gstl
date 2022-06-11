@@ -19,7 +19,7 @@ func Test_Btree_SetAndGet(t *testing.T) {
 	}
 
 	for i := 0; i < max; i++ {
-		v, err := b.Get(i)
+		v, err := b.GetWithErr(i)
 		assert.NoError(t, err)
 		assert.Equal(t, v, i)
 	}
@@ -36,7 +36,7 @@ func Test_Btree_SetAndGet_Split(t *testing.T) {
 	}
 
 	for i := 0; i < max; i++ {
-		v, err := b.Get(i)
+		v, err := b.GetWithErr(i)
 		assert.NoError(t, err, fmt.Sprintf("index:%d", i))
 		assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
 	}
@@ -53,7 +53,7 @@ func Test_Btree_SetAndGet_Split_Big(t *testing.T) {
 	}
 
 	for i := 0; i < max; i++ {
-		v, err := b.Get(i)
+		v, err := b.GetWithErr(i)
 		assert.NoError(t, err, fmt.Sprintf("index:%d", i))
 		assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
 	}

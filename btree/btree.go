@@ -187,9 +187,15 @@ func (b *Btree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 	return
 }
 
+// 获取值, 忽略找不到的情况
+func (b *Btree[K, V]) Get(k K) (v V) {
+	v, _ = b.GetWithErr(k)
+	return
+}
+
 // 找到err为nil
 // 找不到err为ErrNotFound
-func (b *Btree[K, V]) Get(k K) (v V, err error) {
+func (b *Btree[K, V]) GetWithErr(k K) (v V, err error) {
 	if b.root == nil {
 		err = ErrNotFound
 		return
