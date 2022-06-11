@@ -194,7 +194,7 @@ func (s *SkipList[T]) Insert(score float64, elem T) *SkipList[T] {
 }
 
 // 获取
-func (s *SkipList[T]) Get(score float64) (elem T, err error) {
+func (s *SkipList[T]) GetWithErr(score float64) (elem T, err error) {
 
 	x := s.head
 	for i := s.level - 1; i >= 0; i-- {
@@ -213,8 +213,8 @@ func (s *SkipList[T]) Get(score float64) (elem T, err error) {
 }
 
 // 根据score获取value值
-func (s *SkipList[T]) GetOrZero(score float64) (elem T) {
-	elem, _ = s.Get(score)
+func (s *SkipList[T]) Get(score float64) (elem T) {
+	elem, _ = s.GetWithErr(score)
 	return elem
 }
 

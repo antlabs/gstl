@@ -22,7 +22,7 @@ func Test_SetGet(t *testing.T) {
 	}
 
 	for i := 0.0; i < max; i++ {
-		v := zset.GetOrZero(i)
+		v := zset.Get(i)
 		assert.Equal(t, v, fmt.Sprintf("%d", int(i)))
 	}
 }
@@ -42,7 +42,7 @@ func Test_SetGetRemove(t *testing.T) {
 			if j == i {
 				continue
 			}
-			v, err := zset.Get(j)
+			v, err := zset.GetWithErr(j)
 			assert.NoError(t, err, fmt.Sprintf("score:%f, i:%f, j:%f", j, i, j))
 			if err != nil {
 				return
