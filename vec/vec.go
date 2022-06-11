@@ -7,11 +7,15 @@ package vec
 import (
 	"errors"
 	"fmt"
+
 	"github.com/guonaihong/gstl/cmp"
 )
 
-var ErrVecElemEmpty = errors.New("vec is empty")
-var ErrLenGreaterCap = errors.New("len is too long > length of cap")
+var (
+	ErrVecElemEmpty  = errors.New("vec is empty")
+	ErrLenGreaterCap = errors.New("len is too long > length of cap")
+	ErrIndex         = errors.New("Illegal value of index")
+)
 
 const coefficient = 1.5
 
@@ -169,6 +173,15 @@ func (v *Vec[T]) Get(index int) (e T) {
 	return slice[index]
 }
 
+// 获取指定索引的值, 如果索引不合法会返回错误
+func (v *Vec[T]) GetWithErr(index int) (e T, err error) {
+	if index < 0 || index >= v.Len() {
+		err = ErrIndex
+		return
+	}
+	return v.Get(index), nil
+}
+
 // 获取指定索引的指针
 func (v *Vec[T]) GetPtr(index int) (e *T) {
 	slice := v.ToSlice()
@@ -185,7 +198,7 @@ func (v *Vec[T]) Set(index int, value T) *Vec[T] {
 func (v *Vec[T]) SwapRemove(index int) (rv T) {
 	l := v.Len()
 	if index >= l {
-		panic(fmt.Sprintf("swap_remove index (is %d) should be < len (is %d)", index, l))
+		panic(fmt.Sprintf("SwapRemove index (is %d) should be < len (is %d)", index, l))
 	}
 
 	rv = v.Get(index)
