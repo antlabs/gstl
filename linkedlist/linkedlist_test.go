@@ -78,16 +78,16 @@ func Test_Last(t *testing.T) {
 
 func Test_Get(t *testing.T) {
 	// 正索引
-	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(0)), "1")
-	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(1)), "2")
-	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(2)), "3")
-	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(3)), "4")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").GetWithErr(0)), "1")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").GetWithErr(1)), "2")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").GetWithErr(2)), "3")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").GetWithErr(3)), "4")
 
 	// 负索引
-	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(-1)), "4")
-	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(-2)), "3")
-	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(-3)), "2")
-	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").Get(-4)), "1")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").GetWithErr(-1)), "4")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").GetWithErr(-2)), "3")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").GetWithErr(-3)), "2")
+	assert.Equal(t, must.TakeOne(New[string]().RPush("1", "2", "3", "4").GetWithErr(-4)), "1")
 }
 
 func Test_Set(t *testing.T) {

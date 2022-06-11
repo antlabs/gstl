@@ -19,6 +19,7 @@ package linkedlist
 
 import (
 	"errors"
+
 	"github.com/guonaihong/gstl/cmp"
 )
 
@@ -321,9 +322,15 @@ func (l *LinkedList[T]) ContainsFunc(cb func(value T) bool) bool {
 	return false
 }
 
+// 获取指定索引数据, 忽略错误
+func (l *LinkedList[T]) Get(idx int) (e T) {
+	e, _ = l.GetWithErr(idx)
+	return
+}
+
 // 通过索引查找是否包含这个value
 // Get是Index的同义词
-func (l *LinkedList[T]) Get(idx int) (e T, err error) {
+func (l *LinkedList[T]) GetWithErr(idx int) (e T, err error) {
 	return l.Index(idx)
 }
 
