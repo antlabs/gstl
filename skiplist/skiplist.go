@@ -278,8 +278,8 @@ func (s *SkipList[T]) Range(callback func(score float64, v T) bool) *SkipList[T]
 }
 
 // 返回最小的n个值, 升序返回, 比如0,1,2,3
-func (b *SkipList[T]) TopMin(limit int, callback func(score float64, v T) bool) *SkipList[T] {
-	b.Range(func(score float64, v T) bool {
+func (s *SkipList[T]) TopMin(limit int, callback func(score float64, v T) bool) *SkipList[T] {
+	s.Range(func(score float64, v T) bool {
 		if limit <= 0 {
 			return false
 		}
@@ -287,8 +287,39 @@ func (b *SkipList[T]) TopMin(limit int, callback func(score float64, v T) bool) 
 		limit--
 		return true
 	})
-	return b
+	return s
 }
+
+// 返回长度
 func (s *SkipList[T]) Len() int {
 	return s.length
+}
+
+// 从后向前倒序遍历b tree
+func (s *SkipList[T]) RangePrev(callback func(k float64, v T) bool) *SkipList[T] {
+	// 遍历
+	if s.tail == nil {
+		return s
+	}
+
+	for t := s.tail; t != nil; t = t.backward {
+		if !callback(t.score, t.elem) {
+			return s
+		}
+	}
+
+	return s
+}
+
+// 返回最大的n个值, 降序返回, 10, 9, 8, 7
+func (s *SkipList[T]) TopMax(limit int, callback func(k float64, v T) bool) *SkipList[T] {
+	s.RangePrev(func(k float64, v T) bool {
+		if limit <= 0 {
+			return false
+		}
+		callback(k, v)
+		limit--
+		return true
+	})
+	return s
 }
