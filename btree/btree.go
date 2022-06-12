@@ -170,6 +170,7 @@ func (b *Btree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 		if b.root.children == nil {
 			b.root.children = vec.WithCapacity[*node[K, V]](b.maxItems + 1)
 		}
+
 		b.root.children.Push(left, right)
 		if b.root.items == nil {
 			b.root.items = vec.New(median)
@@ -177,6 +178,7 @@ func (b *Btree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 			b.root.items.Push(median)
 		}
 
+		// 再调用下SetWithPrev, 结点分裂好了, 就有空间放数据
 		return b.SetWithPrev(item.key, item.val)
 	}
 
@@ -296,7 +298,7 @@ func (b *Btree[K, V]) delete(n *node[K, V], max bool, k K) (prev pair[K, V], del
 
 func (b *Btree[K, V]) rebalance(n *node[K, V], i int) {
 	if i == n.items.Len() {
-		panic("看下什么情况会触发")
+		i--
 	}
 
 	left, right := n.children.Get(i), n.children.Get(i+1)

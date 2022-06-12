@@ -59,6 +59,28 @@ func Test_Btree_SetAndGet_Split_Big(t *testing.T) {
 	}
 }
 
+// 测试get set, 小数据量下面的替换
+func Test_Btree_SetAndGet_Replace(t *testing.T) {
+	max := 10
+	b := New[int, int](max)
+
+	for i := 0; i < max; i++ {
+		b.Set(i, i)
+	}
+
+	for i := 0; i < max; i++ {
+		prev, replace := b.SetWithPrev(i, i+1)
+		assert.True(t, replace)
+		assert.Equal(t, prev, i)
+	}
+
+	for i := 0; i < max; i++ {
+		v, err := b.GetWithErr(i)
+		assert.NoError(t, err, fmt.Sprintf("index:%d", i))
+		assert.Equal(t, v, i+1, fmt.Sprintf("index:%d", i))
+	}
+}
+
 // 测试Range, 小数据量测试
 func Test_Btree_Range(t *testing.T) {
 	b := New[int, int](2)
@@ -269,4 +291,55 @@ func Test_Btree_TopMax(t *testing.T) {
 		assert.Equal(t, val, need[i][:length])
 	}
 
+}
+
+// 测试btree删除的情况, 少量数量
+func Test_Btree_Delete1(t *testing.T) {
+	for max := 3; max < 1000; max++ {
+
+		b := New[int, int](64)
+
+		// 设置0-max
+		for i := 0; i < max; i++ {
+			b.Set(i, i)
+		}
+
+		// 删除0-max/2
+		for i := 0; i < max/2; i++ {
+			b.Delete(i)
+		}
+
+		// max/2-max应该能找到
+		for i := max / 2; i < max; i++ {
+			v, err := b.GetWithErr(i)
+			assert.NoError(t, err, fmt.Sprintf("index:%d", i))
+			assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
+		}
+
+		// 0-max/2应该找不到
+		for i := 0; i < max/2; i++ {
+			v, err := b.GetWithErr(i)
+			assert.Error(t, err, fmt.Sprintf("index:%d", i))
+			assert.Equal(t, v, 0, fmt.Sprintf("index:%d", i))
+		}
+	}
+}
+
+func Test_Btree_Delete2(t *testing.T) {
+	b := New[int, int](2)
+
+	max := 10000
+	for i := 0; i < max; i++ {
+		b.Set(i, i)
+	}
+
+	for i := max / 2; i < max; i++ {
+		b.Delete(i)
+	}
+
+	for i := max / 2; i < max; i++ {
+		v, err := b.GetWithErr(i)
+		assert.NoError(t, err, fmt.Sprintf("index:%d", i))
+		assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
+	}
 }
