@@ -77,7 +77,7 @@ func New[T any](compare func(T, T) int) *SkipList[T] {
 
 	s.compare = compare
 	s.resetRand()
-	s.head = newNode[T](SKIPLIST_MAXLEVEL, 0, *new(T))
+	s.head = newNode(SKIPLIST_MAXLEVEL, 0, *new(T))
 	return s
 }
 
@@ -161,7 +161,7 @@ func (s *SkipList[T]) Insert(score float64, elem T) *SkipList[T] {
 	}
 
 	// 创建新节点
-	x = newNode[T](level, score, elem)
+	x = newNode(level, score, elem)
 	for i := 0; i < level; i++ {
 		// x.NodeLevel[i]的节点假设等于a, 需要插入的节点x在a之后,
 		// a, x, a.forward三者的关系就是[a, x, a.forward]
@@ -263,6 +263,32 @@ func (s *SkipList[T]) Remove(score float64) *SkipList[T] {
 	return s
 }
 
+// 遍历
+func (s *SkipList[T]) Range(callback func(score float64, v T) bool) *SkipList[T] {
+	if s.head == nil {
+		return s
+	}
+
+	for h := s.head.NodeLevel[0].forward; h != nil; h = h.NodeLevel[0].forward {
+		if !callback(h.score, h.elem) {
+			return s
+		}
+	}
+	return s
+}
+
+// 返回最小的n个值, 升序返回, 比如0,1,2,3
+func (b *SkipList[T]) TopMin(limit int, callback func(score float64, v T) bool) *SkipList[T] {
+	b.Range(func(score float64, v T) bool {
+		if limit <= 0 {
+			return false
+		}
+		callback(score, v)
+		limit--
+		return true
+	})
+	return b
+}
 func (s *SkipList[T]) Len() int {
 	return s.length
 }

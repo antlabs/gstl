@@ -360,7 +360,7 @@ func (b *Btree[K, V]) Range(callback func(k K, v V) bool) *Btree[K, V] {
 	return b
 }
 
-// 返回最小的n个值, 升序返回
+// 返回最小的n个值, 升序返回, 比如0,1,2,3
 func (b *Btree[K, V]) TopMin(limit int, callback func(k K, v V) bool) *Btree[K, V] {
 	b.Range(func(k K, v V) bool {
 		if limit <= 0 {
