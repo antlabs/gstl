@@ -14,18 +14,18 @@ import (
 // ok  	github.com/guonaihong/gstl/btree	25.315s
 // 五百万数据的Get操作时间
 func BenchmarkGet(b *testing.B) {
-	max := 1000000 * 5
-	bt := New[int, int](0)
-	for i := 0; i < max; i++ {
+	max := 1000000 * 5.0
+	bt := New[float64, float64](0)
+	for i := 0.0; i < max; i++ {
 		bt.Set(i, i)
 	}
 
 	b.ResetTimer()
 
-	for i := 0; i < max; i++ {
+	for i := 0.0; i < max; i++ {
 		v := bt.Get(i)
 		if v != i {
-			panic(fmt.Sprintf("need:%d, got:%d", i, v))
+			panic(fmt.Sprintf("need:%f, got:%f", i, v))
 		}
 	}
 }

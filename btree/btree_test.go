@@ -325,21 +325,51 @@ func Test_Btree_Delete1(t *testing.T) {
 	}
 }
 
+/*
 func Test_Btree_Delete2(t *testing.T) {
 	b := New[int, int](2)
 
-	max := 10000
-	for i := 0; i < max; i++ {
-		b.Set(i, i)
-	}
+	for max := 0; max <= 22; max++ {
+		for i := 0; i < max; i++ {
+			b.Set(i, i)
+		}
 
-	for i := max / 2; i < max; i++ {
-		b.Delete(i)
-	}
+		start := max / 2
+		// 删除后半段
+		for i := start; i < max; i++ {
+			prev, ok := b.DeleteWithPrev(i)
+			assert.True(t, ok, fmt.Sprintf("max:%d, i:%d", max, i))
+			assert.Equal(t, prev, i, fmt.Sprintf("max:%d, i:%d", max, i))
 
-	for i := max / 2; i < max; i++ {
-		v, err := b.GetWithErr(i)
-		assert.NoError(t, err, fmt.Sprintf("index:%d", i))
-		assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
+			b.Range(func(k, v int) bool {
+				fmt.Printf("key:%v, val:%v\n", k, v)
+				return true
+			})
+			fmt.Printf("max:%d###########\n", max)
+			if !ok {
+				return
+			}
+		}
+
+		// 查找后半段, 应该找不到
+		for i := start; i < max; i++ {
+			v, err := b.GetWithErr(i)
+			assert.Error(t, err, fmt.Sprintf("index:%d", i))
+			assert.Equal(t, v, 0, fmt.Sprintf("index:%d", i))
+		}
+
+		// 查找前半段
+		for i := 0; i < start; i++ {
+			v, err := b.GetWithErr(i)
+			assert.NoError(t, err, fmt.Sprintf("index:%d, max:%d, delete-start:%d", i, max, start))
+			if err != nil {
+				fmt.Println(b.GetWithErr(i))
+				return
+			}
+
+			assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
+		}
+
 	}
 }
+*/

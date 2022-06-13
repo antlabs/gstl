@@ -106,7 +106,7 @@ func (b *Btree[K, V]) nodeSplit(n *node[K, V]) (right *node[K, V], median pair[K
 	return
 }
 
-//
+// 把k/v的值放到结点里面
 func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (prev V, replaced bool, needSplit bool) {
 	i, found := b.find(n, item.key)
 	// 找到位置直接替换
@@ -219,11 +219,13 @@ func (b *Btree[K, V]) GetWithErr(k K) (v V, err error) {
 	}
 }
 
+// 删除接口
 func (b *Btree[K, V]) Delete(k K) *Btree[K, V] {
 	b.DeleteWithPrev(k)
 	return b
 }
 
+// 删除接口, 返回旧值
 func (b *Btree[K, V]) DeleteWithPrev(k K) (prev V, deleted bool) {
 	if b.root == nil {
 		return
@@ -236,7 +238,7 @@ func (b *Btree[K, V]) DeleteWithPrev(k K) (prev V, deleted bool) {
 
 	if b.root.items.Len() == 0 && !b.root.leaf() {
 		var err error
-		b.root, err = b.root.children.PopFront()
+		b.root, err = b.root.children.First()
 		if err != nil {
 			panic(err.Error())
 		}
@@ -246,7 +248,7 @@ func (b *Btree[K, V]) DeleteWithPrev(k K) (prev V, deleted bool) {
 	if b.count == 0 {
 		b.root = nil
 	}
-	return prevPair.val, false
+	return prevPair.val, true
 }
 
 func (b *Btree[K, V]) delete(n *node[K, V], max bool, k K) (prev pair[K, V], deleted bool) {
@@ -261,38 +263,41 @@ func (b *Btree[K, V]) delete(n *node[K, V], max bool, k K) (prev pair[K, V], del
 		i, found = b.find(n, k)
 	}
 
+	// 如果是叶子, 并且没有找到
 	if n.leaf() && !found {
 		return emptykv, false
 	}
 
 	if found {
 		if n.leaf() {
+			// 叶子结点直接删除走人
 			prev = n.items.Get(i)
 			n.items.Remove(i)
 			return prev, true
 		}
 
-		var emptyKey K
 		if max {
-			prev, deleted = b.delete(n.children.Get(i), true, emptyKey)
+			prev, deleted = b.delete(n.children.Get(i), true, emptykv.key)
 			i++
 		} else {
 			prev = n.items.Get(i)
-			maxItems, _ := b.delete(n.children.Get(i), true, emptyKey)
-			deleted = false
+			maxItems, _ := b.delete(n.children.Get(i), true, emptykv.key)
+			deleted = true
 			n.items.Set(i, maxItems)
-
 		}
 	} else {
 		prev, deleted = b.delete(n.children.Get(i), max, k)
 	}
+
 	if !deleted {
 		return emptykv, false
 	}
 
+	// 准备合并
 	if n.children.Get(i).items.Len() < b.minItems {
 		b.rebalance(n, i)
 	}
+
 	return prev, true
 }
 
@@ -303,23 +308,34 @@ func (b *Btree[K, V]) rebalance(n *node[K, V], i int) {
 
 	left, right := n.children.Get(i), n.children.Get(i+1)
 
+	// 左右元素相加 < maxItems
 	if left.items.Len()+right.items.Len() < b.maxItems {
+		// 向左合并, 左=左+父+右
+		// 合并父节点
 		left.items.Push(n.items.Get(i))
+		// 合并右叶子
 		left.items.Append(right.items)
 
 		if !left.leaf() {
+			// 合并右children
 			left.children.Append(right.children)
 		}
+
+		// 删除父节点
 		n.items.Remove(i)
+		// 删除右叶子
 		n.children.Remove(i + 1)
 	} else if left.items.Len() > right.items.Len() {
-
+		// 向右移动
+		// 父到右
 		right.items.Insert(0, n.items.Get(i))
+		// 左边最后一个当父
 		last, err := left.items.Pop()
 		if err != nil {
 			panic(err.Error())
 		}
 
+		// last是从左叶子最后一个元素借过来的
 		n.items.Set(i, last)
 
 		if !left.leaf() {
@@ -332,12 +348,16 @@ func (b *Btree[K, V]) rebalance(n *node[K, V], i int) {
 		}
 	} else {
 
+		// 向左合并
+		// 左叶先合并父
 		left.items.Push(n.items.Get(i))
+		// 向右边借最左边的元素当父
 		first, err := right.items.PopFront()
 		if err != nil {
 			panic(err.Error())
 		}
 
+		// first是和右叶子借过来的
 		n.items.Set(i, first)
 
 		if !left.leaf() {
