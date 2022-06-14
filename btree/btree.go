@@ -2,6 +2,7 @@ package btree
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/guonaihong/gstl/must"
 	"github.com/guonaihong/gstl/vec"
@@ -111,6 +112,7 @@ func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (prev V, replaced 
 	i, found := b.find(n, item.key)
 	// 找到位置直接替换
 	if found {
+		fmt.Printf("1.## i = %v, item:%v\n", item.key, n.items)
 		prevPtr := n.items.GetPtr(i)
 		prev = prevPtr.val
 		prevPtr.val = item.val
@@ -393,6 +395,46 @@ func (b *Btree[K, V]) TopMin(limit int, callback func(k K, v V) bool) *Btree[K, 
 		return true
 	})
 	return b
+}
+
+func (b *Btree[K, V]) Draw() {
+	if b.root == nil {
+		return
+	}
+
+	b.root.draw(b.root)
+	//b.root.draw(0, b.root.items.Len() == b.root.children.Len())
+}
+
+// 画出b tree
+// 使用层序遍历的姿势
+func (n *node[K, V]) draw(root *node[K, V]) {
+	if root == nil {
+		return
+	}
+
+	q := vec.New(root)
+	for height := 0; q.Len() > 0; height++ {
+		tmp := q.ToSlice()
+		q = vec.New[*node[K, V]]()
+
+		fmt.Printf("height:%d ", height)
+		for _, node := range tmp {
+			fmt.Printf("%v ", node.items)
+
+			if node.children != nil {
+				children := node.children.ToSlice()
+
+				for _, nodeChild := range children {
+
+					q.Push(nodeChild)
+				}
+			}
+
+		}
+		fmt.Printf("\n")
+
+	}
 }
 
 // 遍历b tree
