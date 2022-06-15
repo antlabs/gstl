@@ -279,8 +279,8 @@ func (b *Btree[K, V]) delete(n *node[K, V], max bool, k K) (prev pair[K, V], del
 		}
 
 		if max {
-			prev, deleted = b.delete(n.children.Get(i), true, emptykv.key)
 			i++
+			prev, deleted = b.delete(n.children.Get(i), true, emptykv.key)
 		} else {
 			prev = n.items.Get(i)
 			maxItems, _ := b.delete(n.children.Get(i), true, emptykv.key)

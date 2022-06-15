@@ -336,22 +336,15 @@ func Test_Btree_Draw(t *testing.T) {
 	b.Draw()
 }
 
-/*
 func Test_Btree_Delete2(t *testing.T) {
 	b := New[int, int](2)
 
-	for max := 13; max <= 14; max++ {
+	for max := 0; max <= 33; max++ {
 		//for max := 0; max <= 22; max++ {
 		for i := 0; i < max; i++ {
 			b.Set(i, i)
 		}
 
-		b.Range(func(k, v int) bool {
-			fmt.Printf("set after key:%v, val:%v\n", k, v)
-			return true
-		})
-
-		fmt.Printf("max:%d###########, set ok\n", max)
 		start := max / 2
 		// 删除后半段
 		for i := start; i < max; i++ {
@@ -359,11 +352,6 @@ func Test_Btree_Delete2(t *testing.T) {
 			assert.True(t, ok, fmt.Sprintf("max:%d, i:%d", max, i))
 			assert.Equal(t, prev, i, fmt.Sprintf("max:%d, i:%d", max, i))
 
-			b.Range(func(k, v int) bool {
-				fmt.Printf("delete after key:%v, val:%v\n", k, v)
-				return true
-			})
-			fmt.Printf("max:%d###########, delete(%d)\n", max, i)
 			if !ok {
 				return
 			}
@@ -390,4 +378,3 @@ func Test_Btree_Delete2(t *testing.T) {
 
 	}
 }
-*/
