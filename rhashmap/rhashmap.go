@@ -1,5 +1,6 @@
 package rhashmap
 
+// apache 2.0 guonaihong
 // 参考资料
 // https://github.com/redis/redis/blob/unstable/src/dict.c
 import (

@@ -1,5 +1,7 @@
 package skiplist
 
+// apache 2.0 guonaihong
+
 // 参考文档如下
 // https://github.com/redis/redis/blob/unstable/src/t_zset.c
 // https://redis.io/commands/zcount/

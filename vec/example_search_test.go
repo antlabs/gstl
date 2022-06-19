@@ -1,5 +1,6 @@
 package vec
 
+// apache 2.0 guonaihong
 import "fmt"
 
 func Example_search() {

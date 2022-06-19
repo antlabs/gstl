@@ -1,5 +1,6 @@
 package btree
 
+// apache 2.0 guonaihong
 import (
 	"fmt"
 	"testing"
@@ -339,7 +340,7 @@ func Test_Btree_Draw(t *testing.T) {
 func Test_Btree_Delete2(t *testing.T) {
 	b := New[int, int](2)
 
-	for max := 0; max <= 33; max++ {
+	for max := 0; max <= 500; max++ {
 		//for max := 0; max <= 22; max++ {
 		for i := 0; i < max; i++ {
 			b.Set(i, i)

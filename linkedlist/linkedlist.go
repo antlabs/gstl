@@ -1,5 +1,6 @@
 package linkedlist
 
+// apache 2.0 guonaihong
 // 参考文档如下
 // https://cs.opensource.google/go/go/+/go1.18.1:src/container/list/list.go
 // https://github.com/torvalds/linux/blob/master/tools/include/linux/list.h

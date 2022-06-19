@@ -1,10 +1,12 @@
 package vecdeque
 
+// apache 2.0 guonaihong
 import (
 	"errors"
 	"fmt"
-	"github.com/guonaihong/gstl/cmp"
 	"math"
+
+	"github.com/guonaihong/gstl/cmp"
 )
 
 // 参考文档如下

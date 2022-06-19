@@ -1,5 +1,6 @@
 package cmp
 
+// apache 2.0 guonaihong
 import (
 	"golang.org/x/exp/constraints"
 )

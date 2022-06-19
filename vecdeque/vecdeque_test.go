@@ -1,5 +1,6 @@
 package vecdeque
 
+// apache 2.0 guonaihong
 import "testing"
 
 func Test_PushBack(t *testing.T) {

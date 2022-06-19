@@ -1,5 +1,6 @@
 package linkedlist
 
+// apache 2.0 guonaihong
 import (
 	"testing"
 

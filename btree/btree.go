@@ -1,5 +1,7 @@
 package btree
 
+// apache 2.0 guonaihong
+
 import (
 	"errors"
 	"fmt"

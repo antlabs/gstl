@@ -1,5 +1,6 @@
 package rhashmap
 
+// apache 2.0 guonaihong
 type Option interface {
 	apply(*config)
 }
