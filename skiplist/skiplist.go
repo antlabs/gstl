@@ -236,6 +236,7 @@ func (s *SkipList[T]) GetWithMeta(score float64) (elem T, number Number, err err
 
 	x := s.head
 	for i := s.level - 1; i >= 0; i-- {
+		fmt.Printf("x.NodeLevel[%d].score:%f, score:%f\n", i, x.NodeLevel[i].forward.score, score)
 		for x.NodeLevel[i].forward != nil && (x.NodeLevel[i].forward.score < score) {
 			number.Total++
 			number.Keys = append(number.Keys, x.score)
