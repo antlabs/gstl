@@ -108,7 +108,53 @@ func Test_Skiplist_TopMin(t *testing.T) {
 		assert.Equal(t, key, need[:needCount[i]])
 		assert.Equal(t, val, need[:needCount[i]])
 	}
+}
 
+// 测试下负数
+func Test_Skiplist_TopMin2(t *testing.T) {
+	start := -10
+	max := 100
+	limit := 10
+	sl := New(cmp.Compare[int])
+
+	need := make([]int, 0, limit)
+	for i, l := start, limit; i < max && l > 0; i++ {
+		sl.Set(float64(i), i)
+		need = append(need, i)
+		l--
+	}
+
+	got := make([]int, 0, limit)
+	sl.TopMin(10, func(k float64, v int) bool {
+		got = append(got, int(k))
+		return true
+	})
+
+	assert.Equal(t, need, got)
+}
+
+// debug, 用的入口函数
+func Test_SkipList_SetAndGet2(t *testing.T) {
+
+	sl := New(cmp.Compare[int])
+
+	max := 1000
+	start := -1
+	for i := max; i >= start; i-- {
+		sl.Set(float64(i), i)
+	}
+
+	sl.Draw()
+	for i := start; i < max; i++ {
+		v, count, _ := sl.GetWithMeta(float64(i))
+		fmt.Printf("get %v count = %v, nodes:%v, level:%v maxlevel:%v\n",
+			float64(i),
+			count.Total,
+			count.Keys,
+			count.Level,
+			count.MaxLevel)
+		assert.Equal(t, v, i)
+	}
 }
 
 // 测试TopMax, 返回最大的几个数据降序返回
@@ -128,7 +174,7 @@ func Test_Skiplist_TopMax(t *testing.T) {
 	}
 
 	for i, b := range []*SkipList[int]{
-		// btree里面元素 少于 TopMin 需要返回的值
+		// btree里面元素 少于 TopMax 需要返回的值
 		func() *SkipList[int] {
 			b := New(cmp.Compare[int])
 			for i := 0; i < count10; i++ {
@@ -138,7 +184,7 @@ func Test_Skiplist_TopMax(t *testing.T) {
 			assert.Equal(t, b.Len(), count10)
 			return b
 		}(),
-		// btree里面元素 等于 TopMin 需要返回的值
+		// btree里面元素 等于 TopMax 需要返回的值
 		func() *SkipList[int] {
 
 			b := New(cmp.Compare[int])
@@ -148,7 +194,7 @@ func Test_Skiplist_TopMax(t *testing.T) {
 			assert.Equal(t, b.Len(), count100)
 			return b
 		}(),
-		// btree里面元素 大于 TopMin 需要返回的值
+		// btree里面元素 大于 TopMax 需要返回的值
 		func() *SkipList[int] {
 
 			b := New(cmp.Compare[int])

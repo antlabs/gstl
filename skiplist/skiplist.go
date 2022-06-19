@@ -36,6 +36,7 @@ package skiplist
 // ZUNIONSTORE
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"time"
 )
@@ -214,6 +215,37 @@ func (s *SkipList[T]) GetWithErr(score float64) (elem T, err error) {
 	return
 }
 
+// debug 使用
+type Number struct {
+	Total    int
+	Keys     []float64
+	Level    []int
+	MaxLevel []int
+}
+
+// debug使用, 返回查找某个key 比较的次数+经过的节点数
+func (s *SkipList[T]) GetWithMeta(score float64) (elem T, number Number, err error) {
+
+	x := s.head
+	for i := s.level - 1; i >= 0; i-- {
+		for x.NodeLevel[i].forward != nil && (x.NodeLevel[i].forward.score < score) {
+			number.Total++
+			number.Keys = append(number.Keys, x.score)
+			number.Level = append(number.Level, i)
+			number.MaxLevel = append(number.MaxLevel, len(x.NodeLevel))
+			x = x.NodeLevel[i].forward
+		}
+	}
+
+	x = x.NodeLevel[0].forward
+	if x != nil && score == x.score {
+		return x.elem, number, nil
+	}
+
+	err = ErrNotFound
+	return
+}
+
 // 根据score获取value值
 func (s *SkipList[T]) Get(score float64) (elem T) {
 	elem, _ = s.GetWithErr(score)
@@ -262,6 +294,25 @@ func (s *SkipList[T]) Remove(score float64) *SkipList[T] {
 		return s
 	}
 
+	return s
+}
+
+func (s *SkipList[T]) Draw() *SkipList[T] {
+	if s.head == nil {
+		return s
+	}
+
+	fmt.Printf("maxlevel:%d, head level:%d \n", s.level, len(s.head.NodeLevel))
+	i := 1
+	for h := s.head.NodeLevel[0].forward; h != nil; h = h.NodeLevel[0].forward {
+		fmt.Printf("score:%f, level:%d -> ", h.score, len(h.NodeLevel))
+		if i%6 == 0 {
+			fmt.Printf("\n")
+		}
+		i++
+	}
+
+	fmt.Printf("\n")
 	return s
 }
 
