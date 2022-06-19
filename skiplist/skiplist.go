@@ -119,11 +119,16 @@ func newNode[T any](level int, score float64, elem T) *Node[T] {
 
 // 设置值, 和Insert是同义词
 func (s *SkipList[T]) Set(score float64, elem T) *SkipList[T] {
-	return s.Insert(score, elem)
+	return s.InsertInner(score, elem, s.rand())
 }
 
 // 设置值
 func (s *SkipList[T]) Insert(score float64, elem T) *SkipList[T] {
+	return s.InsertInner(score, elem, s.rand())
+}
+
+// 方便给作者调试用的函数
+func (s *SkipList[T]) InsertInner(score float64, elem T, level int) *SkipList[T] {
 	var (
 		update [SKIPLIST_MAXLEVEL]*Node[T]
 		rank   [SKIPLIST_MAXLEVEL]int
@@ -151,7 +156,10 @@ func (s *SkipList[T]) Insert(score float64, elem T) *SkipList[T] {
 	}
 
 	// 生成新节点的level
-	level := s.rand()
+	if level == 0 {
+		level = s.rand()
+	}
+
 	if level > s.level {
 		// 这次新的level与老的level的差值, 给填充head指针
 		for i := s.level; i < level; i++ {

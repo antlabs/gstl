@@ -133,6 +133,30 @@ func Test_Skiplist_TopMin2(t *testing.T) {
 	assert.Equal(t, need, got)
 }
 
+// debug
+func Test_SkipList_SetAndGet3(t *testing.T) {
+
+	sl := New(cmp.Compare[int])
+
+	keys := []int{5, 8, 10}
+	level := []int{2, 3, 5}
+	for i, key := range keys {
+		sl.InsertInner(float64(key), key, level[i])
+	}
+
+	sl.Draw()
+	for _, i := range keys {
+		v, count, _ := sl.GetWithMeta(float64(i))
+		fmt.Printf("get %v count = %v, nodes:%v, level:%v maxlevel:%v\n",
+			float64(i),
+			count.Total,
+			count.Keys,
+			count.Level,
+			count.MaxLevel)
+		assert.Equal(t, v, i)
+	}
+}
+
 // debug, 用的入口函数
 func Test_SkipList_SetAndGet2(t *testing.T) {
 
