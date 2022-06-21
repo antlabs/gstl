@@ -69,16 +69,17 @@ type SkipList[T any] struct {
 	length int
 	level  int
 
-	compare func(T, T) int
+	//compare func(T, T) int
 }
 
 // 初始化skiplist
-func New[T any](compare func(T, T) int) *SkipList[T] {
+//func New[T any](compare func(T, T) int) *SkipList[T] {
+func New[T any]() *SkipList[T] {
 	s := &SkipList[T]{
 		level: 1,
 	}
 
-	s.compare = compare
+	//s.compare = compare
 	s.resetRand()
 	s.head = newNode(SKIPLIST_MAXLEVEL, 0, *new(T))
 	return s
@@ -135,6 +136,7 @@ func (s *SkipList[T]) InsertInner(score float64, elem T, level int) *SkipList[T]
 	)
 
 	x := s.head
+	var x2 *Node[T]
 	for i := s.level - 1; i >= 0; i-- {
 		if i == s.level-1 {
 			rank[i] = 0
@@ -143,9 +145,11 @@ func (s *SkipList[T]) InsertInner(score float64, elem T, level int) *SkipList[T]
 		}
 
 		for x.NodeLevel[i].forward != nil &&
-			(x.NodeLevel[i].forward.score < score ||
-				x.NodeLevel[i].forward.score == score &&
-					s.compare(elem, x.NodeLevel[i].forward.elem) < 0) {
+			(x.NodeLevel[i].forward.score < score) {
+			// 暂时不支持重复的key, 后面再说 TODO
+			//|| x.NodeLevel[i].forward.score == score &&
+			//s.compare(elem, x.NodeLevel[i].forward.elem) < 0) {
+
 			//TODO span的含义是?
 			rank[i] += x.NodeLevel[i].span
 			x = x.NodeLevel[i].forward
@@ -155,9 +159,11 @@ func (s *SkipList[T]) InsertInner(score float64, elem T, level int) *SkipList[T]
 		update[i] = x
 	}
 
-	// 生成新节点的level
-	if level == 0 {
-		level = s.rand()
+	// 这个score已经存在直接返回
+	x2 = x.NodeLevel[0].forward
+	if x2 != nil && score == x2.score {
+		x2.elem = elem
+		return s
 	}
 
 	if level > s.level {
@@ -212,6 +218,22 @@ func (s *SkipList[T]) GetWithErr(score float64) (elem T, err error) {
 		for x.NodeLevel[i].forward != nil && (x.NodeLevel[i].forward.score < score) {
 			x = x.NodeLevel[i].forward
 		}
+
+		/*
+			// 效果不大
+						if x != s.head && x.score == score {
+							elem = x.elem
+							return
+						}
+		*/
+
+		/*
+			// 效果不大
+			if x.NodeLevel[i].forward != nil && x.NodeLevel[i].forward.score == score {
+				elem = x.NodeLevel[i].forward.elem
+				return
+							}
+		*/
 	}
 
 	x = x.NodeLevel[0].forward
@@ -235,8 +257,11 @@ type Number struct {
 func (s *SkipList[T]) GetWithMeta(score float64) (elem T, number Number, err error) {
 
 	x := s.head
+	fmt.Println()
 	for i := s.level - 1; i >= 0; i-- {
-		fmt.Printf("x.NodeLevel[%d].score:%f, score:%f\n", i, x.NodeLevel[i].forward.score, score)
+		if x.NodeLevel[i].forward != nil {
+			fmt.Printf("x.NodeLevel[%d].score:%f, score:%f\n", i, x.NodeLevel[i].forward.score, score)
+		}
 		for x.NodeLevel[i].forward != nil && (x.NodeLevel[i].forward.score < score) {
 			number.Total++
 			number.Keys = append(number.Keys, x.score)
@@ -244,6 +269,18 @@ func (s *SkipList[T]) GetWithMeta(score float64) (elem T, number Number, err err
 			number.MaxLevel = append(number.MaxLevel, len(x.NodeLevel))
 			x = x.NodeLevel[i].forward
 		}
+
+		if x != nil && x.score == score {
+			elem = x.elem
+			return
+		}
+
+		/*
+			if x.NodeLevel[i].forward != nil && x.NodeLevel[i].forward.score == score {
+				elem = x.NodeLevel[i].forward.elem
+				return
+			}
+		*/
 	}
 
 	x = x.NodeLevel[0].forward

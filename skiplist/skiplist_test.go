@@ -3,7 +3,6 @@ package skiplist
 // apache 2.0 guonaihong
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/guonaihong/gstl/cmp"
@@ -11,12 +10,12 @@ import (
 )
 
 func Test_New(t *testing.T) {
-	n := New(strings.Compare)
+	n := New[int]()
 	assert.NotNil(t, n)
 }
 
 func Test_SetGet(t *testing.T) {
-	zset := New(strings.Compare)
+	zset := New[string]()
 	max := 100.0
 	for i := 0.0; i < max; i++ {
 		zset.Set(i, fmt.Sprintf("%d", int(i)))
@@ -28,8 +27,25 @@ func Test_SetGet(t *testing.T) {
 	}
 }
 
+// 测试插入重复
+func Test_InsertRepeatingElement(t *testing.T) {
+	sl := New[string]()
+	max := 100
+	for i := 0; i < max; i++ {
+		sl.Set(float64(i), fmt.Sprint(i))
+	}
+
+	for i := 0; i < max; i++ {
+		sl.Set(float64(i), fmt.Sprint(i+1))
+	}
+
+	for i := 0; i < max; i++ {
+		assert.Equal(t, sl.Get(float64(i)), fmt.Sprint(i+1))
+	}
+}
+
 func Test_SetGetRemove(t *testing.T) {
-	zset := New(cmp.Compare[float64])
+	zset := New[float64]()
 
 	max := 100.0
 	for i := 0.0; i < max; i++ {
@@ -70,7 +86,7 @@ func Test_Skiplist_TopMin(t *testing.T) {
 	for i, b := range []*SkipList[int]{
 		// btree里面元素 少于 TopMin 需要返回的值
 		func() *SkipList[int] {
-			b := New(cmp.Compare[int])
+			b := New[int]()
 			for i := 0; i < count10; i++ {
 				b.Set(float64(i), i)
 			}
@@ -81,7 +97,7 @@ func Test_Skiplist_TopMin(t *testing.T) {
 		// btree里面元素 等于 TopMin 需要返回的值
 		func() *SkipList[int] {
 
-			b := New(cmp.Compare[int])
+			b := New[int]()
 			for i := 0; i < count100; i++ {
 				b.Set(float64(i), i)
 			}
@@ -91,7 +107,7 @@ func Test_Skiplist_TopMin(t *testing.T) {
 		// btree里面元素 大于 TopMin 需要返回的值
 		func() *SkipList[int] {
 
-			b := New(cmp.Compare[int])
+			b := New[int]()
 			for i := 0; i < count1000; i++ {
 				b.Set(float64(i), i)
 			}
@@ -115,7 +131,7 @@ func Test_Skiplist_TopMin2(t *testing.T) {
 	start := -10
 	max := 100
 	limit := 10
-	sl := New(cmp.Compare[int])
+	sl := New[int]()
 
 	need := make([]int, 0, limit)
 	for i, l := start, limit; i < max && l > 0; i++ {
@@ -133,10 +149,10 @@ func Test_Skiplist_TopMin2(t *testing.T) {
 	assert.Equal(t, need, got)
 }
 
-// debug
-func Test_SkipList_SetAndGet3(t *testing.T) {
+// debug, 指定层
+func Test_SkipList_SetAndGet_Level(t *testing.T) {
 
-	sl := New(cmp.Compare[int])
+	sl := New[int]()
 
 	keys := []int{5, 8, 10}
 	level := []int{2, 3, 5}
@@ -160,7 +176,7 @@ func Test_SkipList_SetAndGet3(t *testing.T) {
 // debug, 用的入口函数
 func Test_SkipList_SetAndGet2(t *testing.T) {
 
-	sl := New(cmp.Compare[int])
+	sl := New[int]()
 
 	max := 1000
 	start := -1
@@ -200,7 +216,7 @@ func Test_Skiplist_TopMax(t *testing.T) {
 	for i, b := range []*SkipList[int]{
 		// btree里面元素 少于 TopMax 需要返回的值
 		func() *SkipList[int] {
-			b := New(cmp.Compare[int])
+			b := New[int]()
 			for i := 0; i < count10; i++ {
 				b.Set(float64(i), i)
 			}
@@ -211,7 +227,7 @@ func Test_Skiplist_TopMax(t *testing.T) {
 		// btree里面元素 等于 TopMax 需要返回的值
 		func() *SkipList[int] {
 
-			b := New(cmp.Compare[int])
+			b := New[int]()
 			for i := 0; i < count100; i++ {
 				b.Set(float64(i), i)
 			}
@@ -221,7 +237,7 @@ func Test_Skiplist_TopMax(t *testing.T) {
 		// btree里面元素 大于 TopMax 需要返回的值
 		func() *SkipList[int] {
 
-			b := New(cmp.Compare[int])
+			b := New[int]()
 			for i := 0; i < count1000; i++ {
 				b.Set(float64(i), i)
 			}
