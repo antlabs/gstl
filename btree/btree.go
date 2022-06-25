@@ -2,6 +2,8 @@ package btree
 
 // apache 2.0 guonaihong
 
+// 参加资料
+// https://github.com/tidwall/btree
 import (
 	"errors"
 	"fmt"
