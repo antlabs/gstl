@@ -22,17 +22,41 @@ type Node[K constraints.Ordered, V any] struct {
 	height int
 }
 
+type root[K constraints.Ordered, V any] struct {
+	node *Node[K, V]
+}
+
+// 返回左子树高度
+func (n *Node[K, V]) LeftHeight() int {
+	if n.left != nil {
+		return n.left.height
+	}
+
+	return 0
+}
+
+// 返回右子树高度
+func (n *Node[K, V]) RightHeight() int {
+	if n.right != nil {
+		return n.right.height
+	}
+	return 0
+}
+
+// avl tree的结构
 type AvlTree[K constraints.Ordered, V any] struct {
 	length int
-	root   *Node[K, V]
+	root   root[K, V]
 }
 
-func (a *AvlTree[K, V]) New() {
-
+// 构造函数
+func New[K constraints.Ordered, V any]() *AvlTree[K, V] {
+	return &AvlTree[K, V]{}
 }
 
+// 第一个节点
 func (a *AvlTree[K, V]) First() (v V, err error) {
-	n := a.root
+	n := a.root.node
 	if n == nil {
 		err = ErrNotFound
 		return
@@ -45,8 +69,9 @@ func (a *AvlTree[K, V]) First() (v V, err error) {
 	return n.val, nil
 }
 
+// 最后一个节点
 func (a *AvlTree[K, V]) Last() (v V, err error) {
-	n := a.root
+	n := a.root.node
 	if n == nil {
 		err = ErrNotFound
 		return
@@ -61,7 +86,7 @@ func (a *AvlTree[K, V]) Last() (v V, err error) {
 
 // 从avl tree找到需要的值
 func (a *AvlTree[K, V]) Get(k K) (v V, err error) {
-	n := a.root
+	n := a.root.node
 	for n != nil {
 		if n.key == k {
 			return n.val, nil
