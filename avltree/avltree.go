@@ -3,6 +3,7 @@ package avltree
 import (
 	"errors"
 
+	"github.com/guonaihong/gstl/cmp"
 	"golang.org/x/exp/constraints"
 )
 
@@ -23,7 +24,7 @@ type Node[K constraints.Ordered, V any] struct {
 }
 
 // 返回左子树高度
-func (n *Node[K, V]) LeftHeight() int {
+func (n *Node[K, V]) leftHeight() int {
 	if n.left != nil {
 		return n.left.height
 	}
@@ -32,15 +33,64 @@ func (n *Node[K, V]) LeftHeight() int {
 }
 
 // 返回右子树高度
-func (n *Node[K, V]) RightHeight() int {
+func (n *Node[K, V]) rightHeight() int {
 	if n.right != nil {
 		return n.right.height
 	}
 	return 0
 }
 
+func (n *Node[K, V]) heightUpdate() {
+	lh := n.left.leftHeight()
+	rh := n.right.rightHeight()
+	n.height = cmp.Max(lh, rh) + 1
+}
+
 type root[K constraints.Ordered, V any] struct {
 	node *Node[K, V]
+}
+
+func (r *root[K, V]) fixLeft(node *Node[K, V]) *Node[K, V] {
+	right := node.right
+	rlh := node.right.leftHeight()
+	rrh := node.right.rightHeight()
+
+	if rlh > rrh {
+		right = r.rotateRight(right)
+		right.right.heightUpdate()
+		right.heightUpdate()
+	}
+	node = r.rotateLeft(node)
+	node.left.heightUpdate()
+	node.heightUpdate()
+
+	return node
+}
+
+func (r *root[K, V]) fixRight(node *Node[K, V]) *Node[K, V] {
+	return node
+}
+
+func (r *root[K, V]) postInsert(node *Node[K, V]) {
+	node.height = 1
+
+	for node = node.parent; node != nil; node = node.parent {
+		lh := node.leftHeight()
+		lr := node.rightHeight()
+		height := cmp.Max(lh, lr) + 1
+
+		diff := lh - lr
+		if node.height == height {
+			break
+		}
+		node.height = height
+
+		if diff <= -2 {
+			node = r.fixLeft(node)
+		} else {
+			node = r.fixRight(node)
+		}
+	}
 }
 
 func (r *root[K, V]) childReplace(oldNode, newNode, parent *Node[K, V]) {
@@ -75,6 +125,22 @@ func (r *root[K, V]) rotateLeft(node *Node[K, V]) *Node[K, V] {
 	r.childReplace(node, right, parent)
 	node.parent = right
 	return right
+}
+
+func (r *root[K, V]) rotateRight(node *Node[K, V]) *Node[K, V] {
+	left := node.left
+	parent := node.parent
+	node.left = left.right
+	if left.right != nil {
+		left.right.parent = node
+	}
+
+	left.right = node
+	left.parent = parent
+	r.childReplace(node, left, parent)
+	node.parent = left
+
+	return node
 }
 
 // avl tree的结构
