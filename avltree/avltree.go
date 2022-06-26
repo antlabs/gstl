@@ -22,10 +22,6 @@ type Node[K constraints.Ordered, V any] struct {
 	height int
 }
 
-type root[K constraints.Ordered, V any] struct {
-	node *Node[K, V]
-}
-
 // 返回左子树高度
 func (n *Node[K, V]) LeftHeight() int {
 	if n.left != nil {
@@ -41,6 +37,44 @@ func (n *Node[K, V]) RightHeight() int {
 		return n.right.height
 	}
 	return 0
+}
+
+type root[K constraints.Ordered, V any] struct {
+	node *Node[K, V]
+}
+
+func (r *root[K, V]) childReplace(oldNode, newNode, parent *Node[K, V]) {
+	if parent != nil {
+		if parent.left == oldNode {
+			parent.left = newNode
+		} else {
+			parent.right = newNode
+		}
+	} else {
+		r.node = newNode
+	}
+
+}
+
+// 左旋就是拽住node往下拉, node.right升为父节点
+func (r *root[K, V]) rotateLeft(node *Node[K, V]) *Node[K, V] {
+	right := node.right
+	parent := node.parent
+
+	// node会滑成right的左节点
+	// 这里安排下node.right的位置, 这里不再指向right, 再向right的左孩子
+	// right.left 大于node, 小于right, 所以新的位置就是node.right
+	node.right = right.left
+	if right.left != nil {
+		right.left.parent = node
+	}
+
+	// 把node从父的位置降下来
+	right.left = node
+	right.parent = parent
+	r.childReplace(node, right, parent)
+	node.parent = right
+	return right
 }
 
 // avl tree的结构
