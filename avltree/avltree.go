@@ -46,13 +46,20 @@ func (n *Node[K, V]) heightUpdate() {
 	n.height = cmp.Max(lh, rh) + 1
 }
 
+func (n *Node[K, V]) link(parent *Node[K, V], link **Node[K, V]) {
+	n.parent = parent
+	*link = node
+}
+
 type root[K constraints.Ordered, V any] struct {
 	node *Node[K, V]
 }
 
 func (r *root[K, V]) fixLeft(node *Node[K, V]) *Node[K, V] {
 	right := node.right
+	// 右节点, 左子树高度
 	rlh := node.right.leftHeight()
+	// 右节点, 右子树高度
 	rrh := node.right.rightHeight()
 
 	if rlh > rrh {
@@ -68,6 +75,22 @@ func (r *root[K, V]) fixLeft(node *Node[K, V]) *Node[K, V] {
 }
 
 func (r *root[K, V]) fixRight(node *Node[K, V]) *Node[K, V] {
+	left := node.left
+	// 右节点, 左子树高度
+	llh := node.left.leftHeight()
+	// 右节点, 右子树高度
+	lrh := node.left.rightHeight()
+
+	if llh < lrh {
+		left = r.rotateLeft(left)
+		left.left.heightUpdate()
+		left.heightUpdate()
+	}
+
+	node = r.rotateRight(node)
+	node.right.heightUpdate()
+	node.heightUpdate()
+
 	return node
 }
 
@@ -106,7 +129,7 @@ func (r *root[K, V]) childReplace(oldNode, newNode, parent *Node[K, V]) {
 
 }
 
-// 左旋就是拽住node往下拉, node.right升为父节点
+// 左旋就是拽住node往左下拉, node.right升为父节点
 func (r *root[K, V]) rotateLeft(node *Node[K, V]) *Node[K, V] {
 	right := node.right
 	parent := node.parent
@@ -127,6 +150,7 @@ func (r *root[K, V]) rotateLeft(node *Node[K, V]) *Node[K, V] {
 	return right
 }
 
+// 右旋就是拽往node往右下拉, node.left升为父节点
 func (r *root[K, V]) rotateRight(node *Node[K, V]) *Node[K, V] {
 	left := node.left
 	parent := node.parent
@@ -200,5 +224,31 @@ func (a *AvlTree[K, V]) Get(k K) (v V, err error) {
 	}
 
 	err = ErrNotFound
+	return
+}
+
+// 设置接口, 如果有值, 把prev值带返回, 并且被替换, 没有就新加
+func (a *AvlTree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
+	link := &a.root.node
+	var parent *Node[K, V]
+	node := &Node[K, V]{pair: pair[K, V]{key: k, val: v}}
+
+	for *link != nil {
+		parent = *link
+		if parent.key == k {
+			prev = parent.val
+			parent.val = v
+			return prev, true
+		}
+
+		if parent.key < k {
+			link = &parent.right
+		} else {
+			link = &parent.left
+		}
+	}
+
+	node.link(parent, link)
+	a.root.postInsert(node)
 	return
 }
