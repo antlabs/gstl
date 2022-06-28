@@ -250,5 +250,26 @@ func (a *AvlTree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 
 	node.link(parent, link)
 	a.root.postInsert(node)
+	a.length++
 	return
+}
+
+func (a *AvlTree[K, V]) Remove(k K) *AvlTree[K, V] {
+	n := a.root.node
+	for n != nil {
+		if n.key == k {
+			goto found
+		}
+
+		if k > n.key {
+			n = n.right
+		} else {
+			n = n.left
+		}
+	}
+
+	return a
+found:
+	// 找到, TODO 修改下指针关系
+	return a
 }
