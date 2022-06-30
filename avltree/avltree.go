@@ -254,6 +254,28 @@ func (a *AvlTree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 	return
 }
 
+func (r *root[K, V]) rebalance(node *Node[K, V]) {
+
+	for ; node != nil; node = node.parent {
+		lh := node.leftHeight()
+		lr := node.rightHeight()
+		height := cmp.Max(lh, lr) + 1
+
+		diff := lh - lr
+		if node.height != height {
+			node.height = height
+		} else if diff >= -1 && diff <= 1 {
+			break
+		}
+
+		if diff <= -2 {
+			node = r.fixLeft(node)
+		} else {
+			node = r.fixRight(node)
+		}
+	}
+}
+
 func (a *AvlTree[K, V]) Remove(k K) *AvlTree[K, V] {
 	n := a.root.node
 	for n != nil {
@@ -269,7 +291,58 @@ func (a *AvlTree[K, V]) Remove(k K) *AvlTree[K, V] {
 	}
 
 	return a
+
 found:
 	// 找到, TODO 修改下指针关系
+	var child, parent *Node[K, V]
+	if n.left != nil && n.right != nil {
+		old := n
+		n = n.right
+		for left := n; left != nil; left = left.left {
+			n = left
+		}
+		// 待会儿old被删除时, 使用n贴到old原来的位置
+
+		child = n.left
+		parent = n.parent
+		if child != nil {
+			// child 这条线不再n 节点
+			child.parent = parent
+		}
+		// TODO 写注释
+		a.root.childReplace(n, child, parent)
+
+		if n.parent == old {
+			parent = n
+		}
+
+		// 把n节点贴到原来old的位置
+		n.left = old.left
+		n.right = old.right
+		n.parent = old.parent
+		n.height = old.height
+
+		a.root.childReplace(old, n, old.parent)
+		old.left.parent = n
+
+		if old.right != nil {
+			old.right.parent = n
+		}
+	} else {
+		if n.left == nil {
+			child = n.right
+		} else {
+			child = n.left
+		}
+		parent = n.parent
+		a.root.childReplace(n, child, parent)
+		if child != nil {
+			child.parent = parent
+		}
+	}
+
+	if parent != nil {
+		a.root.rebalance(parent)
+	}
 	return a
 }
