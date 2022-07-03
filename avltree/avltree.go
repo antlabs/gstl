@@ -1,5 +1,9 @@
 package avltree
 
+// apache 2.0 guonaihong
+
+// 参考资料
+// https://github.com/skywind3000/avlmini
 import (
 	"errors"
 
@@ -88,7 +92,10 @@ func (r *root[K, V]) fixRight(node *Node[K, V]) *Node[K, V] {
 	}
 
 	node = r.rotateRight(node)
-	node.right.heightUpdate()
+	if node.right != nil {
+		node.right.heightUpdate()
+	}
+
 	node.heightUpdate()
 
 	return node
@@ -208,8 +215,14 @@ func (a *AvlTree[K, V]) Last() (v V, err error) {
 	return n.val, nil
 }
 
+// Get
+func (a *AvlTree[K, V]) Get(k K) (v V) {
+	v, _ = a.GetWithErr(k)
+	return
+}
+
 // 从avl tree找到需要的值
-func (a *AvlTree[K, V]) Get(k K) (v V, err error) {
+func (a *AvlTree[K, V]) GetWithErr(k K) (v V, err error) {
 	n := a.root.node
 	for n != nil {
 		if n.key == k {
@@ -225,6 +238,11 @@ func (a *AvlTree[K, V]) Get(k K) (v V, err error) {
 
 	err = ErrNotFound
 	return
+}
+
+func (a *AvlTree[K, V]) Set(k K, v V) *AvlTree[K, V] {
+	_, _ = a.SetWithPrev(k, v)
+	return a
 }
 
 // 设置接口, 如果有值, 把prev值带返回, 并且被替换, 没有就新加
@@ -276,6 +294,10 @@ func (r *root[K, V]) rebalance(node *Node[K, V]) {
 	}
 }
 
+func (a *AvlTree[K, V]) Delete(k K) *AvlTree[K, V] {
+	return a.Remove(k)
+}
+
 func (a *AvlTree[K, V]) Remove(k K) *AvlTree[K, V] {
 	n := a.root.node
 	for n != nil {
@@ -293,7 +315,6 @@ func (a *AvlTree[K, V]) Remove(k K) *AvlTree[K, V] {
 	return a
 
 found:
-	// 找到, TODO 修改下指针关系
 	var child, parent *Node[K, V]
 	if n.left != nil && n.right != nil {
 		old := n
