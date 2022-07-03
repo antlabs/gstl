@@ -41,14 +41,14 @@ func (n *Node[K, V]) rightHeight() int {
 }
 
 func (n *Node[K, V]) heightUpdate() {
-	lh := n.left.leftHeight()
-	rh := n.right.rightHeight()
+	lh := n.leftHeight()
+	rh := n.rightHeight()
 	n.height = cmp.Max(lh, rh) + 1
 }
 
 func (n *Node[K, V]) link(parent *Node[K, V], link **Node[K, V]) {
 	n.parent = parent
-	*link = node
+	*link = n
 }
 
 type root[K constraints.Ordered, V any] struct {
@@ -58,9 +58,9 @@ type root[K constraints.Ordered, V any] struct {
 func (r *root[K, V]) fixLeft(node *Node[K, V]) *Node[K, V] {
 	right := node.right
 	// 右节点, 左子树高度
-	rlh := node.right.leftHeight()
+	rlh := right.leftHeight()
 	// 右节点, 右子树高度
-	rrh := node.right.rightHeight()
+	rrh := right.rightHeight()
 
 	if rlh > rrh {
 		right = r.rotateRight(right)
@@ -77,9 +77,9 @@ func (r *root[K, V]) fixLeft(node *Node[K, V]) *Node[K, V] {
 func (r *root[K, V]) fixRight(node *Node[K, V]) *Node[K, V] {
 	left := node.left
 	// 右节点, 左子树高度
-	llh := node.left.leftHeight()
+	llh := left.leftHeight()
 	// 右节点, 右子树高度
-	lrh := node.left.rightHeight()
+	lrh := left.rightHeight()
 
 	if llh < lrh {
 		left = r.rotateLeft(left)
@@ -99,10 +99,10 @@ func (r *root[K, V]) postInsert(node *Node[K, V]) {
 
 	for node = node.parent; node != nil; node = node.parent {
 		lh := node.leftHeight()
-		lr := node.rightHeight()
-		height := cmp.Max(lh, lr) + 1
+		rh := node.rightHeight()
+		height := cmp.Max(lh, rh) + 1
 
-		diff := lh - lr
+		diff := lh - rh
 		if node.height == height {
 			break
 		}
