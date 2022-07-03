@@ -110,7 +110,7 @@ func (r *root[K, V]) postInsert(node *Node[K, V]) {
 
 		if diff <= -2 {
 			node = r.fixLeft(node)
-		} else {
+		} else if diff >= 2 {
 			node = r.fixRight(node)
 		}
 	}
@@ -270,7 +270,7 @@ func (r *root[K, V]) rebalance(node *Node[K, V]) {
 
 		if diff <= -2 {
 			node = r.fixLeft(node)
-		} else {
+		} else if diff >= 2 {
 			node = r.fixRight(node)
 		}
 	}
