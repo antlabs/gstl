@@ -19,16 +19,16 @@ type pair[K constraints.Ordered, V any] struct {
 	key K
 }
 
-type Node[K constraints.Ordered, V any] struct {
-	left   *Node[K, V]
-	right  *Node[K, V]
-	parent *Node[K, V]
+type node[K constraints.Ordered, V any] struct {
+	left   *node[K, V]
+	right  *node[K, V]
+	parent *node[K, V]
 	pair[K, V]
 	height int
 }
 
 // 返回左子树高度
-func (n *Node[K, V]) leftHeight() int {
+func (n *node[K, V]) leftHeight() int {
 	if n.left != nil {
 		return n.left.height
 	}
@@ -37,29 +37,29 @@ func (n *Node[K, V]) leftHeight() int {
 }
 
 // 返回右子树高度
-func (n *Node[K, V]) rightHeight() int {
+func (n *node[K, V]) rightHeight() int {
 	if n.right != nil {
 		return n.right.height
 	}
 	return 0
 }
 
-func (n *Node[K, V]) heightUpdate() {
+func (n *node[K, V]) heightUpdate() {
 	lh := n.leftHeight()
 	rh := n.rightHeight()
 	n.height = cmp.Max(lh, rh) + 1
 }
 
-func (n *Node[K, V]) link(parent *Node[K, V], link **Node[K, V]) {
+func (n *node[K, V]) link(parent *node[K, V], link **node[K, V]) {
 	n.parent = parent
 	*link = n
 }
 
 type root[K constraints.Ordered, V any] struct {
-	node *Node[K, V]
+	node *node[K, V]
 }
 
-func (r *root[K, V]) fixLeft(node *Node[K, V]) *Node[K, V] {
+func (r *root[K, V]) fixLeft(node *node[K, V]) *node[K, V] {
 	right := node.right
 	// 右节点, 左子树高度
 	rlh := right.leftHeight()
@@ -78,7 +78,7 @@ func (r *root[K, V]) fixLeft(node *Node[K, V]) *Node[K, V] {
 	return node
 }
 
-func (r *root[K, V]) fixRight(node *Node[K, V]) *Node[K, V] {
+func (r *root[K, V]) fixRight(node *node[K, V]) *node[K, V] {
 	left := node.left
 	// 右节点, 左子树高度
 	llh := left.leftHeight()
@@ -101,7 +101,7 @@ func (r *root[K, V]) fixRight(node *Node[K, V]) *Node[K, V] {
 	return node
 }
 
-func (r *root[K, V]) postInsert(node *Node[K, V]) {
+func (r *root[K, V]) postInsert(node *node[K, V]) {
 	node.height = 1
 
 	for node = node.parent; node != nil; node = node.parent {
@@ -123,7 +123,7 @@ func (r *root[K, V]) postInsert(node *Node[K, V]) {
 	}
 }
 
-func (r *root[K, V]) childReplace(oldNode, newNode, parent *Node[K, V]) {
+func (r *root[K, V]) childReplace(oldNode, newNode, parent *node[K, V]) {
 	if parent != nil {
 		if parent.left == oldNode {
 			parent.left = newNode
@@ -137,7 +137,7 @@ func (r *root[K, V]) childReplace(oldNode, newNode, parent *Node[K, V]) {
 }
 
 // 左旋就是拽住node往左下拉, node.right升为父节点
-func (r *root[K, V]) rotateLeft(node *Node[K, V]) *Node[K, V] {
+func (r *root[K, V]) rotateLeft(node *node[K, V]) *node[K, V] {
 	right := node.right
 	parent := node.parent
 
@@ -158,7 +158,7 @@ func (r *root[K, V]) rotateLeft(node *Node[K, V]) *Node[K, V] {
 }
 
 // 右旋就是拽往node往右下拉, node.left升为父节点
-func (r *root[K, V]) rotateRight(node *Node[K, V]) *Node[K, V] {
+func (r *root[K, V]) rotateRight(node *node[K, V]) *node[K, V] {
 	left := node.left
 	parent := node.parent
 	node.left = left.right
@@ -248,8 +248,8 @@ func (a *AvlTree[K, V]) Set(k K, v V) *AvlTree[K, V] {
 // 设置接口, 如果有值, 把prev值带返回, 并且被替换, 没有就新加
 func (a *AvlTree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 	link := &a.root.node
-	var parent *Node[K, V]
-	node := &Node[K, V]{pair: pair[K, V]{key: k, val: v}}
+	var parent *node[K, V]
+	node := &node[K, V]{pair: pair[K, V]{key: k, val: v}}
 
 	for *link != nil {
 		parent = *link
@@ -272,7 +272,7 @@ func (a *AvlTree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 	return
 }
 
-func (r *root[K, V]) rebalance(node *Node[K, V]) {
+func (r *root[K, V]) rebalance(node *node[K, V]) {
 
 	for ; node != nil; node = node.parent {
 		lh := node.leftHeight()
@@ -315,7 +315,7 @@ func (a *AvlTree[K, V]) Remove(k K) *AvlTree[K, V] {
 	return a
 
 found:
-	var child, parent *Node[K, V]
+	var child, parent *node[K, V]
 	if n.left != nil && n.right != nil {
 		old := n
 		n = n.right

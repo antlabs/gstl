@@ -5,10 +5,27 @@ import (
 	"testing"
 )
 
-func BenchmarkGet(b *testing.B) {
+func BenchmarkGetAsc(b *testing.B) {
 	max := 1000000.0 * 5
 	set := New[float64, float64]()
 	for i := 0.0; i < max; i++ {
+		set.Set(i, i)
+	}
+
+	b.ResetTimer()
+
+	for i := 0.0; i < max; i++ {
+		v := set.Get(i)
+		if v != i {
+			panic(fmt.Sprintf("need:%f, got:%f", i, v))
+		}
+	}
+}
+
+func BenchmarkGetDesc(b *testing.B) {
+	max := 1000000.0 * 5
+	set := New[float64, float64]()
+	for i := max; i >= 0; i-- {
 		set.Set(i, i)
 	}
 
