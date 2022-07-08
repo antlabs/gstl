@@ -44,8 +44,18 @@ func (n *node[K, V]) setParentBlack(parent *node[K, V]) {
 	n.parent = parent
 }
 
+func (n *node[K, V]) link(parent *node[K, V], link **node[K, V]) {
+	n.parent = parent
+	n.red = true
+	n.black = false
+	*link = n
+}
+
 type root[K constraints.Ordered, V any] struct {
 	node *node[K, V]
+}
+
+func (r *root[K, V]) insert(n *node[K, V]) {
 }
 
 // 红黑树
@@ -84,7 +94,30 @@ func (r *RBtree[K, V]) Last() (v V, err error) {
 	return n.val, nil
 }
 
+// 设置
 func (r *RBtree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
+	link := &r.root.node
+	var parent *node[K, V]
+
+	node := &node[K, V]{pair: pair[K, V]{key: k, val: v}}
+
+	for *link != nil {
+		parent = *link
+		if parent.key == k {
+			prev = parent.val
+			parent.val = v
+			return prev, true
+		}
+
+		if parent.key < k {
+			*link = parent.right
+		} else {
+			*link = parent.left
+		}
+	}
+
+	node.link(parent, link)
+	r.root.insert(node)
 	r.length++
 	return
 }
