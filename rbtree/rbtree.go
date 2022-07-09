@@ -18,6 +18,11 @@ import (
 
 var ErrNotFound = errors.New("rbtree: not found value")
 
+const (
+	red   = 1
+	black = 2
+)
+
 // 元素
 type pair[K constraints.Ordered, V any] struct {
 	val V
@@ -36,10 +41,12 @@ type node[K constraints.Ordered, V any] struct {
 
 func (n *node[K, V]) setParentRed(parent *node[K, V]) {
 	parent.red = true
+	parent.black = false
 	n.parent = parent
 }
 
 func (n *node[K, V]) setParentBlack(parent *node[K, V]) {
+	parent.red = false
 	parent.black = true
 	n.parent = parent
 }
@@ -55,7 +62,116 @@ type root[K constraints.Ordered, V any] struct {
 	node *node[K, V]
 }
 
-func (r *root[K, V]) insert(n *node[K, V]) {
+func (r *root[K, V]) rotateSetParents(old, new *node[K, V], color int) {
+	parent := old.parent
+	new.parent = old.parent
+	if color == red {
+		old.setParentRed(parent)
+	} else {
+		old.setParentBlack(parent)
+	}
+	r.changeChild(old, new, parent)
+}
+
+func (r *root[K, V]) changeChild(old, new, parent *node[K, V]) {
+	if parent != nil {
+		if parent.left == old {
+			parent.left = new
+		} else {
+			parent.right = new
+		}
+	} else {
+		r.node = new
+	}
+
+}
+
+func (r *root[K, V]) insert(node *node[K, V]) {
+
+	parent := node.parent
+	var gparent, tmp *node[K, V]
+
+	for {
+
+		if parent == nil {
+			node.setParentBlack(parent)
+			break
+		}
+
+		if parent.black {
+			break
+		}
+
+		gparent = parent.parent
+		tmp = gparent.right
+		if parent != tmp {
+			if tmp != nil && tmp.red {
+				/*
+				 * Case 1 - node's uncle is red (color flips).
+				 *
+				 *       G            g
+				 *      / \          / \
+				 *     p   u  -->   P   U
+				 *    /            /
+				 *   n            n
+				 *
+				 * However, since g's parent might be red, and
+				 * 4) does not allow this, we need to recurse
+				 * at g.
+				 */
+				tmp.setParentBlack(gparent)
+				parent.setParentRed(gparent)
+				node = gparent
+				parent = node.parent
+				node.setParentRed(parent)
+				continue
+			}
+
+			tmp = parent.right
+			if node == tmp {
+				/*
+				 * Case 2 - node's uncle is black and node is
+				 * the parent's right child (left rotate at parent).
+				 *
+				 *      G             G
+				 *     / \           / \
+				 *    p   U  -->    n   U
+				 *     \           /
+				 *      n         p
+				 *
+				 * This still leaves us in violation of 4), the
+				 * continuation into Case 3 will fix that.
+				 */
+				tmp = node.left
+				parent.right = tmp
+				node.left = parent
+				if tmp != nil {
+					tmp.setParentBlack(parent)
+				}
+				parent.setParentRed(node)
+				parent = node
+				tmp = node.right
+			}
+
+			/*
+			 * Case 3 - node's uncle is black and node is
+			 * the parent's left child (right rotate at gparent).
+			 *
+			 *        G           P
+			 *       / \         / \
+			 *      p   U  -->  n   g
+			 *     /                 \
+			 *    n                   U
+			 */
+			gparent.left = tmp
+			parent.right = gparent
+			if tmp != nil {
+				tmp.setParentBlack(gparent)
+			}
+			break
+		} else {
+		}
+	}
 }
 
 // 红黑树
