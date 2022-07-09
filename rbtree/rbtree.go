@@ -86,15 +86,15 @@ func (r *root[K, V]) changeChild(old, new, parent *node[K, V]) {
 
 }
 
-func (r *root[K, V]) insert(node *node[K, V]) {
+func (r *root[K, V]) insert(n *node[K, V]) {
 
-	parent := node.parent
+	parent := n.parent
 	var gparent, tmp *node[K, V]
 
 	for {
 
 		if parent == nil {
-			node.setParentBlack(parent)
+			n.setParentBlack(parent)
 			break
 		}
 
@@ -121,14 +121,14 @@ func (r *root[K, V]) insert(node *node[K, V]) {
 				 */
 				tmp.setParentBlack(gparent)
 				parent.setParentRed(gparent)
-				node = gparent
-				parent = node.parent
-				node.setParentRed(parent)
+				n = gparent
+				parent = n.parent
+				n.setParentRed(parent)
 				continue
 			}
 
 			tmp = parent.right
-			if node == tmp {
+			if n == tmp {
 				/*
 				 * Case 2 - node's uncle is black and node is
 				 * the parent's right child (left rotate at parent).
@@ -142,15 +142,15 @@ func (r *root[K, V]) insert(node *node[K, V]) {
 				 * This still leaves us in violation of 4), the
 				 * continuation into Case 3 will fix that.
 				 */
-				tmp = node.left
+				tmp = n.left
 				parent.right = tmp
-				node.left = parent
+				n.left = parent
 				if tmp != nil {
 					tmp.setParentBlack(parent)
 				}
-				parent.setParentRed(node)
-				parent = node
-				tmp = node.right
+				parent.setParentRed(n)
+				parent = n
+				tmp = n.right
 			}
 
 			/*
@@ -174,22 +174,22 @@ func (r *root[K, V]) insert(node *node[K, V]) {
 			if tmp != nil && tmp.red {
 				tmp.setParentBlack(gparent)
 				parent.setParentRed(gparent)
-				node = gparent
-				parent = node.parent
-				node.setParentRed(parent)
+				n = gparent
+				parent = n.parent
+				n.setParentRed(parent)
 				continue
 			}
 			tmp = parent.left
-			if node == tmp {
-				tmp = node.right
+			if n == tmp {
+				tmp = n.right
 				parent.left = tmp
 				parent.right = parent
 				if tmp != nil {
 					tmp.setParentBlack(parent)
 				}
-				parent.setParentRed(node)
-				parent = node
-				tmp = node.left
+				parent.setParentRed(n)
+				parent = n
+				tmp = n.left
 			}
 
 			/* Case 3 - left rotate at gparent */
@@ -198,7 +198,7 @@ func (r *root[K, V]) insert(node *node[K, V]) {
 			if tmp != nil {
 				tmp.setParentBlack(gparent)
 			}
-			root.rotateSetParents(gparent, parent, RED)
+			r.rotateSetParents(gparent, parent, RED)
 			break
 		}
 	}
