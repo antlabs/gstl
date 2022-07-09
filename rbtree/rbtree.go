@@ -19,8 +19,8 @@ import (
 var ErrNotFound = errors.New("rbtree: not found value")
 
 const (
-	red   = 1
-	black = 2
+	RED   = 1
+	BLACK = 2
 )
 
 // 元素
@@ -65,7 +65,7 @@ type root[K constraints.Ordered, V any] struct {
 func (r *root[K, V]) rotateSetParents(old, new *node[K, V], color int) {
 	parent := old.parent
 	new.parent = old.parent
-	if color == red {
+	if color == RED {
 		old.setParentRed(parent)
 	} else {
 		old.setParentBlack(parent)
@@ -170,6 +170,36 @@ func (r *root[K, V]) insert(node *node[K, V]) {
 			}
 			break
 		} else {
+			tmp = gparent.left
+			if tmp != nil && tmp.red {
+				tmp.setParentBlack(gparent)
+				parent.setParentRed(gparent)
+				node = gparent
+				parent = node.parent
+				node.setParentRed(parent)
+				continue
+			}
+			tmp = parent.left
+			if node == tmp {
+				tmp = node.right
+				parent.left = tmp
+				parent.right = parent
+				if tmp != nil {
+					tmp.setParentBlack(parent)
+				}
+				parent.setParentRed(node)
+				parent = node
+				tmp = node.left
+			}
+
+			/* Case 3 - left rotate at gparent */
+			gparent.right = tmp
+			parent.left = gparent
+			if tmp != nil {
+				tmp.setParentBlack(gparent)
+			}
+			root.rotateSetParents(gparent, parent, RED)
+			break
 		}
 	}
 }
