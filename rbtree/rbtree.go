@@ -205,13 +205,13 @@ func (r *root[K, V]) insert(node *node[K, V]) {
 }
 
 // 红黑树
-type RBtree[K constraints.Ordered, V any] struct {
+type RBTree[K constraints.Ordered, V any] struct {
 	length int
 	root   root[K, V]
 }
 
 // 第一个节点
-func (r *RBtree[K, V]) First() (v V, err error) {
+func (r *RBTree[K, V]) First() (v V, err error) {
 	n := r.root.node
 	if n == nil {
 		err = ErrNotFound
@@ -226,7 +226,7 @@ func (r *RBtree[K, V]) First() (v V, err error) {
 }
 
 // 最后一个节点
-func (r *RBtree[K, V]) Last() (v V, err error) {
+func (r *RBTree[K, V]) Last() (v V, err error) {
 	n := r.root.node
 	if n == nil {
 		err = ErrNotFound
@@ -241,7 +241,7 @@ func (r *RBtree[K, V]) Last() (v V, err error) {
 }
 
 // 设置
-func (r *RBtree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
+func (r *RBTree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 	link := &r.root.node
 	var parent *node[K, V]
 
@@ -265,5 +265,30 @@ func (r *RBtree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 	node.link(parent, link)
 	r.root.insert(node)
 	r.length++
+	return
+}
+
+// Get
+func (r *RBTree[K, V]) Get(k K) (v V) {
+	v, _ = r.GetWithErr(k)
+	return
+}
+
+// 从rbtree 找到需要的值
+func (r *RBTree[K, V]) GetWithErr(k K) (v V, err error) {
+	n := r.root.node
+	for n != nil {
+		if n.key == k {
+			return n.val, nil
+		}
+
+		if k > n.key {
+			n = n.right
+		} else {
+			n = n.left
+		}
+	}
+
+	err = ErrNotFound
 	return
 }
