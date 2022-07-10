@@ -6,9 +6,11 @@ package avltree
 // https://github.com/skywind3000/avlmini
 import (
 	"errors"
+	"fmt"
 
 	"github.com/guonaihong/gstl/api"
 	"github.com/guonaihong/gstl/cmp"
+	"github.com/guonaihong/gstl/vec"
 	"golang.org/x/exp/constraints"
 )
 
@@ -401,7 +403,7 @@ func (n *node[K, V]) rangePrevInner(callback func(k K, v V) bool) bool {
 	}
 
 	if n.right != nil {
-		if !n.right.rangeInner(callback) {
+		if !n.right.rangePrevInner(callback) {
 			return false
 		}
 	}
@@ -411,7 +413,7 @@ func (n *node[K, V]) rangePrevInner(callback func(k K, v V) bool) bool {
 	}
 
 	if n.left != nil {
-		if !n.left.rangeInner(callback) {
+		if !n.left.rangePrevInner(callback) {
 			return false
 		}
 	}
@@ -476,4 +478,44 @@ func (a *AvlTree[K, V]) TopMin(limit int, callback func(k K, v V) bool) {
 
 func (a *AvlTree[K, V]) Len() int {
 	return a.length
+}
+
+func (a *AvlTree[K, V]) Draw() {
+	if a.root.node == nil {
+		return
+	}
+
+	a.root.node.draw(a.root.node)
+	//b.root.draw(0, b.root.items.Len() == b.root.children.Len())
+}
+
+// 画出avl tree
+// 使用层序遍历的姿势
+func (n *node[K, V]) draw(root *node[K, V]) {
+	if root == nil {
+		return
+	}
+
+	q := vec.New(root)
+	for height := 0; q.Len() > 0; height++ {
+		tmp := q.ToSlice()
+		q = vec.New[*node[K, V]]()
+
+		fmt.Printf("height:%d ", height)
+		for _, node := range tmp {
+			fmt.Printf("%v ", node.pair)
+
+			if node.left != nil {
+
+				q.Push(node.left)
+			}
+
+			if node.right != nil {
+				q.Push(node.right)
+			}
+
+		}
+		fmt.Printf("\n")
+
+	}
 }

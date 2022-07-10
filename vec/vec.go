@@ -440,6 +440,17 @@ func (v *Vec[T]) RotateLeft(n int) *Vec[T] {
 	return v
 }
 
+// 反转
+func (v *Vec[T]) Rev() *Vec[T] {
+	slice := v.ToSlice()
+	for i, l := 0, v.Len()-1; i < l; i, l = i+1, l-1 {
+		slice[i], slice[l] = slice[l], slice[i]
+	}
+
+	*v = *New(slice...)
+	return v
+}
+
 //原地旋转vec, 向右边旋转
 func (v *Vec[T]) RotateRight(n int) *Vec[T] {
 	l := v.Len()

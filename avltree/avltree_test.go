@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/guonaihong/gstl/cmp"
+	"github.com/guonaihong/gstl/vec"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -70,7 +72,6 @@ func Test_AVLTree_Delete1(t *testing.T) {
 }
 
 // 测试TopMax, 返回最大的几个数据降序返回
-/*
 func Test_AvlTree_TopMax(t *testing.T) {
 
 	need := [3][]int{}
@@ -93,6 +94,8 @@ func Test_AvlTree_TopMax(t *testing.T) {
 			for i := 0; i < count10; i++ {
 				b.Set(i, i)
 			}
+
+			b.Draw()
 
 			assert.Equal(t, b.Len(), count10)
 			return b
@@ -130,7 +133,6 @@ func Test_AvlTree_TopMax(t *testing.T) {
 	}
 
 }
-*/
 
 // 测试TopMin, 它返回最小的几个值
 func Test_AvlTree_TopMin(t *testing.T) {
@@ -187,4 +189,32 @@ func Test_AvlTree_TopMin(t *testing.T) {
 		assert.Equal(t, val, need[:needCount[i]])
 	}
 
+}
+
+func Test_RanePrev(t *testing.T) {
+	a := New[int, int]()
+	data := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
+	dataRev := vec.New(data...).Clone().Rev().ToSlice()
+	for i := len(data) / 2; i >= 0; i-- {
+		a.Set(i, i)
+	}
+
+	for i := len(data)/2 + 1; i < len(data); i++ {
+		a.Set(i, i)
+	}
+
+	//a.Draw()
+
+	var gotKey []int
+	var gotVal []int
+	a.RangePrev(func(k, v int) bool {
+		gotKey = append(gotKey, k)
+		gotVal = append(gotVal, v)
+
+		return true
+	})
+
+	assert.Equal(t, gotKey, dataRev)
+	assert.Equal(t, gotVal, dataRev)
 }
