@@ -8,11 +8,13 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/guonaihong/gstl/api"
 	"github.com/guonaihong/gstl/must"
 	"github.com/guonaihong/gstl/vec"
 	"golang.org/x/exp/constraints"
 )
 
+var _ api.SortedSet[int, int] = (*Btree[int, int])(nil)
 var ErrNotFound = errors.New("btree not found")
 
 //btree头结点
@@ -58,10 +60,9 @@ func (b *Btree[K, V]) Len() int {
 }
 
 // 设置接口, 如果有这个值, 有值就替换, 没有就新加
-func (b *Btree[K, V]) Set(k K, v V) *Btree[K, V] {
+func (b *Btree[K, V]) Set(k K, v V) {
 
 	_, _ = b.SetWithPrev(k, v)
-	return b
 }
 
 // 新建一个节点
@@ -226,9 +227,8 @@ func (b *Btree[K, V]) GetWithErr(k K) (v V, err error) {
 }
 
 // 删除接口
-func (b *Btree[K, V]) Delete(k K) *Btree[K, V] {
+func (b *Btree[K, V]) Delete(k K) {
 	b.DeleteWithPrev(k)
-	return b
 }
 
 // 删除接口, 返回旧值
@@ -389,7 +389,7 @@ func (b *Btree[K, V]) Range(callback func(k K, v V) bool) *Btree[K, V] {
 }
 
 // 返回最小的n个值, 升序返回, 比如0,1,2,3
-func (b *Btree[K, V]) TopMin(limit int, callback func(k K, v V) bool) *Btree[K, V] {
+func (b *Btree[K, V]) TopMin(limit int, callback func(k K, v V) bool) {
 	b.Range(func(k K, v V) bool {
 		if limit <= 0 {
 			return false
@@ -398,7 +398,6 @@ func (b *Btree[K, V]) TopMin(limit int, callback func(k K, v V) bool) *Btree[K, 
 		limit--
 		return true
 	})
-	return b
 }
 
 func (b *Btree[K, V]) Draw() {
@@ -484,7 +483,7 @@ func (b *Btree[K, V]) RangePrev(callback func(k K, v V) bool) *Btree[K, V] {
 }
 
 // 返回最大的n个值, 降序返回, 10, 9, 8, 7
-func (b *Btree[K, V]) TopMax(limit int, callback func(k K, v V) bool) *Btree[K, V] {
+func (b *Btree[K, V]) TopMax(limit int, callback func(k K, v V) bool) {
 	b.RangePrev(func(k K, v V) bool {
 		if limit <= 0 {
 			return false
@@ -493,7 +492,6 @@ func (b *Btree[K, V]) TopMax(limit int, callback func(k K, v V) bool) *Btree[K, 
 		limit--
 		return true
 	})
-	return b
 }
 
 // TODO benchmark下 if提出来之后性能提升, 就是把for循环拆成两个写

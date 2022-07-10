@@ -10,7 +10,10 @@ import (
 	"unsafe"
 
 	"github.com/cespare/xxhash/v2"
+	"github.com/guonaihong/gstl/api"
 )
+
+var _ api.Set[int, int] = (*HashMap[int, int])(nil)
 
 const (
 	HT_INITIAL_EXP  = 2
@@ -372,8 +375,12 @@ func (h *HashMap[K, V]) Range(pr func(key K, val V)) (err error) {
 	return nil
 }
 
+func (h *HashMap[K, V]) Set(k K, v V) {
+	h.SetWithPrev(k, v)
+}
+
 // 设置
-func (h *HashMap[K, V]) Set(k K, v V) error {
+func (h *HashMap[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 	h.lazyinit()
 	if h.isRehashing() {
 		h.rehash(1)
@@ -381,7 +388,7 @@ func (h *HashMap[K, V]) Set(k K, v V) error {
 
 	index, e, err := h.findIndexAndEntry(k)
 	if err != nil {
-		return err
+		return
 	}
 
 	idx := 0
@@ -393,24 +400,25 @@ func (h *HashMap[K, V]) Set(k K, v V) error {
 	// element存在, 这里是替换
 	if e != nil {
 		//e.key = k
+		prev = e.val
 		e.val = v
-		return nil
+		return prev, true
 	}
 
 	e = &entry[K, V]{key: k, val: v}
 	e.next = h.table[idx][index]
 	h.table[idx][index] = e
 	h.used[idx]++
-	return nil
+	return
 }
 
 // Remove是delete别名
-func (h *HashMap[K, V]) Remove(key K) (err error) {
-	return h.Delete(key)
+func (h *HashMap[K, V]) Delete(key K) {
+	h.Remove(key)
 }
 
 // 删除
-func (h *HashMap[K, V]) Delete(key K) (err error) {
+func (h *HashMap[K, V]) Remove(key K) (err error) {
 	if h.Len() == 0 {
 		err = ErrNotFound
 		return

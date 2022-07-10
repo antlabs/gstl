@@ -7,11 +7,14 @@ package avltree
 import (
 	"errors"
 
+	"github.com/guonaihong/gstl/api"
 	"github.com/guonaihong/gstl/cmp"
 	"golang.org/x/exp/constraints"
 )
 
 var ErrNotFound = errors.New("avltree: not found value")
+
+var _ api.SortedSet[int, int] = (*AvlTree[int, int])(nil)
 
 // 元素
 type pair[K constraints.Ordered, V any] struct {
@@ -240,9 +243,8 @@ func (a *AvlTree[K, V]) GetWithErr(k K) (v V, err error) {
 	return
 }
 
-func (a *AvlTree[K, V]) Set(k K, v V) *AvlTree[K, V] {
+func (a *AvlTree[K, V]) Set(k K, v V) {
 	_, _ = a.SetWithPrev(k, v)
-	return a
 }
 
 // 设置接口, 如果有值, 把prev值带返回, 并且被替换, 没有就新加
@@ -294,8 +296,8 @@ func (r *root[K, V]) rebalance(node *node[K, V]) {
 	}
 }
 
-func (a *AvlTree[K, V]) Delete(k K) *AvlTree[K, V] {
-	return a.Remove(k)
+func (a *AvlTree[K, V]) Delete(k K) {
+	a.Remove(k)
 }
 
 func (a *AvlTree[K, V]) Remove(k K) *AvlTree[K, V] {
@@ -366,4 +368,12 @@ found:
 		a.root.rebalance(parent)
 	}
 	return a
+}
+
+func (a *AvlTree[K, V]) TopMax(limit int, callback func(k K, v V) bool) {
+
+}
+
+func (a *AvlTree[K, V]) TopMin(limit int, callback func(k K, v V) bool) {
+
 }

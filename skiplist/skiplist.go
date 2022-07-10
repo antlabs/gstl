@@ -39,7 +39,11 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+
+	"github.com/guonaihong/gstl/api"
 )
+
+var _ api.SortedSet[float64, float64] = (*SkipList[float64])(nil)
 
 const (
 	SKIPLIST_MAXLEVEL = 32
@@ -119,17 +123,21 @@ func newNode[T any](level int, score float64, elem T) *Node[T] {
 }
 
 // 设置值, 和Insert是同义词
-func (s *SkipList[T]) Set(score float64, elem T) *SkipList[T] {
+func (s *SkipList[T]) Set(score float64, elem T) {
+	s.InsertInner(score, elem, s.rand())
+}
+
+func (s *SkipList[T]) SetWithPrev(score float64, elem T) (prev T, replaced bool) {
 	return s.InsertInner(score, elem, s.rand())
 }
 
 // 设置值
-func (s *SkipList[T]) Insert(score float64, elem T) *SkipList[T] {
-	return s.InsertInner(score, elem, s.rand())
+func (s *SkipList[T]) Insert(score float64, elem T) {
+	s.InsertInner(score, elem, s.rand())
 }
 
 // 方便给作者调试用的函数
-func (s *SkipList[T]) InsertInner(score float64, elem T, level int) *SkipList[T] {
+func (s *SkipList[T]) InsertInner(score float64, elem T, level int) (prev T, replaced bool) {
 	var (
 		update [SKIPLIST_MAXLEVEL]*Node[T]
 		rank   [SKIPLIST_MAXLEVEL]int
@@ -162,8 +170,9 @@ func (s *SkipList[T]) InsertInner(score float64, elem T, level int) *SkipList[T]
 	// 这个score已经存在直接返回
 	x2 = x.NodeLevel[0].forward
 	if x2 != nil && score == x2.score {
+		prev = x2.elem
 		x2.elem = elem
-		return s
+		return prev, true
 	}
 
 	if level > s.level {
@@ -207,7 +216,7 @@ func (s *SkipList[T]) InsertInner(score float64, elem T, level int) *SkipList[T]
 	}
 
 	s.length++
-	return s
+	return
 }
 
 // 获取
@@ -322,6 +331,11 @@ func (s *SkipList[T]) removeNode(x *Node[T], update []*Node[T]) {
 	s.length--
 }
 
+// 根据score删除
+func (s *SkipList[T]) Delete(score float64) {
+	s.Remove(score)
+}
+
 // 根据score删除元素
 func (s *SkipList[T]) Remove(score float64) *SkipList[T] {
 
@@ -377,7 +391,7 @@ func (s *SkipList[T]) Range(callback func(score float64, v T) bool) *SkipList[T]
 }
 
 // 返回最小的n个值, 升序返回, 比如0,1,2,3
-func (s *SkipList[T]) TopMin(limit int, callback func(score float64, v T) bool) *SkipList[T] {
+func (s *SkipList[T]) TopMin(limit int, callback func(score float64, v T) bool) {
 	s.Range(func(score float64, v T) bool {
 		if limit <= 0 {
 			return false
@@ -386,7 +400,6 @@ func (s *SkipList[T]) TopMin(limit int, callback func(score float64, v T) bool) 
 		limit--
 		return true
 	})
-	return s
 }
 
 // 返回长度
@@ -411,7 +424,7 @@ func (s *SkipList[T]) RangePrev(callback func(k float64, v T) bool) *SkipList[T]
 }
 
 // 返回最大的n个值, 降序返回, 10, 9, 8, 7
-func (s *SkipList[T]) TopMax(limit int, callback func(k float64, v T) bool) *SkipList[T] {
+func (s *SkipList[T]) TopMax(limit int, callback func(k float64, v T) bool) {
 	s.RangePrev(func(k float64, v T) bool {
 		if limit <= 0 {
 			return false
@@ -420,5 +433,4 @@ func (s *SkipList[T]) TopMax(limit int, callback func(k float64, v T) bool) *Ski
 		limit--
 		return true
 	})
-	return s
 }
