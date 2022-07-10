@@ -13,6 +13,8 @@ type Set[K constraints.Ordered, V any] interface {
 	Set(k K, v V)
 	// 设置值
 	SetWithPrev(k K, v V) (prev V, replaced bool)
+	// int
+	Len() int
 }
 
 type SortedSet[K constraints.Ordered, V any] interface {

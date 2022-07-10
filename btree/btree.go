@@ -378,14 +378,14 @@ func (b *Btree[K, V]) rebalance(n *node[K, V], i int) {
 }
 
 // 遍历b tree
-func (b *Btree[K, V]) Range(callback func(k K, v V) bool) *Btree[K, V] {
+func (b *Btree[K, V]) Range(callback func(k K, v V) bool) {
 	// 遍历
 	if b.root == nil {
-		return b
+		return
 	}
 
 	b.root.rangeInner(callback)
-	return b
+	return
 }
 
 // 返回最小的n个值, 升序返回, 比如0,1,2,3

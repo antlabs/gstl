@@ -370,10 +370,110 @@ found:
 	return a
 }
 
-func (a *AvlTree[K, V]) TopMax(limit int, callback func(k K, v V) bool) {
+func (n *node[K, V]) rangeInner(callback func(k K, v V) bool) bool {
 
+	if n == nil {
+		return true
+	}
+
+	if n.left != nil {
+		if !n.left.rangeInner(callback) {
+			return false
+		}
+	}
+
+	if !callback(n.key, n.val) {
+		return false
+	}
+
+	if n.right != nil {
+		if !n.right.rangeInner(callback) {
+			return false
+		}
+	}
+	return true
+}
+
+func (n *node[K, V]) rangePrevInner(callback func(k K, v V) bool) bool {
+
+	if n == nil {
+		return true
+	}
+
+	if n.right != nil {
+		if !n.right.rangeInner(callback) {
+			return false
+		}
+	}
+
+	if !callback(n.key, n.val) {
+		return false
+	}
+
+	if n.left != nil {
+		if !n.left.rangeInner(callback) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// 遍历avl tree
+func (a *AvlTree[K, V]) Range(callback func(k K, v V) bool) {
+	// 遍历
+	if a.root.node == nil {
+		return
+	}
+
+	a.root.node.rangeInner(callback)
+	return
+}
+
+// 遍历avl tree
+func (a *AvlTree[K, V]) RangePrev(callback func(k K, v V) bool) {
+	// 遍历
+	if a.root.node == nil {
+		return
+	}
+
+	a.root.node.rangePrevInner(callback)
+	return
+}
+
+func (a *AvlTree[K, V]) TopMax(limit int, callback func(k K, v V) bool) {
+	a.RangePrev(func(k K, v V) bool {
+
+		if limit <= 0 {
+			return false
+		}
+
+		if !callback(k, v) {
+			return false
+		}
+
+		limit--
+		return true
+	})
 }
 
 func (a *AvlTree[K, V]) TopMin(limit int, callback func(k K, v V) bool) {
 
+	a.Range(func(k K, v V) bool {
+
+		if limit <= 0 {
+			return false
+		}
+
+		if !callback(k, v) {
+			return false
+		}
+
+		limit--
+		return true
+	})
+}
+
+func (a *AvlTree[K, V]) Len() int {
+	return a.length
 }

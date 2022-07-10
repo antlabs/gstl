@@ -38,7 +38,7 @@ func Test_SetAndGet2(t *testing.T) {
 }
 
 // 测试btree删除的情况, 少量数量
-func Test_Btree_Delete1(t *testing.T) {
+func Test_AVLTree_Delete1(t *testing.T) {
 	for max := 3; max < 1000; max++ {
 
 		b := New[int, int]()
@@ -67,4 +67,124 @@ func Test_Btree_Delete1(t *testing.T) {
 			assert.Equal(t, v, 0, fmt.Sprintf("index:%d", i))
 		}
 	}
+}
+
+// 测试TopMax, 返回最大的几个数据降序返回
+/*
+func Test_AvlTree_TopMax(t *testing.T) {
+
+	need := [3][]int{}
+	count10 := 10
+	count100 := 100
+	count1000 := 1000
+	count := []int{count10, count100, count1000}
+
+	for i := 0; i < len(count); i++ {
+		for j, k := count[i]-1, count100-1; j >= 0 && k >= 0; j-- {
+			need[i] = append(need[i], j)
+			k--
+		}
+	}
+
+	for i, b := range []*AvlTree[int, int]{
+		// btree里面元素 少于 TopMax 需要返回的值
+		func() *AvlTree[int, int] {
+			b := New[int, int]()
+			for i := 0; i < count10; i++ {
+				b.Set(i, i)
+			}
+
+			assert.Equal(t, b.Len(), count10)
+			return b
+		}(),
+		// btree里面元素 等于 TopMax 需要返回的值
+		func() *AvlTree[int, int] {
+
+			b := New[int, int]()
+			for i := 0; i < count100; i++ {
+				b.Set(int(i), i)
+			}
+			assert.Equal(t, b.Len(), count100)
+			return b
+		}(),
+		// btree里面元素 大于 TopMax 需要返回的值
+		func() *AvlTree[int, int] {
+
+			b := New[int, int]()
+			for i := 0; i < count1000; i++ {
+				b.Set(int(i), i)
+			}
+			assert.Equal(t, b.Len(), count1000)
+			return b
+		}(),
+	} {
+		var key, val []int
+		b.TopMax(count100, func(k int, v int) bool {
+			key = append(key, int(k))
+			val = append(val, v)
+			return true
+		})
+		length := cmp.Min(count[i], len(need[i]))
+		assert.Equal(t, key, need[i][:length])
+		assert.Equal(t, val, need[i][:length])
+	}
+
+}
+*/
+
+// 测试TopMin, 它返回最小的几个值
+func Test_AvlTree_TopMin(t *testing.T) {
+
+	need := []int{}
+	count10 := 10
+	count100 := 100
+	count1000 := 1000
+
+	for i := 0; i < count1000; i++ {
+		need = append(need, i)
+	}
+
+	needCount := []int{count10, count100, count100}
+	for i, b := range []*AvlTree[int, int]{
+		// btree里面元素 少于 TopMin 需要返回的值
+		func() *AvlTree[int, int] {
+			b := New[int, int]()
+			for i := 0; i < count10; i++ {
+				b.Set(i, i)
+			}
+
+			assert.Equal(t, b.Len(), count10)
+			return b
+		}(),
+		// btree里面元素 等于 TopMin 需要返回的值
+		func() *AvlTree[int, int] {
+
+			b := New[int, int]()
+			for i := 0; i < count100; i++ {
+				b.Set(i, i)
+			}
+			assert.Equal(t, b.Len(), count100)
+			return b
+		}(),
+		// btree里面元素 大于 TopMin 需要返回的值
+		func() *AvlTree[int, int] {
+
+			b := New[int, int]()
+			for i := 0; i < count1000; i++ {
+				b.Set(i, i)
+			}
+			assert.Equal(t, b.Len(), count1000)
+			return b
+		}(),
+	} {
+		var key, val []int
+		b.TopMin(count100, func(k, v int) bool {
+			key = append(key, k)
+			val = append(val, v)
+			return true
+		})
+		assert.Equal(t, key, need[:needCount[i]])
+		assert.Equal(t, val, need[:needCount[i]])
+	}
+
 }
