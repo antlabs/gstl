@@ -29,14 +29,18 @@ type pair[K constraints.Ordered, V any] struct {
 	key K
 }
 
-type node[K constraints.Ordered, V any] struct {
-	left   *node[K, V]
-	right  *node[K, V]
+type parentColor[K constraints.Ordered, V any] struct {
 	parent *node[K, V]
-	pair[K, V]
 	// red/black 可以用一个变量实现, 为了代码简单清晰, 这里不考虑一个字节的收益, 放弃使用位操作
 	red   bool
 	black bool
+}
+
+type node[K constraints.Ordered, V any] struct {
+	left  *node[K, V]
+	right *node[K, V]
+	pair[K, V]
+	parentColor[K, V]
 }
 
 func (n *node[K, V]) setParentRed(parent *node[K, V]) {
@@ -219,7 +223,8 @@ func (r *root[K, V]) eraseAugmented(n *node[K, V]) *node[K, V] {
 
 	var parent, rebalance *node[K, V]
 
-	red, black := false, false
+	var pc parentColor[K, V]
+
 	if tmp == nil {
 		/*
 		 * Case 1: node to erase has no more than 1 child (easy!)
@@ -229,22 +234,20 @@ func (r *root[K, V]) eraseAugmented(n *node[K, V]) *node[K, V] {
 		 * so as to bypass __rb_erase_color() later on.
 		 */
 
-		red, black := n.red, n.black
+		pc = n.parentColor
 		parent = n.parent
 
 		r.changeChild(n, child, parent)
 		if child != nil {
-			child.parent.red = red
-			child.parent.black = black
-		} else if black {
+			child.parentColor = pc
+		} else if pc.black {
 			rebalance = parent
 		}
 
 		tmp = parent
 	} else if child == nil {
 		/* Still case 1, but this time the child is node->rb_left */
-		tmp.parent = n.parent
-		tmp.red, tmp.back = n.red, n.black
+		tmp.parentColor = n.parentColor
 		parent = n.parent
 		r.changeChild(n, tmp, parent)
 		tmp = parent
@@ -300,19 +303,18 @@ func (r *root[K, V]) eraseAugmented(n *node[K, V]) *node[K, V] {
 		successor.left = tmp
 		tmp.setParent(successor)
 
-		red, black = n.parent.red, n.parent.black
-		parent2 := n.parent
+		pc = n.parentColor
 		tmp = n.parent
 		r.changeChild(n, successor, tmp)
 
 		if child2 != nil {
-			successor.setParentWithColor(parent2, red, black)
+			successor.parentColor = pc
 			child2.setParentBlack(parent)
 			rebalance = nil
 		} else {
-			//parent2 := successor.parent
-			black2 := successor.black
-			if black2 {
+			pc2 := successor.parentColor
+			successor.parentColor = pc
+			if pc2.black {
 				rebalance = parent
 			}
 		}
