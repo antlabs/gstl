@@ -51,6 +51,15 @@ func (n *node[K, V]) setParentBlack(parent *node[K, V]) {
 	n.parent = parent
 }
 
+func (n *node[K, V]) setParent(parent *node[K, V]) {
+	n.parent = parent
+}
+
+func (n *node[K, V]) setParentWithColor(parent *node[K, V], red bool, black bool) {
+	n.parent = parent
+	n.red = red
+	n.black = black
+}
 func (n *node[K, V]) link(parent *node[K, V], link **node[K, V]) {
 	n.parent = parent
 	n.red = true
@@ -204,6 +213,114 @@ func (r *root[K, V]) insert(n *node[K, V]) {
 	}
 }
 
+func (r *root[K, V]) eraseAugmented(n *node[K, V]) *node[K, V] {
+	child := n.right
+	tmp := n.left
+
+	var parent, rebalance *node[K, V]
+
+	red, black := false, false
+	if tmp == nil {
+		/*
+		 * Case 1: node to erase has no more than 1 child (easy!)
+		 *
+		 * Note that if there is one child it must be red due to 5)
+		 * and node must be black due to 4). We adjust colors locally
+		 * so as to bypass __rb_erase_color() later on.
+		 */
+
+		red, black := n.red, n.black
+		parent = n.parent
+
+		r.changeChild(n, child, parent)
+		if child != nil {
+			child.parent.red = red
+			child.parent.black = black
+		} else if black {
+			rebalance = parent
+		}
+
+		tmp = parent
+	} else if child == nil {
+		/* Still case 1, but this time the child is node->rb_left */
+		tmp.parent = n.parent
+		tmp.red, tmp.back = n.red, n.black
+		parent = n.parent
+		r.changeChild(n, tmp, parent)
+		tmp = parent
+	} else {
+		successor := child
+		var child2 *node[K, V]
+
+		tmp = child.left
+		if tmp == nil {
+			/*
+			 * Case 2: node's successor is its right child
+			 *
+			 *    (n)          (s)
+			 *    / \          / \
+			 *  (x) (s)  ->  (x) (c)
+			 *        \
+			 *        (c)
+			 */
+
+			parent = successor
+			child2 = successor.right
+		} else {
+			/*
+			 * Case 3: node's successor is leftmost under
+			 * node's right child subtree
+			 *
+			 *    (n)          (s)
+			 *    / \          / \
+			 *  (x) (y)  ->  (x) (y)
+			 *      /            /
+			 *    (p)          (p)
+			 *    /            /
+			 *  (s)          (c)
+			 *    \
+			 *    (c)
+			 */
+			for {
+				parent = successor
+				successor = tmp
+				tmp = tmp.right
+				if tmp == nil {
+					break
+				}
+			}
+
+			child2 = successor.right
+			parent.left = child2
+			successor.right = child
+			child.setParent(successor)
+		}
+
+		tmp = n.left
+		successor.left = tmp
+		tmp.setParent(successor)
+
+		red, black = n.parent.red, n.parent.black
+		parent2 := n.parent
+		tmp = n.parent
+		r.changeChild(n, successor, tmp)
+
+		if child2 != nil {
+			successor.setParentWithColor(parent2, red, black)
+			child2.setParentBlack(parent)
+			rebalance = nil
+		} else {
+			//parent2 := successor.parent
+			black2 := successor.black
+			if black2 {
+				rebalance = parent
+			}
+		}
+		tmp = successor
+	}
+	return rebalance
+}
+
 // 红黑树
 type RBTree[K constraints.Ordered, V any] struct {
 	length int
@@ -291,4 +408,8 @@ func (r *RBTree[K, V]) GetWithErr(k K) (v V, err error) {
 
 	err = ErrNotFound
 	return
+}
+
+func (r *RBTree[K, V]) Delete(k K) {
+
 }

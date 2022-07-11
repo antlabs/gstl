@@ -486,7 +486,6 @@ func (a *AvlTree[K, V]) Draw() {
 	}
 
 	a.root.node.draw(a.root.node)
-	//b.root.draw(0, b.root.items.Len() == b.root.children.Len())
 }
 
 // 画出avl tree
