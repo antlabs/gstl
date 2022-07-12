@@ -43,6 +43,11 @@ type node[K constraints.Ordered, V any] struct {
 	parentColor[K, V]
 }
 
+func (n *node[K, V]) setBlack() {
+	n.black = true
+	n.red = false
+}
+
 func (n *node[K, V]) setParentRed(parent *node[K, V]) {
 	parent.red = true
 	parent.black = false
@@ -323,6 +328,180 @@ func (r *root[K, V]) eraseAugmented(n *node[K, V]) *node[K, V] {
 	return rebalance
 }
 
+func (r *root[K, V]) eraseColor(parent *node[K, V]) {
+	var n, sibling, tmp1, tmp2 *node[K, V]
+
+	for {
+		/*
+		 * Loop invariants:
+		 * - node is black (or NULL on first iteration)
+		 * - node is not the root (parent is not NULL)
+		 * - All leaf paths going through parent and node have a
+		 *   black node count that is 1 lower than other leaf paths.
+		 */
+		sibling = parent.right
+		if n != sibling { /* node == parent->rb_left */
+			if sibling.red {
+				/*
+				 * Case 1 - left rotate at parent
+				 *
+				 *     P               S
+				 *    / \             / \
+				 *   N   s    -->    p   Sr
+				 *      / \         / \
+				 *     Sl  Sr      N   Sl
+				 */
+				tmp1 = sibling.left
+				parent.right = tmp1
+				sibling.left = parent
+				tmp1.setParentBlack(parent)
+				r.rotateSetParents(parent, sibling, RED)
+				sibling = tmp1
+			}
+			tmp1 = sibling.right
+
+			if tmp1 == nil || tmp1.black {
+				tmp2 = sibling.left
+				if tmp2 == nil || tmp2.black {
+					/*
+					 * Case 2 - sibling color flip
+					 * (p could be either color here)
+					 *
+					 *    (p)           (p)
+					 *    / \           / \
+					 *   N   S    -->  N   s
+					 *      / \           / \
+					 *     Sl  Sr        Sl  Sr
+					 *
+					 * This leaves us violating 5) which
+					 * can be fixed by flipping p to black
+					 * if it was red, or by recursing at p.
+					 * p is red when coming from Case 1.
+					 */
+					sibling.setParentRed(parent)
+					if parent.red {
+						parent.setBlack()
+					} else {
+						n = parent
+						parent = n.parent
+						if parent != nil {
+							continue
+						}
+					}
+					break
+				}
+				/*
+				 * Case 3 - right rotate at sibling
+				 * (p could be either color here)
+				 *
+				 *   (p)           (p)
+				 *   / \           / \
+				 *  N   S    -->  N   sl
+				 *     / \             \
+				 *    sl  Sr            S
+				 *                       \
+				 *                        Sr
+				 *
+				 * Note: p might be red, and then both
+				 * p and sl are red after rotation(which
+				 * breaks property 4). This is fixed in
+				 * Case 4 (in __rb_rotate_set_parents()
+				 *         which set sl the color of p
+				 *         and set p RB_BLACK)
+				 *
+				 *   (p)            (sl)
+				 *   / \            /  \
+				 *  N   sl   -->   P    S
+				 *       \        /      \
+				 *        S      N        Sr
+				 *         \
+				 *          Sr
+				 */
+				tmp1 = tmp2.right
+				sibling.left = tmp1
+				tmp2.right = sibling
+				parent.right = tmp2
+				if tmp1 != nil {
+					tmp1.setParentBlack(sibling)
+				}
+				tmp1 = sibling
+				sibling = tmp2
+			}
+			/*
+			 * Case 4 - left rotate at parent + color flips
+			 * (p and sl could be either color here.
+			 *  After rotation, p becomes black, s acquires
+			 *  p's color, and sl keeps its color)
+			 *
+			 *      (p)             (s)
+			 *      / \             / \
+			 *     N   S     -->   P   Sr
+			 *        / \         / \
+			 *      (sl) sr      N  (sl)
+			 */
+			tmp2 = sibling.left
+			parent.right = tmp2
+			sibling.left = parent
+			tmp1.setParentRed(sibling)
+			if tmp2 != nil {
+				tmp2.setParent(parent)
+			}
+			r.rotateSetParents(parent, sibling, RED)
+			break
+		} else {
+			sibling = parent.left
+			if sibling.red {
+				tmp1 = sibling.right
+				parent.left = tmp1
+				sibling.right = parent
+				tmp1.setParentBlack(parent)
+				r.rotateSetParents(parent, sibling, RED)
+				sibling = tmp1
+			}
+
+			tmp1 = sibling.left
+			if tmp1 == nil || tmp1.black {
+				tmp2 = sibling.right
+				if tmp2 == nil || tmp2.black {
+					sibling.setParentRed(parent)
+					if parent.red {
+						parent.setBlack()
+					} else {
+						n = parent
+						parent = n.parent
+						if parent != nil {
+							continue
+						}
+					}
+					break
+				}
+				/* Case 3 - left rotate at sibling */
+				tmp1 = tmp2.left
+				sibling.right = tmp1
+				tmp2.left = sibling
+				parent.left = tmp2
+
+				if tmp1 != nil {
+					tmp1.setParentBlack(sibling)
+				}
+
+				tmp1 = sibling
+				sibling = tmp2
+			}
+			/* Case 4 - right rotate at parent + color flips */
+			tmp2 = sibling.right
+			parent.left = tmp2
+			sibling.right = parent
+			tmp1.setParentBlack(sibling)
+			if tmp2 != nil {
+				tmp2.setParent(parent)
+			}
+			r.rotateSetParents(parent, sibling, BLACK)
+			break
+		}
+	}
+}
+
 // 红黑树
 type RBTree[K constraints.Ordered, V any] struct {
 	length int
@@ -413,5 +592,24 @@ func (r *RBTree[K, V]) GetWithErr(k K) (v V, err error) {
 }
 
 func (r *RBTree[K, V]) Delete(k K) {
+	n := r.root.node
+	for n != nil {
+		if n.key == k {
+			goto found
+		}
 
+		if k > n.key {
+			n = n.right
+		} else {
+			n = n.left
+		}
+	}
+	return
+
+found:
+	rebalance := r.root.eraseAugmented(n)
+	if rebalance != nil {
+		r.root.eraseColor(n)
+	}
+	return
 }
