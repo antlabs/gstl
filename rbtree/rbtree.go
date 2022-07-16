@@ -258,6 +258,168 @@ func (r *RBTree[K, V]) GetWithErr(k K) (v V, err error) {
 	return
 }
 
+// 删除
+func (r *root[K, V]) erase(n *node[K, V]) {
+
+	var child, parent *node[K, V]
+	var color color
+	if n.left != nil {
+		child = n.right
+	} else if n.right != nil {
+		child = n.left
+	} else {
+		old := n
+		n = n.right
+		left := n.left
+		for ; left != nil; left = n.left {
+		}
+		child = n.right
+		parent = n.parent
+		color = n.color
+
+		if child != nil {
+
+			child.parent = parent
+		}
+
+		if parent != nil {
+			if parent.left == n {
+				parent.left = child
+			} else {
+				parent.right = child
+			}
+		} else {
+			r.node = child
+		}
+
+		if n.parent == old {
+			parent = n
+		}
+		n.parent = old.parent
+		n.color = old.color
+		n.right = old.right
+		n.left = old.left
+
+		if old.parent != nil {
+			if old.parent.left == old {
+				old.parent.left = n
+			} else {
+				old.parent.right = n
+			}
+		} else {
+			r.node = n
+		}
+		old.left.parent = n
+		if old.right != nil {
+			old.right.parent = n
+		}
+		goto color
+	}
+	parent = n.parent
+	color = n.color
+
+	if child != nil {
+		child.parent = parent
+	}
+	if parent != nil {
+		if parent.left == n {
+			parent.left = child
+		} else {
+			parent.right = child
+		}
+	} else {
+		r.node = child
+	}
+
+color:
+	if color == BLACK {
+		r.eraseColor(child, parent)
+	}
+}
+
+func (r *root[K, V]) eraseColor(n *node[K, V], parent *node[K, V]) {
+
+	var other *node[K, V]
+	for (n == nil || n.color == BLACK) && n != r.node {
+		if parent.left == n {
+			other = parent.right
+			if other.color == RED {
+				other.color = BLACK
+				parent.color = RED
+				r.rotateLeft(parent)
+				other = parent.right
+			}
+			if (other.left == nil || other.left.color == BLACK) && (other.right == nil || other.right.color == BLACK) {
+
+				other.color = RED
+				n = parent
+				parent = n.parent
+			} else {
+
+				if other.right == nil || other.right.color == BLACK {
+
+					oleft := other.left
+					if oleft != nil {
+						oleft.color = BLACK
+					}
+					other.color = RED
+					r.rotateRight(other)
+					other = parent.right
+				}
+				other.color = parent.color
+				parent.color = BLACK
+				if other.right != nil {
+					other.right.color = BLACK
+				}
+				r.rotateLeft(parent)
+				n = r.node
+				break
+			}
+		} else {
+
+			other = parent.left
+			if other.color == RED {
+
+				other.color = BLACK
+				parent.color = RED
+				r.rotateRight(parent)
+				other = parent.left
+			}
+
+			if (other.left == nil || other.left.color == BLACK) && (other.right == nil || other.right.color == BLACK) {
+				other.color = RED
+				n = parent
+				parent = n.parent
+			} else {
+				if other.left == nil || other.left.color == BLACK {
+
+					oright := other.right
+					if oright != nil {
+						oright.color = BLACK
+					}
+					other.color = RED
+					r.rotateLeft(other)
+					other = parent.left
+				}
+				other.color = parent.color
+				parent.color = BLACK
+				if other.left != nil {
+					other.left.color = BLACK
+				}
+				r.rotateRight(parent)
+
+				n = r.node
+				break
+			}
+
+		}
+	}
+	if n != nil {
+		n.color = BLACK
+	}
+
+}
+
 func (r *RBTree[K, V]) Delete(k K) {
 	n := r.root.node
 	for n != nil {
@@ -274,9 +436,6 @@ func (r *RBTree[K, V]) Delete(k K) {
 	return
 
 found:
-	rebalance := r.root.eraseAugmented(n)
-	if rebalance != nil {
-		r.root.eraseColor(n)
-	}
+	r.root.erase(n)
 	return
 }
