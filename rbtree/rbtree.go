@@ -270,9 +270,9 @@ func (r *root[K, V]) erase(n *node[K, V]) {
 
 	var child, parent *node[K, V]
 	var color color
-	if n.left != nil {
+	if n.left == nil {
 		child = n.right
-	} else if n.right != nil {
+	} else if n.right == nil {
 		child = n.left
 	} else {
 		old := n
@@ -285,7 +285,6 @@ func (r *root[K, V]) erase(n *node[K, V]) {
 		color = n.color
 
 		if child != nil {
-
 			child.parent = parent
 		}
 
@@ -302,6 +301,7 @@ func (r *root[K, V]) erase(n *node[K, V]) {
 		if n.parent == old {
 			parent = n
 		}
+
 		n.parent = old.parent
 		n.color = old.color
 		n.right = old.right

@@ -39,7 +39,7 @@ func Test_SetAndGet2(t *testing.T) {
 	}
 }
 
-// 测试btree删除的情况, 少量数量
+// 测试avltree删除的情况, 少量数量
 func Test_AVLTree_Delete1(t *testing.T) {
 	for max := 3; max < 1000; max++ {
 
