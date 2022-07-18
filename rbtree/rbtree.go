@@ -453,10 +453,72 @@ func (r *RBTree[K, V]) Len() int {
 
 func (r *RBTree[K, V]) TopMin(limit int, callback func(k K, v V) bool) {
 
+	r.Range(func(k K, v V) bool {
+
+		if limit <= 0 {
+			return false
+		}
+
+		if !callback(k, v) {
+			return false
+		}
+
+		limit--
+		return true
+	})
+}
+
+// 遍历rbtree
+func (r *RBTree[K, V]) RangePrev(callback func(k K, v V) bool) {
+	// 遍历
+	if r.root.node == nil {
+		return
+	}
+
+	r.root.node.rangePrevInner(callback)
+	return
 }
 
 func (r *RBTree[K, V]) TopMax(limit int, callback func(k K, v V) bool) {
 
+	r.RangePrev(func(k K, v V) bool {
+
+		if limit <= 0 {
+			return false
+		}
+
+		if !callback(k, v) {
+			return false
+		}
+
+		limit--
+		return true
+	})
+}
+
+func (n *node[K, V]) rangePrevInner(callback func(k K, v V) bool) bool {
+
+	if n == nil {
+		return true
+	}
+
+	if n.right != nil {
+		if !n.right.rangePrevInner(callback) {
+			return false
+		}
+	}
+
+	if !callback(n.key, n.val) {
+		return false
+	}
+
+	if n.left != nil {
+		if !n.left.rangePrevInner(callback) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (n *node[K, V]) rangeInner(callback func(k K, v V) bool) bool {
