@@ -1,6 +1,7 @@
 package rbtree
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,6 +14,11 @@ func Test_SetAndGet(t *testing.T) {
 	for i := 0; i < max; i++ {
 		b.SetWithPrev(i, i)
 	}
+
+	b.Range(func(k, v int) bool {
+		fmt.Println("k", k, "v", v)
+		return true
+	})
 
 	for i := 0; i < max; i++ {
 		v, err := b.GetWithErr(i)

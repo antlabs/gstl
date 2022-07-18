@@ -6,6 +6,7 @@ package rbtree
 import (
 	"errors"
 
+	"github.com/guonaihong/gstl/api"
 	"golang.org/x/exp/constraints"
 )
 
@@ -15,6 +16,8 @@ import (
 // 3. 所有叶子(空节点)均为黑色
 // 4. 每个红色节点的两个子节点均为黑色(红父黑子)
 // 5. 从根到叶的每个路径包含相同数量的黑色节点(黑高相同)
+
+var _ api.SortedSet[int, int] = (*RBTree[int, int])(nil)
 
 var ErrNotFound = errors.New("rbtree: not found value")
 
@@ -205,6 +208,10 @@ func (r *RBTree[K, V]) Last() (v V, err error) {
 	return n.val, nil
 }
 
+func (r *RBTree[K, V]) Set(k K, v V) {
+	_, _ = r.SetWithPrev(k, v)
+}
+
 // 设置
 func (r *RBTree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 	link := &r.root.node
@@ -221,9 +228,9 @@ func (r *RBTree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 		}
 
 		if parent.key < k {
-			*link = parent.right
+			link = &parent.right
 		} else {
-			*link = parent.left
+			link = &parent.left
 		}
 	}
 
@@ -437,5 +444,52 @@ func (r *RBTree[K, V]) Delete(k K) {
 
 found:
 	r.root.erase(n)
+	return
+}
+
+func (r *RBTree[K, V]) Len() int {
+	return r.length
+}
+
+func (r *RBTree[K, V]) TopMin(limit int, callback func(k K, v V) bool) {
+
+}
+
+func (r *RBTree[K, V]) TopMax(limit int, callback func(k K, v V) bool) {
+
+}
+
+func (n *node[K, V]) rangeInner(callback func(k K, v V) bool) bool {
+
+	if n == nil {
+		return true
+	}
+
+	if n.left != nil {
+		if !n.left.rangeInner(callback) {
+			return false
+		}
+	}
+
+	if !callback(n.key, n.val) {
+		return false
+	}
+
+	if n.right != nil {
+		if !n.right.rangeInner(callback) {
+			return false
+		}
+	}
+	return true
+}
+
+// 遍历rbtree
+func (a *RBTree[K, V]) Range(callback func(k K, v V) bool) {
+	// 遍历
+	if a.root.node == nil {
+		return
+	}
+
+	a.root.node.rangeInner(callback)
 	return
 }
