@@ -16,7 +16,7 @@ import (
 
 var ErrNotFound = errors.New("avltree: not found value")
 
-var _ api.SortedSet[int, int] = (*AvlTree[int, int])(nil)
+var _ api.SortedMap[int, int] = (*AvlTree[int, int])(nil)
 
 // 元素
 type pair[K constraints.Ordered, V any] struct {

@@ -43,7 +43,7 @@ import (
 	"github.com/guonaihong/gstl/api"
 )
 
-var _ api.SortedSet[float64, float64] = (*SkipList[float64])(nil)
+var _ api.SortedMap[float64, float64] = (*SkipList[float64])(nil)
 
 const (
 	SKIPLIST_MAXLEVEL = 32

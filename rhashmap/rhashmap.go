@@ -13,7 +13,7 @@ import (
 	"github.com/guonaihong/gstl/api"
 )
 
-var _ api.Set[int, int] = (*HashMap[int, int])(nil)
+var _ api.Map[int, int] = (*HashMap[int, int])(nil)
 
 const (
 	HT_INITIAL_EXP  = 2

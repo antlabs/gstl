@@ -17,7 +17,7 @@ import (
 // 4. 每个红色节点的两个子节点均为黑色(红父黑子)
 // 5. 从根到叶的每个路径包含相同数量的黑色节点(黑高相同)
 
-var _ api.SortedSet[int, int] = (*RBTree[int, int])(nil)
+var _ api.SortedMap[int, int] = (*RBTree[int, int])(nil)
 
 var ErrNotFound = errors.New("rbtree: not found value")
 

@@ -14,7 +14,7 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-var _ api.SortedSet[int, int] = (*Btree[int, int])(nil)
+var _ api.SortedMap[int, int] = (*Btree[int, int])(nil)
 var ErrNotFound = errors.New("btree not found")
 
 //btree头结点

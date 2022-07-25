@@ -2,7 +2,7 @@ package api
 
 import "golang.org/x/exp/constraints"
 
-type Set[K constraints.Ordered, V any] interface {
+type Map[K constraints.Ordered, V any] interface {
 	// 获取
 	Get(k K) (elem V)
 	// 获取
@@ -17,8 +17,17 @@ type Set[K constraints.Ordered, V any] interface {
 	Len() int
 }
 
-type SortedSet[K constraints.Ordered, V any] interface {
-	Set[K, V]
+type SortedMap[K constraints.Ordered, V any] interface {
+	Map[K, V]
 	TopMin(limit int, callback func(k K, v V) bool)
 	TopMax(limit int, callback func(k K, v V) bool)
+}
+
+// TODO
+type Set[K constraints.Ordered] interface {
+	Set(k K)
+}
+
+type Trie[V any] interface {
+	Get(k string) (v any)
 }
