@@ -5,6 +5,7 @@ package trie
 type Trie[V any] struct {
 	v        V
 	children map[rune]*Trie[V]
+	set      bool
 }
 
 func New[V any]() *Trie[V] {
@@ -28,7 +29,11 @@ func (t *Trie[V]) SetWithPrev(k string, v V) (prev V, replaced bool) {
 		n = c
 	}
 
-	// TODO
+	prev = n.v
+	n.v = v
+
+	replaced = n.set
+	n.set = true
 	return
 }
 
