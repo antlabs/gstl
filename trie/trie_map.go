@@ -5,7 +5,8 @@ import "unicode/utf8"
 // apache 2.0 guonaihong
 
 type Trie[V any] struct {
-	v        V
+	v V
+	// 这里也可以换成多少数据结构, 压测下性能
 	children map[rune]*Trie[V]
 	set      bool
 }
@@ -27,7 +28,9 @@ func (t *Trie[V]) SetWithPrev(k string, v V) (prev V, replaced bool) {
 				n.children = map[rune]*Trie[V]{}
 			}
 			c = &Trie[V]{}
+			n.children[r] = c
 		}
+
 		n = c
 	}
 
@@ -43,7 +46,7 @@ func (t *Trie[V]) HasPrefix(k string) bool {
 
 	n := t
 	for _, r := range k {
-		n := n.children[r]
+		n = n.children[r]
 		if n == nil {
 			return false
 		}
