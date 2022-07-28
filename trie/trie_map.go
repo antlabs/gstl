@@ -1,6 +1,8 @@
 package trie
 
-import "unicode/utf8"
+import (
+	"unicode/utf8"
+)
 
 // apache 2.0 guonaihong
 
@@ -111,6 +113,10 @@ func (t *Trie[V]) Delete(k string) {
 		delete(p.children, recog[last].r)
 
 		if !p.isLeaf() {
+			return
+		}
+
+		if p.isSet {
 			return
 		}
 	}
