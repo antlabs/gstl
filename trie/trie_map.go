@@ -6,9 +6,9 @@ import "unicode/utf8"
 
 type Trie[V any] struct {
 	v V
-	// 这里也可以换成多少数据结构, 压测下性能
+	// 这里也可以换成别的数据结构, btree, avltree, skiplist, 压测下性能
 	children map[rune]*Trie[V]
-	set      bool
+	isSet    bool
 }
 
 func New[V any]() *Trie[V] {
@@ -37,8 +37,8 @@ func (t *Trie[V]) SetWithPrev(k string, v V) (prev V, replaced bool) {
 	prev = n.v
 	n.v = v
 
-	replaced = n.set
-	n.set = true
+	replaced = n.isSet
+	n.isSet = true
 	return
 }
 
@@ -55,7 +55,8 @@ func (t *Trie[V]) HasPrefix(k string) bool {
 	return true
 }
 
-func (t *Trie[V]) Get(k string) (v V) {
+func (t *Trie[V]) GetWithBool(k string) (v V, found bool) {
+
 	n := t
 	for _, r := range k {
 		n = n.children[r]
@@ -63,7 +64,12 @@ func (t *Trie[V]) Get(k string) (v V) {
 			return
 		}
 	}
-	return n.v
+	return n.v, true
+}
+
+func (t *Trie[V]) Get(k string) (v V) {
+	v, _ = t.GetWithBool(k)
+	return
 }
 
 func (t *Trie[V]) isLeaf() bool {
@@ -94,7 +100,7 @@ func (t *Trie[V]) Delete(k string) {
 	}
 
 	n.v = v
-	n.set = false
+	n.isSet = false
 
 	if !n.isLeaf() {
 		return
