@@ -29,5 +29,9 @@ type Set[K constraints.Ordered] interface {
 }
 
 type Trie[V any] interface {
-	Get(k string) (v any)
+	Get(k string) (v V)
+	SetWithPrev(k string, v V) (prev V, replaced bool)
+	HasPrefix(k string) bool
+	GetWithBool(k string) (v V, found bool)
+	Delete(k string)
 }

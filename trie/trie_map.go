@@ -2,9 +2,13 @@ package trie
 
 import (
 	"unicode/utf8"
+
+	"github.com/guonaihong/gstl/api"
 )
 
 // apache 2.0 guonaihong
+
+var _ api.Trie[int] = (*Trie[int])(nil)
 
 type Trie[V any] struct {
 	v V
