@@ -1,5 +1,6 @@
 package set
 
+// apache 2.0 guonaihong
 import (
 	"testing"
 
@@ -111,4 +112,68 @@ func Test_Union(t *testing.T) {
 
 	newSet := s.Union(s1, s2)
 	assert.Equal(t, newSet.ToSlice(), []string{"1111", "2222", "3333"})
+}
+
+func Test_Diff(t *testing.T) {
+	s := From("hello", "world", "1234", "4567")
+	s2 := From("1234", "4567")
+
+	newSet := s.Diff(s2)
+	assert.Equal(t, newSet.ToSlice(), []string{"hello", "world"})
+}
+
+func Test_Intersection(t *testing.T) {
+	s := From("1234", "5678", "9abc")
+	s2 := From("abcde", "5678", "9abc")
+
+	v := s.Intersection(s2).ToSlice()
+	assert.Equal(t, v, []string{"5678", "9abc"})
+}
+
+func Test_IsSubset(t *testing.T) {
+
+	s := From("5678", "9abc")
+	s2 := From("abcde", "5678", "9abc")
+
+	assert.True(t, s.IsSubset(s2))
+}
+
+func Test_IsSubset_Not(t *testing.T) {
+
+	s := From("aa", "5678", "9abc")
+	s2 := From("abcde", "5678", "9abc")
+
+	assert.False(t, s.IsSubset(s2))
+}
+
+func Test_IsSubset_Not2(t *testing.T) {
+
+	s := From("aa", "5678", "9abc", "33333")
+	s2 := From("abcde", "5678", "9abc")
+
+	assert.False(t, s.IsSubset(s2))
+}
+
+func Test_IsSuperbset(t *testing.T) {
+
+	s2 := From("5678", "9abc")
+	s := From("abcde", "5678", "9abc")
+
+	assert.True(t, s.IsSuperset(s2))
+}
+
+func Test_IsSuperset_Not(t *testing.T) {
+
+	s2 := From("aa", "5678", "9abc")
+	s := From("abcde", "5678", "9abc")
+
+	assert.False(t, s.IsSuperset(s2))
+}
+
+func Test_IsSuperset_Not2(t *testing.T) {
+
+	s2 := From("aa", "5678", "9abc", "33333")
+	s := From("abcde", "5678", "9abc")
+
+	assert.False(t, s.IsSuperset(s2))
 }
