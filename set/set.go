@@ -17,7 +17,7 @@ func New[K constraints.Ordered]() *Set[K] {
 }
 
 // 从slice创建set
-func From[K constraints.Ordered](s []K) *Set[K] {
+func From[K constraints.Ordered](s ...K) *Set[K] {
 	var b rbtree.RBTree[K, struct{}]
 	for _, v := range s {
 		b.Set(v, struct{}{})
@@ -36,8 +36,17 @@ func (s *Set[K]) Len() int {
 	return s.SortedMap.Len()
 }
 
+func (s *Set[K]) ToSlice() (new []K) {
+	new = make([]K, 0, s.Len())
+	s.Range(func(k K) bool {
+		new = append(new, k)
+		return true
+	})
+	return
+}
+
 // 深度复制一个集合
-func (s *Set[K]) Clone() (new api.Set[K]) {
+func (s *Set[K]) Clone() (new *Set[K]) {
 	new = New[K]()
 	s.Range(func(k K) bool {
 		new.Set(k)
@@ -66,7 +75,7 @@ func (s *Set[K]) Diff(s1 *Set[K]) (new *Set[K]) {
 }
 
 // 返回两个集合的所有元素
-func (s *Set[K]) Union(s1 *Set[K]) (new *Set[K]) {
+func (s *Set[K]) Union(sets ...*Set[K]) (new *Set[K]) {
 
 	new = New[K]()
 	s.Range(func(k K) bool {
@@ -74,10 +83,12 @@ func (s *Set[K]) Union(s1 *Set[K]) (new *Set[K]) {
 		return true
 	})
 
-	s1.Range(func(k K) bool {
-		new.Set(k)
-		return true
-	})
+	for _, s1 := range sets {
+		s1.Range(func(k K) bool {
+			new.Set(k)
+			return true
+		})
+	}
 
 	return
 }
@@ -119,11 +130,12 @@ func (s *Set[K]) Range(cb func(k K) bool) {
 }
 
 // 两个集合是否相等
-func (s *Set[K]) Equal(s1 Set[K]) (b bool) {
+func (s *Set[K]) Equal(s1 *Set[K]) (b bool) {
 	if s.Len() != s1.Len() {
 		return false
 	}
 
+	b = true
 	s.Range(func(k K) bool {
 		_, err := s1.GetWithErr(k)
 		if err != nil {
