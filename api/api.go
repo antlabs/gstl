@@ -15,6 +15,8 @@ type Map[K constraints.Ordered, V any] interface {
 	SetWithPrev(k K, v V) (prev V, replaced bool)
 	// int
 	Len() int
+	// 遍历
+	Range(callback func(k K, v V) bool)
 }
 
 type SortedMap[K constraints.Ordered, V any] interface {
