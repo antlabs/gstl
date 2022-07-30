@@ -10,12 +10,12 @@ import (
 )
 
 func Test_New(t *testing.T) {
-	n := New[int]()
+	n := New[int, int]()
 	assert.NotNil(t, n)
 }
 
 func Test_SetGet(t *testing.T) {
-	zset := New[string]()
+	zset := New[float64, string]()
 	max := 100.0
 	for i := 0.0; i < max; i++ {
 		zset.Set(i, fmt.Sprintf("%d", int(i)))
@@ -29,7 +29,7 @@ func Test_SetGet(t *testing.T) {
 
 // 测试插入重复
 func Test_InsertRepeatingElement(t *testing.T) {
-	sl := New[string]()
+	sl := New[float64, string]()
 	max := 100
 	for i := 0; i < max; i++ {
 		sl.Set(float64(i), fmt.Sprint(i))
@@ -45,7 +45,7 @@ func Test_InsertRepeatingElement(t *testing.T) {
 }
 
 func Test_SetGetRemove(t *testing.T) {
-	zset := New[float64]()
+	zset := New[float64, float64]()
 
 	max := 100.0
 	for i := 0.0; i < max; i++ {
@@ -83,10 +83,10 @@ func Test_Skiplist_TopMin(t *testing.T) {
 	}
 
 	needCount := []int{count10, count100, count100}
-	for i, b := range []*SkipList[int]{
+	for i, b := range []*SkipList[float64, int]{
 		// btree里面元素 少于 TopMin 需要返回的值
-		func() *SkipList[int] {
-			b := New[int]()
+		func() *SkipList[float64, int] {
+			b := New[float64, int]()
 			for i := 0; i < count10; i++ {
 				b.Set(float64(i), i)
 			}
@@ -95,9 +95,9 @@ func Test_Skiplist_TopMin(t *testing.T) {
 			return b
 		}(),
 		// btree里面元素 等于 TopMin 需要返回的值
-		func() *SkipList[int] {
+		func() *SkipList[float64, int] {
 
-			b := New[int]()
+			b := New[float64, int]()
 			for i := 0; i < count100; i++ {
 				b.Set(float64(i), i)
 			}
@@ -105,9 +105,9 @@ func Test_Skiplist_TopMin(t *testing.T) {
 			return b
 		}(),
 		// btree里面元素 大于 TopMin 需要返回的值
-		func() *SkipList[int] {
+		func() *SkipList[float64, int] {
 
-			b := New[int]()
+			b := New[float64, int]()
 			for i := 0; i < count1000; i++ {
 				b.Set(float64(i), i)
 			}
@@ -131,7 +131,7 @@ func Test_Skiplist_TopMin2(t *testing.T) {
 	start := -10
 	max := 100
 	limit := 10
-	sl := New[int]()
+	sl := New[float64, int]()
 
 	need := make([]int, 0, limit)
 	for i, l := start, limit; i < max && l > 0; i++ {
@@ -152,7 +152,7 @@ func Test_Skiplist_TopMin2(t *testing.T) {
 // debug, 指定层
 func Test_SkipList_SetAndGet_Level(t *testing.T) {
 
-	sl := New[int]()
+	sl := New[float64, int]()
 
 	keys := []int{5, 8, 10}
 	level := []int{2, 3, 5}
@@ -176,7 +176,7 @@ func Test_SkipList_SetAndGet_Level(t *testing.T) {
 // debug, 用的入口函数
 func Test_SkipList_SetAndGet2(t *testing.T) {
 
-	sl := New[int]()
+	sl := New[float64, int]()
 
 	max := 1000
 	start := -1
@@ -213,10 +213,10 @@ func Test_Skiplist_TopMax(t *testing.T) {
 		}
 	}
 
-	for i, b := range []*SkipList[int]{
+	for i, b := range []*SkipList[float64, int]{
 		// btree里面元素 少于 TopMax 需要返回的值
-		func() *SkipList[int] {
-			b := New[int]()
+		func() *SkipList[float64, int] {
+			b := New[float64, int]()
 			for i := 0; i < count10; i++ {
 				b.Set(float64(i), i)
 			}
@@ -225,9 +225,9 @@ func Test_Skiplist_TopMax(t *testing.T) {
 			return b
 		}(),
 		// btree里面元素 等于 TopMax 需要返回的值
-		func() *SkipList[int] {
+		func() *SkipList[float64, int] {
 
-			b := New[int]()
+			b := New[float64, int]()
 			for i := 0; i < count100; i++ {
 				b.Set(float64(i), i)
 			}
@@ -235,9 +235,9 @@ func Test_Skiplist_TopMax(t *testing.T) {
 			return b
 		}(),
 		// btree里面元素 大于 TopMax 需要返回的值
-		func() *SkipList[int] {
+		func() *SkipList[float64, int] {
 
-			b := New[int]()
+			b := New[float64, int]()
 			for i := 0; i < count1000; i++ {
 				b.Set(float64(i), i)
 			}

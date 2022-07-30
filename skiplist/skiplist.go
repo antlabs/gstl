@@ -41,9 +41,10 @@ import (
 	"time"
 
 	"github.com/guonaihong/gstl/api"
+	"golang.org/x/exp/constraints"
 )
 
-var _ api.SortedMap[float64, float64] = (*SkipList[float64])(nil)
+var _ api.SortedMap[float64, float64] = (*SkipList[float64, float64])(nil)
 
 const (
 	SKIPLIST_MAXLEVEL = 32
@@ -53,21 +54,21 @@ var (
 	ErrNotFound = errors.New("not found element")
 )
 
-type Node[T any] struct {
-	score float64
+type Node[K constraints.Ordered, T any] struct {
+	score K
 	elem  T
 	// 后退指针
-	backward  *Node[T]
+	backward  *Node[K, T]
 	NodeLevel []struct {
 		// 指向前进节点, 是指向tail的方向
-		forward *Node[T]
+		forward *Node[K, T]
 		span    int
 	}
 }
 
-type SkipList[T any] struct {
-	head *Node[T]
-	tail *Node[T]
+type SkipList[K constraints.Ordered, T any] struct {
+	head *Node[K, T]
+	tail *Node[K, T]
 
 	r      *rand.Rand
 	length int
@@ -78,23 +79,24 @@ type SkipList[T any] struct {
 
 // 初始化skiplist
 //func New[T any](compare func(T, T) int) *SkipList[T] {
-func New[T any]() *SkipList[T] {
-	s := &SkipList[T]{
+func New[K constraints.Ordered, T any]() *SkipList[K, T] {
+	s := &SkipList[K, T]{
 		level: 1,
 	}
 
 	//s.compare = compare
+	var score K
 	s.resetRand()
-	s.head = newNode(SKIPLIST_MAXLEVEL, 0, *new(T))
+	s.head = newNode(SKIPLIST_MAXLEVEL, score, *new(T))
 	return s
 }
 
-func (s *SkipList[T]) resetRand() {
+func (s *SkipList[K, T]) resetRand() {
 
 	s.r = rand.New(rand.NewSource(time.Now().UnixNano()))
 }
 
-func (s *SkipList[T]) rand() int {
+func (s *SkipList[K, T]) rand() int {
 	level := 1
 	for {
 
@@ -111,40 +113,40 @@ func (s *SkipList[T]) rand() int {
 	return SKIPLIST_MAXLEVEL
 }
 
-func newNode[T any](level int, score float64, elem T) *Node[T] {
-	return &Node[T]{
+func newNode[K constraints.Ordered, T any](level int, score K, elem T) *Node[K, T] {
+	return &Node[K, T]{
 		score: score,
 		elem:  elem,
 		NodeLevel: make([]struct {
-			forward *Node[T]
+			forward *Node[K, T]
 			span    int
 		}, level),
 	}
 }
 
 // 设置值, 和Insert是同义词
-func (s *SkipList[T]) Set(score float64, elem T) {
+func (s *SkipList[K, T]) Set(score K, elem T) {
 	s.InsertInner(score, elem, s.rand())
 }
 
-func (s *SkipList[T]) SetWithPrev(score float64, elem T) (prev T, replaced bool) {
+func (s *SkipList[K, T]) SetWithPrev(score K, elem T) (prev T, replaced bool) {
 	return s.InsertInner(score, elem, s.rand())
 }
 
 // 设置值
-func (s *SkipList[T]) Insert(score float64, elem T) {
+func (s *SkipList[K, T]) Insert(score K, elem T) {
 	s.InsertInner(score, elem, s.rand())
 }
 
 // 方便给作者调试用的函数
-func (s *SkipList[T]) InsertInner(score float64, elem T, level int) (prev T, replaced bool) {
+func (s *SkipList[K, T]) InsertInner(score K, elem T, level int) (prev T, replaced bool) {
 	var (
-		update [SKIPLIST_MAXLEVEL]*Node[T]
+		update [SKIPLIST_MAXLEVEL]*Node[K, T]
 		rank   [SKIPLIST_MAXLEVEL]int
 	)
 
 	x := s.head
-	var x2 *Node[T]
+	var x2 *Node[K, T]
 	for i := s.level - 1; i >= 0; i-- {
 		if i == s.level-1 {
 			rank[i] = 0
@@ -220,7 +222,7 @@ func (s *SkipList[T]) InsertInner(score float64, elem T, level int) (prev T, rep
 }
 
 // 获取
-func (s *SkipList[T]) GetWithErr(score float64) (elem T, err error) {
+func (s *SkipList[K, T]) GetWithErr(score K) (elem T, err error) {
 
 	x := s.head
 	for i := s.level - 1; i >= 0; i-- {
@@ -255,21 +257,21 @@ func (s *SkipList[T]) GetWithErr(score float64) (elem T, err error) {
 }
 
 // debug 使用
-type Number struct {
+type Number[K constraints.Ordered] struct {
 	Total    int
-	Keys     []float64
+	Keys     []K
 	Level    []int
 	MaxLevel []int
 }
 
 // debug使用, 返回查找某个key 比较的次数+经过的节点数
-func (s *SkipList[T]) GetWithMeta(score float64) (elem T, number Number, err error) {
+func (s *SkipList[K, T]) GetWithMeta(score K) (elem T, number Number[K], err error) {
 
 	x := s.head
 	fmt.Println()
 	for i := s.level - 1; i >= 0; i-- {
 		if x.NodeLevel[i].forward != nil {
-			fmt.Printf("x.NodeLevel[%d].score:%f, score:%f\n", i, x.NodeLevel[i].forward.score, score)
+			fmt.Printf("x.NodeLevel[%d].score:%v, score:%v\n", i, x.NodeLevel[i].forward.score, score)
 		}
 		for x.NodeLevel[i].forward != nil && (x.NodeLevel[i].forward.score < score) {
 			number.Total++
@@ -302,12 +304,12 @@ func (s *SkipList[T]) GetWithMeta(score float64) (elem T, number Number, err err
 }
 
 // 根据score获取value值
-func (s *SkipList[T]) Get(score float64) (elem T) {
+func (s *SkipList[K, T]) Get(score K) (elem T) {
 	elem, _ = s.GetWithErr(score)
 	return elem
 }
 
-func (s *SkipList[T]) removeNode(x *Node[T], update []*Node[T]) {
+func (s *SkipList[K, T]) removeNode(x *Node[K, T], update []*Node[K, T]) {
 	for i := 0; i < s.level; i++ {
 		if update[i].NodeLevel[i].forward == x {
 			update[i].NodeLevel[i].span += x.NodeLevel[i].span - 1
@@ -332,14 +334,14 @@ func (s *SkipList[T]) removeNode(x *Node[T], update []*Node[T]) {
 }
 
 // 根据score删除
-func (s *SkipList[T]) Delete(score float64) {
+func (s *SkipList[K, T]) Delete(score K) {
 	s.Remove(score)
 }
 
 // 根据score删除元素
-func (s *SkipList[T]) Remove(score float64) *SkipList[T] {
+func (s *SkipList[K, T]) Remove(score K) *SkipList[K, T] {
 
-	var update [SKIPLIST_MAXLEVEL]*Node[T]
+	var update [SKIPLIST_MAXLEVEL]*Node[K, T]
 	x := s.head
 	for i := s.level - 1; i >= 0; i-- {
 		for x.NodeLevel[i].forward != nil && (x.NodeLevel[i].forward.score < score) {
@@ -357,7 +359,7 @@ func (s *SkipList[T]) Remove(score float64) *SkipList[T] {
 	return s
 }
 
-func (s *SkipList[T]) Draw() *SkipList[T] {
+func (s *SkipList[K, T]) Draw() *SkipList[K, T] {
 	if s.head == nil {
 		return s
 	}
@@ -365,7 +367,7 @@ func (s *SkipList[T]) Draw() *SkipList[T] {
 	fmt.Printf("maxlevel:%d, head level:%d \n", s.level, len(s.head.NodeLevel))
 	i := 1
 	for h := s.head.NodeLevel[0].forward; h != nil; h = h.NodeLevel[0].forward {
-		fmt.Printf("score:%f, level:%d -> ", h.score, len(h.NodeLevel))
+		fmt.Printf("score:%v, level:%d -> ", h.score, len(h.NodeLevel))
 		if i%6 == 0 {
 			fmt.Printf("\n")
 		}
@@ -377,22 +379,22 @@ func (s *SkipList[T]) Draw() *SkipList[T] {
 }
 
 // 遍历
-func (s *SkipList[T]) Range(callback func(score float64, v T) bool) *SkipList[T] {
+func (s *SkipList[K, T]) Range(callback func(score K, v T) bool) {
 	if s.head == nil {
-		return s
+		return
 	}
 
 	for h := s.head.NodeLevel[0].forward; h != nil; h = h.NodeLevel[0].forward {
 		if !callback(h.score, h.elem) {
-			return s
+			return
 		}
 	}
-	return s
+	return
 }
 
 // 返回最小的n个值, 升序返回, 比如0,1,2,3
-func (s *SkipList[T]) TopMin(limit int, callback func(score float64, v T) bool) {
-	s.Range(func(score float64, v T) bool {
+func (s *SkipList[K, T]) TopMin(limit int, callback func(score K, v T) bool) {
+	s.Range(func(score K, v T) bool {
 		if limit <= 0 {
 			return false
 		}
@@ -403,12 +405,12 @@ func (s *SkipList[T]) TopMin(limit int, callback func(score float64, v T) bool) 
 }
 
 // 返回长度
-func (s *SkipList[T]) Len() int {
+func (s *SkipList[K, T]) Len() int {
 	return s.length
 }
 
 // 从后向前倒序遍历b tree
-func (s *SkipList[T]) RangePrev(callback func(k float64, v T) bool) *SkipList[T] {
+func (s *SkipList[K, T]) RangePrev(callback func(k K, v T) bool) *SkipList[K, T] {
 	// 遍历
 	if s.tail == nil {
 		return s
@@ -424,8 +426,8 @@ func (s *SkipList[T]) RangePrev(callback func(k float64, v T) bool) *SkipList[T]
 }
 
 // 返回最大的n个值, 降序返回, 10, 9, 8, 7
-func (s *SkipList[T]) TopMax(limit int, callback func(k float64, v T) bool) {
-	s.RangePrev(func(k float64, v T) bool {
+func (s *SkipList[K, T]) TopMax(limit int, callback func(k K, v T) bool) {
+	s.RangePrev(func(k K, v T) bool {
 		if limit <= 0 {
 			return false
 		}

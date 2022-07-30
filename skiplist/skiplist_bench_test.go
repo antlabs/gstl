@@ -17,7 +17,7 @@ import (
 // 五百万数据的Get操作时间
 func BenchmarkGet(b *testing.B) {
 	max := 1000000.0 * 5
-	set := New[float64]()
+	set := New[float64, float64]()
 	for i := 0.0; i < max; i++ {
 		set.Set(i, i)
 	}

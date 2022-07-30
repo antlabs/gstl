@@ -346,9 +346,9 @@ func (h *HashMap[K, V]) Get(key K) (v V) {
 }
 
 // 遍历
-func (h *HashMap[K, V]) Range(pr func(key K, val V)) (err error) {
+func (h *HashMap[K, V]) Range(pr func(key K, val V) bool) {
 	if h.Len() == 0 {
-		err = ErrNotFound
+		//err = ErrNotFound
 		return
 	}
 
@@ -362,7 +362,9 @@ func (h *HashMap[K, V]) Range(pr func(key K, val V)) (err error) {
 		for idx := 0; idx < len(h.table[table]); idx++ {
 			head := h.table[table][idx]
 			for head != nil {
-				pr(head.key, head.val)
+				if !pr(head.key, head.val) {
+					return
+				}
 				head = head.next
 			}
 
@@ -372,7 +374,6 @@ func (h *HashMap[K, V]) Range(pr func(key K, val V)) (err error) {
 			break
 		}
 	}
-	return nil
 }
 
 func (h *HashMap[K, V]) Set(k K, v V) {

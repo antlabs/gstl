@@ -185,8 +185,9 @@ func Test_Range(t *testing.T) {
 
 	assert.Equal(t, hm.Len(), max)
 	got := make([]int, 0, max)
-	hm.Range(func(key int, val int) {
+	hm.Range(func(key int, val int) bool {
 		got = append(got, key, val)
+		return true
 	})
 
 	sort.Ints(got)
@@ -201,8 +202,9 @@ func Test_Range_Zero(t *testing.T) {
 
 	assert.Equal(t, hm.Len(), max)
 	got := make([]int, 0, max)
-	hm.Range(func(key int, val int) {
+	hm.Range(func(key int, val int) bool {
 		got = append(got, key, val)
+		return true
 	})
 
 	sort.Ints(got)
@@ -219,8 +221,9 @@ func Test_Range_Rehasing(t *testing.T) {
 
 	assert.Equal(t, hm.Len(), max)
 	got := make([]int, 0, max)
-	hm.Range(func(key int, val int) {
+	hm.Range(func(key int, val int) bool {
 		got = append(got, key, val)
+		return true
 	})
 
 	sort.Ints(got)
