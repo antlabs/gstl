@@ -36,4 +36,5 @@ type Trie[V any] interface {
 	HasPrefix(k string) bool
 	GetWithBool(k string) (v V, found bool)
 	Delete(k string)
+	Len() int
 }

@@ -12,9 +12,11 @@ var _ api.Trie[int] = (*Trie[int])(nil)
 
 type Trie[V any] struct {
 	v V
-	// 这里也可以换成别的数据结构, btree, avltree, skiplist, 压测下性能
+	// 这里也可以换成别的数据结构, btree, avltree, skiplist, slice(搜索就二分搜索，插入也是，并且维护有序)
+	// 压测下性能 TODO
 	children map[rune]*Trie[V]
 	isSet    bool
+	length   int
 }
 
 func New[V any]() *Trie[V] {
@@ -44,6 +46,9 @@ func (t *Trie[V]) SetWithPrev(k string, v V) (prev V, replaced bool) {
 	n.v = v
 
 	replaced = n.isSet
+	if !replaced {
+		t.length++
+	}
 	n.isSet = true
 	return
 }
@@ -108,6 +113,7 @@ func (t *Trie[V]) Delete(k string) {
 	n.v = v
 	n.isSet = false
 
+	n.length--
 	if !n.isLeaf() {
 		return
 	}
@@ -124,4 +130,8 @@ func (t *Trie[V]) Delete(k string) {
 			return
 		}
 	}
+}
+
+func (t *Trie[V]) Len() int {
+	return t.length
 }
