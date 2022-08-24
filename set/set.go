@@ -62,7 +62,7 @@ func (s *Set[K]) IsMember(k K) (b bool) {
 	return err == nil
 }
 
-// 返回的元素没有s1中的元素, s - s1
+// 返回的是s1没有的元素, s - s1
 func (s *Set[K]) Diff(s1 *Set[K]) (new *Set[K]) {
 
 	new = New[K]()
