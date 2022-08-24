@@ -75,7 +75,7 @@ func (t *Trie[V]) GetWithBool(k string) (v V, found bool) {
 			return
 		}
 	}
-	return n.v, true
+	return n.v, true && n.isSet
 }
 
 func (t *Trie[V]) Get(k string) (v V) {

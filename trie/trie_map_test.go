@@ -61,6 +61,8 @@ func Test_TrieMap_GetWithBool_notFound(t *testing.T) {
 	}
 	_, ok := tm.GetWithBool("/ha")
 	assert.False(t, ok)
+	_, ok = tm.GetWithBool("/he")
+	assert.False(t, ok)
 }
 
 func Test_TrieMap_Delete(t *testing.T) {
