@@ -44,15 +44,34 @@ func (r *Radix[V]) Get(k string) (v V) {
 
 // 设置
 func (r *Radix[V]) SetWithPrev(k string, v V) (prev V, replaced bool) {
-	/*
-		n := r.root
-		var parent *node
 
-		for _, rune := range k {
-			n.edges.SearchFunc()
+	var parent *node[V]
+	var found bool
+	n := r.root
+
+	for {
+		if len(k) == 0 {
+			if n.isSet {
+				prev = n.val
+				n.val = v
+				return prev, true
+			}
+
+			n.key = k
+			n.val = v
+			n.isSet = true
+			r.length++
+			replaced = true
+			return
 		}
-	*/
 
+		rune, _ := utf8.DecodeLastRuneInString(k)
+		parent = n
+		n, found = n.children(rune)
+		if !found {
+
+		}
+	}
 	return
 }
 
@@ -85,7 +104,7 @@ func (r *Radix[V]) GetWithBool(k string) (v V, found bool) {
 
 	for {
 
-		// k 消费完，要不找到，要不找不到
+		// k 消费完，找到，或者找不到
 		if len(k) == 0 {
 			if n.isSet {
 				return n.val, true
