@@ -1,5 +1,6 @@
 package radix
 
+// apache 2.0 guonaihong
 import (
 	"strings"
 	"unicode/utf8"
@@ -231,6 +232,5 @@ func (r *Radix[V]) Delete(k string) {
 
 // 返回长度
 func (r *Radix[V]) Len() int {
-
 	return r.length
 }
