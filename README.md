@@ -125,3 +125,11 @@ s2 := s.Clone()
 
 assert.True(t, s.Equal(s2))
 ```
+
+## 九`ifop`
+ifop是弥补下golang没有三目运算符，使用函数模拟
+
+```go
+// 如果该值不为0, 返回原来的值，否则默认值
+val = IfElse(len(val) != 0, val, "default")
+```
