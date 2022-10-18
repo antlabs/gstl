@@ -150,5 +150,5 @@ m := make(map[string]string)
 m["a"] = "1"
 m["b"] = "2"
 m["c"] = "3"
-get := Values(m)
+get := mapex.Values(m)
 ```
