@@ -126,10 +126,29 @@ s2 := s.Clone()
 assert.True(t, s.Equal(s2))
 ```
 
-## 九`ifop`
+## 九、`ifop`
 ifop是弥补下golang没有三目运算符，使用函数模拟
 
 ```go
 // 如果该值不为0, 返回原来的值，否则默认值
 val = IfElse(len(val) != 0, val, "default")
+```
+## 十、`mapex`
+薄薄一层包装，增加标准库map的接口
+* mapex.Keys()
+```go
+m := make(map[string]string)
+m["a"] = "1"
+m["b"] = "2"
+m["c"] = "3"
+get := mapex.Keys(m)// 返回map的所有key
+
+```
+* mapex.Values()
+```go
+m := make(map[string]string)
+m["a"] = "1"
+m["b"] = "2"
+m["c"] = "3"
+get := Values(m)
 ```
