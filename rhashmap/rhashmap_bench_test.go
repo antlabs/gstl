@@ -1,6 +1,6 @@
 package rhashmap
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 import (
 	"fmt"
 	"testing"
@@ -8,22 +8,22 @@ import (
 
 // goos: darwin
 // goarch: amd64
-// pkg: github.com/guonaihong/gstl/rhashmap
+// pkg: github.com/antlabs/gstl/rhashmap
 // cpu: Intel(R) Core(TM) i7-1068NG7 CPU @ 2.30GHz
 // BenchmarkGet-8       1000000000          0.4066 ns/op
 // BenchmarkGetStd-8    1000000000          0.8333 ns/op
 // PASS
-// ok   github.com/guonaihong/gstl/rhashmap 130.007s.
+// ok   github.com/antlabs/gstl/rhashmap 130.007s.
 // 比标准库快一倍.
 
 // goos: darwin
 // goarch: amd64
-// pkg: github.com/guonaihong/gstl/rhashmap
+// pkg: github.com/antlabs/gstl/rhashmap
 // cpu: Intel(R) Core(TM) i7-1068NG7 CPU @ 2.30GHz
 // BenchmarkSet-8      	1000000000	         0.1690 ns/op
 // BenchmarkSetStd-8   	1000000000	         0.1470 ns/op
 // PASS
-// ok  	github.com/guonaihong/gstl/rhashmap	3.970s
+// ok  	github.com/antlabs/gstl/rhashmap	3.970s
 // 五百万数据的Get操作时间
 func BenchmarkGet(b *testing.B) {
 	max := 1000000.0 * 5

@@ -1,6 +1,6 @@
 package vec
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 // 参考文档如下
 // https://doc.rust-lang.org/src/alloc/vec/mod.rs.html
 // https://doc.rust-lang.org/std/vec/struct.Vec.html
@@ -9,7 +9,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/guonaihong/gstl/cmp"
+	"github.com/antlabs/gstl/cmp"
 )
 
 var (

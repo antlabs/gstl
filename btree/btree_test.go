@@ -1,11 +1,11 @@
 package btree
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 import (
 	"fmt"
 	"testing"
 
-	"github.com/guonaihong/gstl/cmp"
+	"github.com/antlabs/gstl/cmp"
 	"github.com/stretchr/testify/assert"
 )
 

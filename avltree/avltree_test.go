@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/guonaihong/gstl/cmp"
-	"github.com/guonaihong/gstl/vec"
+	"github.com/antlabs/gstl/cmp"
+	"github.com/antlabs/gstl/vec"
 	"github.com/stretchr/testify/assert"
 )
 

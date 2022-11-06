@@ -1,12 +1,12 @@
 package rbtree
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 // 参考资料
 // https://github.com/torvalds/linux/blob/master/lib/rbtree.c
 import (
 	"errors"
 
-	"github.com/guonaihong/gstl/api"
+	"github.com/antlabs/gstl/api"
 	"golang.org/x/exp/constraints"
 )
 

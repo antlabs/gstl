@@ -1,6 +1,6 @@
 package btree
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 
 // 参考资料
 // https://github.com/tidwall/btree
@@ -8,9 +8,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/guonaihong/gstl/api"
-	"github.com/guonaihong/gstl/must"
-	"github.com/guonaihong/gstl/vec"
+	"github.com/antlabs/gstl/api"
+	"github.com/antlabs/gstl/must"
+	"github.com/antlabs/gstl/vec"
 	"golang.org/x/exp/constraints"
 )
 

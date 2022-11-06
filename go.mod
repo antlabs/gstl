@@ -1,4 +1,4 @@
-module github.com/guonaihong/gstl
+module github.com/antlabs/gstl
 
 go 1.19
 

@@ -1,6 +1,6 @@
 package skiplist
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 
 // 参考文档如下
 // https://github.com/redis/redis/blob/unstable/src/t_zset.c
@@ -40,7 +40,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/guonaihong/gstl/api"
+	"github.com/antlabs/gstl/api"
 	"golang.org/x/exp/constraints"
 )
 

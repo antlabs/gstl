@@ -1,17 +1,17 @@
 package rbtree
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 
 // goos: darwin
 // goarch: amd64
-// pkg: github.com/guonaihong/gstl/rbtree
+// pkg: github.com/antlabs/gstl/rbtree
 // cpu: Intel(R) Core(TM) i7-1068NG7 CPU @ 2.30GHz
 // BenchmarkGetAsc-8    	1000000000	         0.3336 ns/op
 // BenchmarkGetDesc-8   	1000000000	         0.3702 ns/op
 // BenchmarkGetStd-8
 // 1000000000	         0.8940 ns/op
 // PASS
-// ok  	github.com/guonaihong/gstl/rbtree	139.415s
+// ok  	github.com/antlabs/gstl/rbtree	139.415s
 import (
 	"fmt"
 	"testing"

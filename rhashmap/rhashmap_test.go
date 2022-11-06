@@ -1,6 +1,6 @@
 package rhashmap
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 import (
 	"sort"
 	"testing"

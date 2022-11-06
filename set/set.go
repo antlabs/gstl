@@ -1,9 +1,9 @@
 package set
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 import (
-	"github.com/guonaihong/gstl/api"
-	"github.com/guonaihong/gstl/rbtree"
+	"github.com/antlabs/gstl/api"
+	"github.com/antlabs/gstl/rbtree"
 	"golang.org/x/exp/constraints"
 )
 

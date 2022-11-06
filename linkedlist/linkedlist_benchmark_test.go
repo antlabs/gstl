@@ -1,6 +1,6 @@
 package linkedlist
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 import (
 	"container/list"
 	"testing"
@@ -9,12 +9,12 @@ import (
 
 // goos: darwin
 // goarch: amd64
-// pkg: github.com/guonaihong/gstl/linkedlist
+// pkg: github.com/antlabs/gstl/linkedlist
 // cpu: Intel(R) Core(TM) i7-1068NG7 CPU @ 2.30GHz
 // Benchmark_ListAdd_Stdlib-8   	 5918479	       190.0 ns/op
 // Benchmark_ListAdd_gstl-8     	15942064	        83.15 ns/op
 // PASS
-// ok  	github.com/guonaihong/gstl/linkedlist	3.157s
+// ok  	github.com/antlabs/gstl/linkedlist	3.157s
 type timeNodeStdlib struct {
 	expire     uint64
 	userExpire time.Duration

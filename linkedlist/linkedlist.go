@@ -1,6 +1,6 @@
 package linkedlist
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 // 参考文档如下
 // https://cs.opensource.google/go/go/+/go1.18.1:src/container/list/list.go
 // https://github.com/torvalds/linux/blob/master/tools/include/linux/list.h
@@ -21,7 +21,7 @@ package linkedlist
 import (
 	"errors"
 
-	"github.com/guonaihong/gstl/cmp"
+	"github.com/antlabs/gstl/cmp"
 )
 
 var ErrListElemEmpty = errors.New("list is empty")

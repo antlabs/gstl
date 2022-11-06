@@ -1,6 +1,6 @@
 package ifop
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 func If[T any](cond bool, t T) (zero T) {
 	if cond {
 		return t

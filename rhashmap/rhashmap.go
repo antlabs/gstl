@@ -1,6 +1,6 @@
 package rhashmap
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 // 参考资料
 // https://github.com/redis/redis/blob/unstable/src/dict.c
 import (
@@ -10,7 +10,7 @@ import (
 	"unsafe"
 
 	"github.com/cespare/xxhash/v2"
-	"github.com/guonaihong/gstl/api"
+	"github.com/antlabs/gstl/api"
 )
 
 var _ api.Map[int, int] = (*HashMap[int, int])(nil)

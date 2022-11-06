@@ -1,6 +1,6 @@
 package skiplist
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 import (
 	"fmt"
 	"testing"
@@ -8,12 +8,12 @@ import (
 
 // goos: darwin
 // goarch: amd64
-// pkg: github.com/guonaihong/gstl/skiplist
+// pkg: github.com/antlabs/gstl/skiplist
 // cpu: Intel(R) Core(TM) i7-1068NG7 CPU @ 2.30GHz
 // BenchmarkGet-8      	1000000000	         0.7746 ns/op
 // BenchmarkGetStd-8   	1000000000	         0.7847 ns/op
 // PASS
-// ok  	github.com/guonaihong/gstl/skiplist	178.377s
+// ok  	github.com/antlabs/gstl/skiplist	178.377s
 // 五百万数据的Get操作时间
 func BenchmarkGet(b *testing.B) {
 	max := 1000000.0 * 5

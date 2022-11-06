@@ -1,6 +1,6 @@
 package must
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 func TakeOne[T any](v T, err error) T {
 	if err != nil {
 		panic(err.Error())

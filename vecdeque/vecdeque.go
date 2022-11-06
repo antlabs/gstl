@@ -1,12 +1,12 @@
 package vecdeque
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 import (
 	"errors"
 	"fmt"
 	"math"
 
-	"github.com/guonaihong/gstl/cmp"
+	"github.com/antlabs/gstl/cmp"
 )
 
 // 参考文档如下

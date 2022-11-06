@@ -3,10 +3,10 @@ package trie
 import (
 	"unicode/utf8"
 
-	"github.com/guonaihong/gstl/api"
+	"github.com/antlabs/gstl/api"
 )
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 
 var _ api.Trie[int] = (*Trie[int])(nil)
 

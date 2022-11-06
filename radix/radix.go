@@ -1,13 +1,13 @@
 package radix
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/guonaihong/gstl/api"
-	"github.com/guonaihong/gstl/cmp"
-	"github.com/guonaihong/gstl/vec"
+	"github.com/antlabs/gstl/api"
+	"github.com/antlabs/gstl/cmp"
+	"github.com/antlabs/gstl/vec"
 )
 
 var _ api.Trie[int] = (*Radix[int])(nil)

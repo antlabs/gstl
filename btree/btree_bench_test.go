@@ -1,6 +1,6 @@
 package btree
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 import (
 	"fmt"
 	"testing"
@@ -8,11 +8,11 @@ import (
 
 // goos: darwin
 // goarch: amd64
-// pkg: github.com/guonaihong/gstl/btree
+// pkg: github.com/antlabs/gstl/btree
 // cpu: Intel(R) Core(TM) i7-1068NG7 CPU @ 2.30GHz
 // BenchmarkGet-8   	1000000000	         0.5326 ns/op
 // PASS
-// ok  	github.com/guonaihong/gstl/btree	25.315s
+// ok  	github.com/antlabs/gstl/btree	25.315s
 // 五百万数据的Get操作时间
 func BenchmarkGet(b *testing.B) {
 	max := 1000000 * 5.0

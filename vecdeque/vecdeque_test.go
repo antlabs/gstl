@@ -1,6 +1,6 @@
 package vecdeque
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 import "testing"
 
 func Test_PushBack(t *testing.T) {

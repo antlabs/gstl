@@ -1,10 +1,10 @@
 package linkedlist
 
-// apache 2.0 guonaihong
+// apache 2.0 antlabs
 import (
 	"testing"
 
-	"github.com/guonaihong/gstl/must"
+	"github.com/antlabs/gstl/must"
 	"github.com/stretchr/testify/assert"
 )
 
