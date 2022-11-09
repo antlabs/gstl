@@ -1,5 +1,8 @@
 # gstl
 支持泛型的数据结构库
+[![Go](https://github.com/antlabs/gstl/workflows/Go/badge.svg)](https://github.com/antlabs/gstl/actions)
+[![codecov](https://codecov.io/gh/antlabs/gstl/branch/master/graph/badge.svg)](https://codecov.io/gh/antlabs/gstl)
+
 ## 一、`vec`
 ```go
 
