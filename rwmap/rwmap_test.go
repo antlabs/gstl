@@ -156,3 +156,29 @@ func Test_New(t *testing.T) {
 	m.Store("3", "3")
 	assert.Equal(t, m.Len(), 3)
 }
+
+func Test_Keys(t *testing.T) {
+	m := New[string, string](3)
+	m.Store("a", "1")
+	m.Store("b", "2")
+	m.Store("c", "3")
+	get := m.Keys()
+	sort.Strings(get)
+	assert.Equal(t, get, []string{"a", "b", "c"})
+
+	var m2 RWMap[string, string]
+	assert.Equal(t, len(m2.Values()), 0)
+}
+
+func Test_Values(t *testing.T) {
+	m := New[string, string](3)
+	m.Store("a", "1")
+	m.Store("b", "2")
+	m.Store("c", "3")
+	get := m.Values()
+	sort.Strings(get)
+	assert.Equal(t, get, []string{"1", "2", "3"})
+
+	var m2 RWMap[string, string]
+	assert.Equal(t, len(m2.Keys()), 0)
+}
