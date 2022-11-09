@@ -2,7 +2,11 @@
 
 package rwmap
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/antlabs/gstl/mapex"
+)
 
 type RWMap[K comparable, V any] struct {
 	rw sync.RWMutex
@@ -98,6 +102,32 @@ func (r *RWMap[K, V]) Store(key K, value V) {
 	}
 	r.m[key] = value
 	r.rw.Unlock()
+}
+
+// keys
+func (r *RWMap[K, V]) Keys() (keys []K) {
+
+	r.rw.RLock()
+	if r.m == nil {
+		r.rw.RUnlock()
+		return
+	}
+	keys = mapex.Keys(r.m)
+	r.rw.RUnlock()
+	return keys
+}
+
+// vals
+func (r *RWMap[K, V]) Values() (values []V) {
+
+	r.rw.RLock()
+	if r.m == nil {
+		r.rw.RUnlock()
+		return
+	}
+	values = mapex.Values(r.m)
+	r.rw.RUnlock()
+	return values
 }
 
 // 返回长度
