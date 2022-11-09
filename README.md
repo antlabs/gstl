@@ -152,3 +152,28 @@ m["b"] = "2"
 m["c"] = "3"
 get := mapex.Values(m)
 ```
+## 十一、`rwmap`
+rwmap与sync.Map类似支持并发访问，只解决sync.Map 2个问题.  
+1. 没有Len成员函数  
+2. 以及没有使用泛型语法，有运行才发现类型使用错误的烦恼
+```go
+var m RWMap[string, string] // 声明一个string, string的map
+m.Store("hello", "1") // 保存
+v1, ok1 := m.Load("hello") // 获取值
+v1, ok1 = m.LoadAndDelete("hello") //返回hello对应值，然后删除hello
+Delete("hello") // 删除
+v1, ok1 = m.LoadOrStore("hello", "world")
+
+// 遍历，使用回调函数
+m.Range(func(key, val string) bool {
+	fmt.Printf("k:%s, val:%s\n"i, key, val)
+	return true
+})
+
+// 遍历，迭代器
+for pair := range m.Iter() {
+  fmt.Printf("k:%s, val:%s\n", pair.Key, pair.Val)
+}
+
+m.Len()// 获取长度
+```
