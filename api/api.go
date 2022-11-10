@@ -38,3 +38,12 @@ type Trie[V any] interface {
 	Delete(k string)
 	Len() int
 }
+
+type CMaper[K comparable, V any] interface {
+	Delete(key K)
+	Load(key K) (value V, ok bool)
+	LoadAndDelete(key K) (value V, loaded bool)
+	LoadOrStore(key K, value V) (actual V, loaded bool)
+	Range(f func(key K, value V) bool)
+	Store(key K, value V)
+}

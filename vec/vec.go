@@ -451,7 +451,7 @@ func (v *Vec[T]) Rev() *Vec[T] {
 	return v
 }
 
-//原地旋转vec, 向右边旋转
+// 原地旋转vec, 向右边旋转
 func (v *Vec[T]) RotateRight(n int) *Vec[T] {
 	l := v.Len()
 	n %= l

@@ -17,7 +17,7 @@ import (
 var _ api.SortedMap[int, int] = (*Btree[int, int])(nil)
 var ErrNotFound = errors.New("btree not found")
 
-//btree头结点
+// btree头结点
 type Btree[K constraints.Ordered, V any] struct {
 	count    int         //当前元素个数
 	root     *node[K, V] // root结点指针

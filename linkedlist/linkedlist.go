@@ -66,9 +66,12 @@ func (l *LinkedList[T]) lazyInit() {
 
 // at e at.next
 // at <- e
-//       e -> at.next
+//
+//	e -> at.next
+//
 // at -> e
-//       e <- at.next
+//
+//	e <- at.next
 func (l *LinkedList[T]) insert(at, e *Node[T]) {
 	e.prev = at
 	e.next = at.next
@@ -300,7 +303,7 @@ func (l *LinkedList[T]) InsertAfter(value T, equal func(value T) bool) *LinkedLi
 	return l
 }
 
-//  类似于redis linsert before 命令
+// 类似于redis linsert before 命令
 func (l *LinkedList[T]) InsertBefore(value T, equal func(value T) bool) *LinkedList[T] {
 	l.RangeSafe(func(n *Node[T]) bool {
 		if equal(n.Element) {

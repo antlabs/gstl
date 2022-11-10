@@ -5,17 +5,22 @@ package rwmap
 import (
 	"sync"
 
+	"github.com/antlabs/gstl/api"
 	"github.com/antlabs/gstl/mapex"
 )
 
-type RWMap[K comparable, V any] struct {
-	rw sync.RWMutex
-	m  map[K]V
-}
+//type Pair[K comparable, V any] = mapex.Pair[K comparable, V any]
 
 type Pair[K comparable, V any] struct {
 	Key K
 	Val V
+}
+
+var _ api.CMaper[int, int] = (*RWMap[int, int])(nil)
+
+type RWMap[K comparable, V any] struct {
+	rw sync.RWMutex
+	m  map[K]V
 }
 
 // 通过new函数分配可以指定map的长度

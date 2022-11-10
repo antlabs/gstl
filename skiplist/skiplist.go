@@ -78,7 +78,7 @@ type SkipList[K constraints.Ordered, T any] struct {
 }
 
 // 初始化skiplist
-//func New[T any](compare func(T, T) int) *SkipList[T] {
+// func New[T any](compare func(T, T) int) *SkipList[T] {
 func New[K constraints.Ordered, T any]() *SkipList[K, T] {
 	s := &SkipList[K, T]{
 		level: 1,
