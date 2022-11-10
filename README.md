@@ -160,7 +160,32 @@ rwmap与sync.Map类似支持并发访问，只解决sync.Map 2个问题.
 1. 没有Len成员函数  
 2. 以及没有使用泛型语法，有运行才发现类型使用错误的烦恼
 ```go
-var m RWMap[string, string] // 声明一个string, string的map
+var m rwmap.RWMap[string, string] // 声明一个string, string的map
+m.Store("hello", "1") // 保存
+v1, ok1 := m.Load("hello") // 获取值
+v1, ok1 = m.LoadAndDelete("hello") //返回hello对应值，然后删除hello
+Delete("hello") // 删除
+v1, ok1 = m.LoadOrStore("hello", "world")
+
+// 遍历，使用回调函数
+m.Range(func(key, val string) bool {
+	fmt.Printf("k:%s, val:%s\n"i, key, val)
+	return true
+})
+
+// 遍历，迭代器
+for pair := range m.Iter() {
+  fmt.Printf("k:%s, val:%s\n", pair.Key, pair.Val)
+}
+
+m.Len()// 获取长度
+allKeys := m.Keys() //返回所有的key
+allValues := m.Values()// 返回所有的value
+```
+## 十二、`cmap`
+cmap是用锁分区的方式实现的，(TODO与sync.Map测试下性能对比，从sync.Map的源代码上看只能用于读多写少，如果写读对半分，或者写多读少？)
+```go
+var m cmap.CMap[string, string] // 声明一个string, string的map
 m.Store("hello", "1") // 保存
 v1, ok1 := m.Load("hello") // 获取值
 v1, ok1 = m.LoadAndDelete("hello") //返回hello对应值，然后删除hello
