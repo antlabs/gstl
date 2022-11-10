@@ -9,8 +9,8 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/cespare/xxhash/v2"
 	"github.com/antlabs/gstl/api"
+	xxhash "github.com/cespare/xxhash/v2"
 )
 
 var _ api.Map[int, int] = (*HashMap[int, int])(nil)
