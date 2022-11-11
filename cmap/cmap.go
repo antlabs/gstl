@@ -30,19 +30,27 @@ type Item[K comparable, V any] struct {
 }
 
 func New[K comparable, V any]() (c *CMap[K, V]) {
+	c = &CMap[K, V]{}
+	c.init(0)
+	return c
+}
+
+func (c *CMap[K, V]) init(n int) {
 	np := runtime.GOMAXPROCS(0)
 	if np <= 0 {
 		np = 8
 	}
 
-	c = &CMap[K, V]{
-		bucket: make([]Item[K, V], np),
+	if n > 0 {
+		np = n
 	}
+
+	c.bucket = make([]Item[K, V], np)
 
 	for i := range c.bucket {
 		c.bucket[i].m = make(map[K]V)
 	}
-	return c
+
 }
 
 // 计算hash值
