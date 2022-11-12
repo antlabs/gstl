@@ -258,21 +258,19 @@ func (l *LinkedList[T]) PushBack(elems ...T) *LinkedList[T] {
 }
 
 // 返回第1个元素
-func (l *LinkedList[T]) First() (e T, err error) {
+func (l *LinkedList[T]) First() (e T, ok bool) {
 	if l.length == 0 {
-		err = ErrListElemEmpty
 		return
 	}
-	return l.root.next.Element, nil
+	return l.root.next.Element, true
 }
 
 // 返回最后1个元素
-func (l *LinkedList[T]) Last() (e T, err error) {
+func (l *LinkedList[T]) Last() (e T, ok bool) {
 	if l.length == 0 {
-		err = ErrListElemEmpty
 		return
 	}
-	return l.root.prev.Element, nil
+	return l.root.prev.Element, true
 }
 
 // 链表是否为空
@@ -328,13 +326,13 @@ func (l *LinkedList[T]) ContainsFunc(cb func(value T) bool) bool {
 
 // 获取指定索引数据, 忽略错误
 func (l *LinkedList[T]) Get(idx int) (e T) {
-	e, _ = l.GetWithErr(idx)
+	e, _ = l.GetWithBool(idx)
 	return
 }
 
 // 通过索引查找是否包含这个value
 // Get是Index的同义词
-func (l *LinkedList[T]) GetWithErr(idx int) (e T, err error) {
+func (l *LinkedList[T]) GetWithBool(idx int) (e T, ok bool) {
 	return l.Index(idx)
 }
 
@@ -405,13 +403,13 @@ func (l *LinkedList[T]) RemFunc(count int, cb func(value T) bool) (ndel int) {
 // idx >= 0 形为和Get(idx int) 一样, 获取指向索引的元素
 // idx < 0 获取倒数第几个元素
 // O(min(index, length - index))
-func (l *LinkedList[T]) Index(idx int) (e T, err error) {
+func (l *LinkedList[T]) Index(idx int) (e T, ok bool) {
 	var n *Node[T]
-	n, err = l.indexInner(idx)
-	if err != nil {
+	n, ok = l.indexInner(idx)
+	if !ok {
 		return
 	}
-	return n.Element, nil
+	return n.Element, true
 }
 
 // 类型redis lset命令
@@ -419,33 +417,33 @@ func (l *LinkedList[T]) Index(idx int) (e T, err error) {
 // index < 0 倒着数
 // On(min(index, length - index))
 func (l *LinkedList[T]) Set(index int, value T) *LinkedList[T] {
-	n, err := l.indexInner(index)
-	if err != nil {
+	n, ok := l.indexInner(index)
+	if !ok {
 		return l
 	}
 	n.Element = value
 	return l
 }
 
-func (l *LinkedList[T]) indexInner(idx int) (*Node[T], error) {
+func (l *LinkedList[T]) indexInner(idx int) (*Node[T], bool) {
 	idx, front := l.index(idx)
 
 	if front {
 		for pos, i := l.root.next, 0; pos != &l.root; pos, i = pos.next, i+1 {
 			if i == idx {
-				return pos, nil
+				return pos, true
 			}
 		}
 	} else {
 		for pos, i := l.root.prev, idx; pos != &l.root; pos, i = pos.prev, i-1 {
 			if i == 0 {
-				return pos, nil
+				return pos, true
 			}
 		}
 
 	}
 
-	return nil, ErrNotFound
+	return nil, false
 
 }
 

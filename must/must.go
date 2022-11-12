@@ -34,6 +34,10 @@ func TakeOneErr[T any](v T, err error) error {
 	return err
 }
 
+func TakeOneBool[T any](v T, ok bool) bool {
+	return ok
+}
+
 func TakeTwoErr[T, U any](a T, b U, err error) error {
 	return err
 }
