@@ -179,10 +179,9 @@ func New[K constraints.Ordered, V any]() *RBTree[K, V] {
 }
 
 // 第一个节点
-func (r *RBTree[K, V]) First() (v V, err error) {
+func (r *RBTree[K, V]) First() (v V, ok bool) {
 	n := r.root.node
 	if n == nil {
-		err = ErrNotFound
 		return
 	}
 
@@ -190,14 +189,13 @@ func (r *RBTree[K, V]) First() (v V, err error) {
 		n = n.left
 	}
 
-	return n.val, nil
+	return n.val, true
 }
 
 // 最后一个节点
-func (r *RBTree[K, V]) Last() (v V, err error) {
+func (r *RBTree[K, V]) Last() (v V, ok bool) {
 	n := r.root.node
 	if n == nil {
-		err = ErrNotFound
 		return
 	}
 
@@ -205,7 +203,7 @@ func (r *RBTree[K, V]) Last() (v V, err error) {
 		n = n.right
 	}
 
-	return n.val, nil
+	return n.val, true
 }
 
 func (r *RBTree[K, V]) Set(k K, v V) {
@@ -242,16 +240,16 @@ func (r *RBTree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 
 // Get
 func (r *RBTree[K, V]) Get(k K) (v V) {
-	v, _ = r.GetWithErr(k)
+	v, _ = r.GetWithBool(k)
 	return
 }
 
 // 从rbtree 找到需要的值
-func (r *RBTree[K, V]) GetWithErr(k K) (v V, err error) {
+func (r *RBTree[K, V]) GetWithBool(k K) (v V, ok bool) {
 	n := r.root.node
 	for n != nil {
 		if n.key == k {
-			return n.val, nil
+			return n.val, true
 		}
 
 		if k > n.key {
@@ -261,7 +259,6 @@ func (r *RBTree[K, V]) GetWithErr(k K) (v V, err error) {
 		}
 	}
 
-	err = ErrNotFound
 	return
 }
 
