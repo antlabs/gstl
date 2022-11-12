@@ -13,9 +13,7 @@ import (
 )
 
 var (
-	ErrVecElemEmpty  = errors.New("vec is empty")
 	ErrLenGreaterCap = errors.New("len is too long > length of cap")
-	ErrIndex         = errors.New("Illegal value of index")
 )
 
 const coefficient = 1.5
@@ -98,15 +96,15 @@ func (v *Vec[T]) Append(other *Vec[T]) *Vec[T] {
 }
 
 // 删除vec第一个元素, 并返回它, 和TakeFirst是同义词的关系
-func (v *Vec[T]) PopFront() (e T, err error) {
+func (v *Vec[T]) PopFront() (e T, ok bool) {
 	return v.TakeFirst()
 }
 
 // 从尾巴弹出
-func (v *Vec[T]) Pop() (e T, err error) {
+func (v *Vec[T]) Pop() (e T, ok bool) {
 	l := v.Len()
 	if l == 0 {
-		return e, ErrVecElemEmpty
+		return
 	}
 
 	slice := v.ToSlice()
@@ -120,7 +118,7 @@ func (v *Vec[T]) Pop() (e T, err error) {
 		v = New(newSlice...)
 	}
 
-	return e, nil
+	return e, true
 }
 
 // 返回slice底层的slice
@@ -175,12 +173,11 @@ func (v *Vec[T]) Get(index int) (e T) {
 }
 
 // 获取指定索引的值, 如果索引不合法会返回错误
-func (v *Vec[T]) GetWithErr(index int) (e T, err error) {
+func (v *Vec[T]) GetWithBool(index int) (e T, ok bool) {
 	if index < 0 || index >= v.Len() {
-		err = ErrIndex
 		return
 	}
-	return v.Get(index), nil
+	return v.Get(index), true
 }
 
 // 获取指定索引的指针
@@ -354,32 +351,32 @@ func (v *Vec[T]) Cap() int {
 }
 
 // 返回第1个元素
-func (v *Vec[T]) First() (n T, err error) {
+func (v *Vec[T]) First() (n T, ok bool) {
 	if v.Len() == 0 {
-		return n, ErrVecElemEmpty
+		return
 	}
 
-	return v.Get(0), nil
+	return v.Get(0), true
 }
 
 // 删除vec第一个元素, 并返回它
-func (v *Vec[T]) TakeFirst() (n T, err error) {
+func (v *Vec[T]) TakeFirst() (n T, ok bool) {
 	if v.Len() == 0 {
-		return n, ErrVecElemEmpty
+		return
 	}
 
 	n = v.Get(0)
 	v.Remove(0)
-	return n, nil
+	return n, true
 }
 
 // 返回最后一个元素
-func (v *Vec[T]) Last() (n T, err error) {
+func (v *Vec[T]) Last() (n T, ok bool) {
 	if v.Len() == 0 {
-		return n, ErrVecElemEmpty
+		return
 	}
 
-	return v.Get(v.Len() - 1), nil
+	return v.Get(v.Len() - 1), true
 }
 
 // 原地操作, 回调函数会返回的元素值

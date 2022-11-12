@@ -5,7 +5,6 @@ package btree
 // 参考资料
 // https://github.com/tidwall/btree
 import (
-	"errors"
 	"fmt"
 
 	"github.com/antlabs/gstl/api"
@@ -15,7 +14,7 @@ import (
 )
 
 var _ api.SortedMap[int, int] = (*Btree[int, int])(nil)
-var ErrNotFound = errors.New("btree not found")
+var notFound = "not found element"
 
 // btree头结点
 type Btree[K constraints.Ordered, V any] struct {
@@ -198,15 +197,14 @@ func (b *Btree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 
 // 获取值, 忽略找不到的情况
 func (b *Btree[K, V]) Get(k K) (v V) {
-	v, _ = b.GetWithErr(k)
+	v, _ = b.GetWithBool(k)
 	return
 }
 
-// 找到err为nil
-// 找不到err为ErrNotFound
-func (b *Btree[K, V]) GetWithErr(k K) (v V, err error) {
+// 找到ok为true
+// 找不到ok为false
+func (b *Btree[K, V]) GetWithBool(k K) (v V, ok bool) {
 	if b.root == nil {
-		err = ErrNotFound
 		return
 	}
 
@@ -214,11 +212,10 @@ func (b *Btree[K, V]) GetWithErr(k K) (v V, err error) {
 	for {
 		i, found := b.find(n, k)
 		if found {
-			return n.items.Get(i).val, nil
+			return n.items.Get(i).val, true
 		}
 
 		if n.leaf() {
-			err = ErrNotFound
 			return
 		}
 
@@ -243,10 +240,10 @@ func (b *Btree[K, V]) DeleteWithPrev(k K) (prev V, deleted bool) {
 	}
 
 	if b.root.items.Len() == 0 && !b.root.leaf() {
-		var err error
-		b.root, err = b.root.children.First()
-		if err != nil {
-			panic(err.Error())
+		var ok bool
+		b.root, ok = b.root.children.First()
+		if !ok {
+			panic("not found first element")
 		}
 	}
 
@@ -336,9 +333,9 @@ func (b *Btree[K, V]) rebalance(n *node[K, V], i int) {
 		// 父到右
 		right.items.Insert(0, n.items.Get(i))
 		// 左边最后一个当父
-		last, err := left.items.Pop()
-		if err != nil {
-			panic(err.Error())
+		last, ok := left.items.Pop()
+		if !ok {
+			panic(notFound)
 		}
 
 		// last是从左叶子最后一个元素借过来的
@@ -346,9 +343,9 @@ func (b *Btree[K, V]) rebalance(n *node[K, V], i int) {
 
 		if !left.leaf() {
 
-			last, err := left.children.Pop()
-			if err != nil {
-				panic(err.Error())
+			last, ok := left.children.Pop()
+			if !ok {
+				panic(notFound)
 			}
 			right.children.Insert(0, last)
 		}
@@ -358,18 +355,18 @@ func (b *Btree[K, V]) rebalance(n *node[K, V], i int) {
 		// 左叶先合并父
 		left.items.Push(n.items.Get(i))
 		// 向右边借最左边的元素当父
-		first, err := right.items.PopFront()
-		if err != nil {
-			panic(err.Error())
+		first, ok := right.items.PopFront()
+		if !ok {
+			panic(notFound)
 		}
 
 		// first是和右叶子借过来的
 		n.items.Set(i, first)
 
 		if !left.leaf() {
-			first, err := right.children.PopFront()
-			if err != nil {
-				panic(err.Error())
+			first, ok := right.children.PopFront()
+			if !ok {
+				panic(notFound)
 			}
 
 			left.children.Push(first)
@@ -468,7 +465,7 @@ func (n *node[K, V]) rangeInner(callback func(k K, v V) bool) bool {
 	}
 
 	// n.children比n.items多一个元素. 这里不能漏掉
-	return must.TakeOne(n.children.Last()).rangeInner(callback)
+	return must.TakeOneDiscardBool(n.children.Last()).rangeInner(callback)
 }
 
 // 从后向前倒序遍历b tree
@@ -499,7 +496,7 @@ func (n *node[K, V]) rangePrevInner(callback func(k K, v V) bool) bool {
 
 	// 先右
 	if n.children != nil {
-		if !must.TakeOne(n.children.Last()).rangePrevInner(callback) {
+		if !must.TakeOneDiscardBool(n.children.Last()).rangePrevInner(callback) {
 			return false
 		}
 	}
