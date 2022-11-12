@@ -63,7 +63,8 @@ func BenchmarkGetStd(b *testing.B) {
 
 	max := float64(b.N)
 	//max := 1000000.0 * 5
-	set := make(map[float64]float64, int(max))
+	set := make(map[float64]float64)
+	//set := make(map[float64]float64, int(max))
 	for i := 0.0; i < max; i++ {
 		set[i] = i
 	}

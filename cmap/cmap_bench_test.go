@@ -72,7 +72,7 @@ func benchMap(b *testing.B, bench bench[int, int]) {
 		b.Run(fmt.Sprintf("%T", m), func(b *testing.B) {
 			m = reflect.New(reflect.TypeOf(m).Elem()).Interface().(api.CMaper[int, int])
 			if m2, ok := m.(*CMap[int, int]); ok {
-				m2.init(1)
+				m2.init(64)
 			}
 
 			if bench.setup != nil {

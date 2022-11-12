@@ -25,8 +25,22 @@ import (
 // PASS
 // ok  	github.com/antlabs/gstl/rhashmap	3.970s
 // 五百万数据的Get操作时间
+
+// TODO 再优化下性能
+// go1.19.1
+// 3kw
+// goos: darwin
+// goarch: arm64
+// pkg: github.com/antlabs/gstl/rhashmap
+// BenchmarkGet-8      	34664005	        62.20 ns/op
+// BenchmarkGetStd-8   	30007470	        49.40 ns/op
+// BenchmarkSet-8      	14623854	       178.9 ns/op
+// BenchmarkSetStd-8   	22709601	        74.71 ns/op
+// PASS
+// ok  	github.com/antlabs/gstl/rhashmap	16.521s
 func BenchmarkGet(b *testing.B) {
-	max := 1000000.0 * 5
+	//max := 1000000.0 * 5
+	max := float64(b.N)
 	set := NewWithOpt[float64, float64](WithCap(int(max)))
 	for i := 0.0; i < max; i++ {
 		set.Set(i, i)
@@ -44,7 +58,7 @@ func BenchmarkGet(b *testing.B) {
 
 func BenchmarkGetStd(b *testing.B) {
 
-	max := 1000000.0 * 5
+	max := float64(b.N)
 	set := make(map[float64]float64, int(max))
 	for i := 0.0; i < max; i++ {
 		set[i] = i
@@ -62,7 +76,7 @@ func BenchmarkGetStd(b *testing.B) {
 
 // gstl set
 func BenchmarkSet(b *testing.B) {
-	max := 1000000.0
+	max := float64(b.N)
 	set := NewWithOpt[float64, float64](WithCap(int(max)))
 	for i := 0.0; i < max; i++ {
 		set.Set(i, i)
@@ -73,7 +87,7 @@ func BenchmarkSet(b *testing.B) {
 // 标准库set
 func BenchmarkSetStd(b *testing.B) {
 
-	max := 1000000.0
+	max := float64(b.N)
 	set := make(map[float64]float64, int(max))
 	for i := 0.0; i < max; i++ {
 		set[i] = i

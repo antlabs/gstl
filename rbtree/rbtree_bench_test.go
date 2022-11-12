@@ -29,6 +29,16 @@ import (
 	"testing"
 )
 
+func BenchmarkSetAsc(b *testing.B) {
+	//max := 1000000.0 * 5
+	set := New[float64, float64]()
+	max := float64(b.N)
+	for i := 0.0; i < max; i++ {
+		set.Set(i, i)
+	}
+
+}
+
 func BenchmarkGetAsc(b *testing.B) {
 	//max := 1000000.0 * 5
 	set := New[float64, float64]()
@@ -82,4 +92,24 @@ func BenchmarkGetStd(b *testing.B) {
 			panic(fmt.Sprintf("need:%f, got:%f", i, v))
 		}
 	}
+}
+
+func BenchmarkSet(b *testing.B) {
+	max := float64(b.N)
+	//max := 1000000.0 * 5
+	set := New[float64, float64]()
+	for i := max; i >= 0; i-- {
+		set.Set(i, i)
+	}
+
+}
+
+func BenchmarkSetStd(b *testing.B) {
+	max := float64(b.N)
+	//max := 1000000.0 * 5
+	set := make(map[float64]float64)
+	for i := max; i >= 0.0; i-- {
+		set[i] = i
+	}
+
 }

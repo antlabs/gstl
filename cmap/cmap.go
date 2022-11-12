@@ -7,29 +7,29 @@ import (
 	"unsafe"
 
 	"github.com/antlabs/gstl/api"
-	"github.com/antlabs/gstl/mapex"
 	xxhash "github.com/cespare/xxhash/v2"
+	"golang.org/x/exp/constraints"
 )
 
 var _ api.CMaper[int, int] = (*CMap[int, int])(nil)
 
-type Pair[K comparable, V any] struct {
+type Pair[K constraints.Ordered, V any] struct {
 	Key K
 	Val V
 }
 
-type CMap[K comparable, V any] struct {
+type CMap[K constraints.Ordered, V any] struct {
 	bucket   []Item[K, V]
 	keySize  int
 	isKeyStr bool
 }
 
-type Item[K comparable, V any] struct {
+type Item[K constraints.Ordered, V any] struct {
 	rw sync.RWMutex
-	m  map[K]V
+	m  api.Map[K, V]
 }
 
-func New[K comparable, V any]() (c *CMap[K, V]) {
+func New[K constraints.Ordered, V any]() (c *CMap[K, V]) {
 	c = &CMap[K, V]{}
 	c.init(0)
 	return c
@@ -48,7 +48,7 @@ func (c *CMap[K, V]) init(n int) {
 	c.bucket = make([]Item[K, V], np)
 
 	for i := range c.bucket {
-		c.bucket[i].m = make(map[K]V)
+		c.bucket[i].m = newStdMap[K, V]()
 	}
 
 }
@@ -92,14 +92,14 @@ func (c *CMap[K, V]) findIndex(key K) *Item[K, V] {
 func (c *CMap[K, V]) Delete(key K) {
 	item := c.findIndex(key)
 	item.rw.Lock()
-	delete(item.m, key)
+	item.m.Delete(key)
 	item.rw.Unlock()
 }
 
 func (c *CMap[K, V]) Load(key K) (value V, ok bool) {
 	item := c.findIndex(key)
 	item.rw.RLock()
-	value, ok = item.m[key]
+	value, ok = item.m.GetWithBool(key)
 	item.rw.RUnlock()
 	return
 }
@@ -107,12 +107,12 @@ func (c *CMap[K, V]) Load(key K) (value V, ok bool) {
 func (c *CMap[K, V]) LoadAndDelete(key K) (value V, loaded bool) {
 	item := c.findIndex(key)
 	item.rw.Lock()
-	value, loaded = item.m[key]
+	value, loaded = item.m.GetWithBool(key)
 	if !loaded {
 		item.rw.Unlock()
 		return
 	}
-	delete(item.m, key)
+	item.m.Delete(key)
 	item.rw.Unlock()
 	return
 }
@@ -120,14 +120,15 @@ func (c *CMap[K, V]) LoadAndDelete(key K) (value V, loaded bool) {
 func (c *CMap[K, V]) LoadOrStore(key K, value V) (actual V, loaded bool) {
 	item := c.findIndex(key)
 	item.rw.Lock()
-	actual, loaded = item.m[key]
+	actual, loaded = item.m.GetWithBool(key)
 	if !loaded {
 		actual = value
-		item.m[key] = actual
+		item.m.Set(key, actual)
 		item.rw.Unlock()
 		return
 	}
-	actual, loaded = item.m[key]
+
+	actual, loaded = item.m.GetWithBool(key)
 	item.rw.Unlock()
 	return
 }
@@ -136,12 +137,7 @@ func (c *CMap[K, V]) Range(f func(key K, value V) bool) {
 	for i := 0; i < len(c.bucket); i++ {
 		item := &c.bucket[i]
 		item.rw.RLock()
-		for k, v := range item.m {
-			if !f(k, v) {
-				item.rw.RUnlock()
-				return
-			}
-		}
+		item.m.Range(f)
 		item.rw.RUnlock()
 	}
 }
@@ -164,9 +160,10 @@ func (c *CMap[K, V]) Iter() (rv chan Pair[K, V]) {
 
 			defer wg.Done()
 			item.rw.RLock()
-			for k, v := range item.m {
-				rv <- Pair[K, V]{Key: k, Val: v}
-			}
+			item.m.Range(func(key K, value V) bool {
+				rv <- Pair[K, V]{Key: key, Val: value}
+				return true
+			})
 			item.rw.RUnlock()
 
 		}(item)
@@ -178,7 +175,7 @@ func (c *CMap[K, V]) Iter() (rv chan Pair[K, V]) {
 func (c *CMap[K, V]) Store(key K, value V) {
 	item := c.findIndex(key)
 	item.rw.Lock()
-	item.m[key] = value
+	item.m.Set(key, value)
 	item.rw.Unlock()
 	return
 }
@@ -195,7 +192,10 @@ func (c *CMap[K, V]) Keys() []K {
 
 		item := &c.bucket[i]
 		item.rw.RLock()
-		all = append(all, mapex.Keys(item.m)...)
+		item.m.Range(func(key K, value V) bool {
+			all = append(all, key)
+			return true
+		})
 		item.rw.RUnlock()
 	}
 	return all
@@ -212,7 +212,10 @@ func (c *CMap[K, V]) Values() []V {
 
 		item := &c.bucket[i]
 		item.rw.RLock()
-		all = append(all, mapex.Values(item.m)...)
+		item.m.Range(func(key K, value V) bool {
+			all = append(all, value)
+			return true
+		})
 		item.rw.RUnlock()
 	}
 	return all
@@ -223,7 +226,7 @@ func (c *CMap[K, V]) Len() int {
 	for i := 0; i < len(c.bucket); i++ {
 		item := &c.bucket[i]
 		item.rw.RLock()
-		l += len(item.m)
+		l += item.m.Len()
 		item.rw.RUnlock()
 	}
 	return l
