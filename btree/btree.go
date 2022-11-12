@@ -117,7 +117,7 @@ func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (prev V, replaced 
 	i, found := b.find(n, item.key)
 	// 找到位置直接替换
 	if found {
-		fmt.Printf("1.## i = %v, item:%v\n", item.key, n.items)
+		//fmt.Printf("1.## i = %v, item:%v\n", item.key, n.items)
 		prevPtr := n.items.GetPtr(i)
 		prev = prevPtr.val
 		prevPtr.val = item.val

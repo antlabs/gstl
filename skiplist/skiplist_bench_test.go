@@ -16,7 +16,8 @@ import (
 // ok  	github.com/antlabs/gstl/skiplist	178.377s
 // 五百万数据的Get操作时间
 func BenchmarkGet(b *testing.B) {
-	max := 1000000.0 * 5
+	//max := 1000000.0 * 5
+	max := float64(b.N)
 	set := New[float64, float64]()
 	for i := 0.0; i < max; i++ {
 		set.Set(i, i)
@@ -34,7 +35,8 @@ func BenchmarkGet(b *testing.B) {
 
 func BenchmarkGetStd(b *testing.B) {
 
-	max := 1000000.0 * 5
+	//max := 1000000.0 * 5
+	max := float64(b.N)
 	set := make(map[float64]float64, int(max))
 	for i := 0.0; i < max; i++ {
 		set[i] = i
