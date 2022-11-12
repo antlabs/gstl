@@ -58,8 +58,8 @@ func (s *Set[K]) Clone() (new *Set[K]) {
 
 // 测试k是否在集合中
 func (s *Set[K]) IsMember(k K) (b bool) {
-	_, err := s.GetWithErr(k)
-	return err == nil
+	_, b = s.GetWithBool(k)
+	return
 }
 
 // 返回的是s1没有的元素, s - s1
@@ -147,13 +147,8 @@ func (s *Set[K]) Equal(s1 *Set[K]) (b bool) {
 
 	b = true
 	s.Range(func(k K) bool {
-		_, err := s1.GetWithErr(k)
-		if err != nil {
-			b = false
-			return false
-		}
-
-		return true
+		_, b = s1.GetWithBool(k)
+		return b
 	})
 
 	return
