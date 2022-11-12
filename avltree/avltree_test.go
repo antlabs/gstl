@@ -18,8 +18,8 @@ func Test_SetAndGet(t *testing.T) {
 	}
 
 	for i := 0; i < max; i++ {
-		v, err := b.GetWithErr(i)
-		assert.NoError(t, err)
+		v, ok := b.GetWithBool(i)
+		assert.True(t, ok)
 		assert.Equal(t, v, i)
 	}
 }
@@ -33,8 +33,8 @@ func Test_SetAndGet2(t *testing.T) {
 	}
 
 	for i := max; i >= 0; i-- {
-		v, err := b.GetWithErr(i)
-		assert.NoError(t, err)
+		v, ok := b.GetWithBool(i)
+		assert.True(t, ok)
 		assert.Equal(t, v, i)
 	}
 }
@@ -57,15 +57,15 @@ func Test_AVLTree_Delete1(t *testing.T) {
 
 		// max/2-max应该能找到
 		for i := max / 2; i < max; i++ {
-			v, err := b.GetWithErr(i)
-			assert.NoError(t, err, fmt.Sprintf("index:%d", i))
+			v, ok := b.GetWithBool(i)
+			assert.True(t, ok, fmt.Sprintf("index:%d", i))
 			assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
 		}
 
 		// 0-max/2应该找不到
 		for i := 0; i < max/2; i++ {
-			v, err := b.GetWithErr(i)
-			assert.Error(t, err, fmt.Sprintf("index:%d", i))
+			v, ok := b.GetWithBool(i)
+			assert.False(t, ok, fmt.Sprintf("index:%d", i))
 			assert.Equal(t, v, 0, fmt.Sprintf("index:%d", i))
 		}
 	}
