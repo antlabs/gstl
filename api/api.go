@@ -6,7 +6,7 @@ type Map[K constraints.Ordered, V any] interface {
 	// 获取
 	Get(k K) (elem V)
 	// 获取
-	GetWithErr(k K) (elem V, err error)
+	GetWithBool(k K) (elem V, ok bool)
 	// 删除
 	Delete(k K)
 	// 设置

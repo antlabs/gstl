@@ -86,8 +86,8 @@ func Test_SetGet_Zero(t *testing.T) {
 	}
 
 	for i := 0; i < 10; i++ {
-		v, err := hm.GetWithErr(i)
-		assert.Error(t, err)
+		v, err := hm.GetWithBool(i)
+		assert.False(t, err)
 		assert.Equal(t, v, 0)
 	}
 }
@@ -99,9 +99,9 @@ func Test_SetGet_NotFound(t *testing.T) {
 	hm.Set(1, "hello")
 	hm.Set(1, "world")
 
-	_, err := hm.GetWithErr(3)
+	_, err := hm.GetWithBool(3)
 
-	assert.Error(t, err)
+	assert.False(t, err)
 	assert.Equal(t, hm.Get(1), "world")
 }
 
@@ -115,9 +115,9 @@ func Test_SetGet_Rehashing(t *testing.T) {
 	hm.Set(4, "world")
 	hm.Set(5, "world")
 
-	_, err := hm.GetWithErr(7)
+	_, err := hm.GetWithBool(7)
 
-	assert.Error(t, err)
+	assert.False(t, err)
 	assert.Equal(t, hm.Get(1), "hello")
 
 }

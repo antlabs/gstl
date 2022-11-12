@@ -308,9 +308,8 @@ func sizeMask(exp int8) uint64 {
 }
 
 // 获取
-func (h *HashMap[K, V]) GetWithErr(key K) (v V, err error) {
+func (h *HashMap[K, V]) GetWithBool(key K) (v V, ok bool) {
 	if h.Len() == 0 {
-		err = ErrNotFound
 		return
 	}
 
@@ -325,7 +324,7 @@ func (h *HashMap[K, V]) GetWithErr(key K) (v V, err error) {
 		head := h.table[table][idx]
 		for head != nil {
 			if key == head.key {
-				return head.val, nil
+				return head.val, true
 			}
 
 			head = head.next
@@ -335,13 +334,12 @@ func (h *HashMap[K, V]) GetWithErr(key K) (v V, err error) {
 			break
 		}
 	}
-	err = ErrNotFound
 	return
 }
 
 // 获取
 func (h *HashMap[K, V]) Get(key K) (v V) {
-	v, _ = h.GetWithErr(key)
+	v, _ = h.GetWithBool(key)
 	return
 }
 

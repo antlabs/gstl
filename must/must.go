@@ -1,6 +1,13 @@
 package must
 
 // apache 2.0 antlabs
+func TakeOneDiscardBool[T any](v T, ok bool) T {
+	if !ok {
+		panic("ok is false")
+	}
+	return v
+}
+
 func TakeOne[T any](v T, err error) T {
 	if err != nil {
 		panic(err.Error())
@@ -25,6 +32,10 @@ func TakeThree[T, U, V any](a T, b U, c V, err error) (T, U, V) {
 
 func TakeOneErr[T any](v T, err error) error {
 	return err
+}
+
+func TakeOneBool[T any](v T, ok bool) bool {
+	return ok
 }
 
 func TakeTwoErr[T, U any](a T, b U, err error) error {

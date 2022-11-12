@@ -20,8 +20,8 @@ func Test_Btree_SetAndGet(t *testing.T) {
 	}
 
 	for i := 0; i < max; i++ {
-		v, err := b.GetWithErr(i)
-		assert.NoError(t, err)
+		v, ok := b.GetWithBool(i)
+		assert.True(t, ok)
 		assert.Equal(t, v, i)
 	}
 }
@@ -37,8 +37,8 @@ func Test_Btree_SetAndGet_Split(t *testing.T) {
 	}
 
 	for i := 0; i < max; i++ {
-		v, err := b.GetWithErr(i)
-		assert.NoError(t, err, fmt.Sprintf("index:%d", i))
+		v, ok := b.GetWithBool(i)
+		assert.True(t, ok, fmt.Sprintf("index:%d", i))
 		assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
 	}
 }
@@ -54,8 +54,8 @@ func Test_Btree_SetAndGet_Split_Big(t *testing.T) {
 	}
 
 	for i := 0; i < max; i++ {
-		v, err := b.GetWithErr(i)
-		assert.NoError(t, err, fmt.Sprintf("index:%d", i))
+		v, ok := b.GetWithBool(i)
+		assert.True(t, ok, fmt.Sprintf("index:%d", i))
 		assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
 	}
 }
@@ -76,8 +76,8 @@ func Test_Btree_SetAndGet_Replace(t *testing.T) {
 	}
 
 	for i := 0; i < max; i++ {
-		v, err := b.GetWithErr(i)
-		assert.NoError(t, err, fmt.Sprintf("index:%d", i))
+		v, ok := b.GetWithBool(i)
+		assert.True(t, ok, fmt.Sprintf("index:%d", i))
 		assert.Equal(t, v, i+1, fmt.Sprintf("index:%d", i))
 	}
 }
@@ -312,15 +312,15 @@ func Test_Btree_Delete1(t *testing.T) {
 
 		// max/2-max应该能找到
 		for i := max / 2; i < max; i++ {
-			v, err := b.GetWithErr(i)
-			assert.NoError(t, err, fmt.Sprintf("index:%d", i))
+			v, ok := b.GetWithBool(i)
+			assert.True(t, ok, fmt.Sprintf("index:%d", i))
 			assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
 		}
 
 		// 0-max/2应该找不到
 		for i := 0; i < max/2; i++ {
-			v, err := b.GetWithErr(i)
-			assert.Error(t, err, fmt.Sprintf("index:%d", i))
+			v, ok := b.GetWithBool(i)
+			assert.False(t, ok, fmt.Sprintf("index:%d", i))
 			assert.Equal(t, v, 0, fmt.Sprintf("index:%d", i))
 		}
 	}
@@ -360,17 +360,16 @@ func Test_Btree_Delete2(t *testing.T) {
 
 		// 查找后半段, 应该找不到
 		for i := start; i < max; i++ {
-			v, err := b.GetWithErr(i)
-			assert.Error(t, err, fmt.Sprintf("index:%d", i))
+			v, ok := b.GetWithBool(i)
+			assert.False(t, ok, fmt.Sprintf("index:%d", i))
 			assert.Equal(t, v, 0, fmt.Sprintf("index:%d", i))
 		}
 
 		// 查找前半段
 		for i := 0; i < start; i++ {
-			v, err := b.GetWithErr(i)
-			assert.NoError(t, err, fmt.Sprintf("index:%d, max:%d, delete-start:%d", i, max, start))
-			if err != nil {
-				fmt.Println(b.GetWithErr(i))
+			v, ok := b.GetWithBool(i)
+			assert.True(t, ok, fmt.Sprintf("index:%d, max:%d, delete-start:%d", i, max, start))
+			if !ok {
 				return
 			}
 

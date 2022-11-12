@@ -222,7 +222,7 @@ func (s *SkipList[K, T]) InsertInner(score K, elem T, level int) (prev T, replac
 }
 
 // 获取
-func (s *SkipList[K, T]) GetWithErr(score K) (elem T, err error) {
+func (s *SkipList[K, T]) GetWithBool(score K) (elem T, ok bool) {
 
 	x := s.head
 	for i := s.level - 1; i >= 0; i-- {
@@ -249,10 +249,9 @@ func (s *SkipList[K, T]) GetWithErr(score K) (elem T, err error) {
 
 	x = x.NodeLevel[0].forward
 	if x != nil && score == x.score {
-		return x.elem, nil
+		return x.elem, true
 	}
 
-	err = ErrNotFound
 	return
 }
 
@@ -265,7 +264,7 @@ type Number[K constraints.Ordered] struct {
 }
 
 // debug使用, 返回查找某个key 比较的次数+经过的节点数
-func (s *SkipList[K, T]) GetWithMeta(score K) (elem T, number Number[K], err error) {
+func (s *SkipList[K, T]) GetWithMeta(score K) (elem T, number Number[K], ok bool) {
 
 	x := s.head
 	fmt.Println()
@@ -296,16 +295,15 @@ func (s *SkipList[K, T]) GetWithMeta(score K) (elem T, number Number[K], err err
 
 	x = x.NodeLevel[0].forward
 	if x != nil && score == x.score {
-		return x.elem, number, nil
+		return x.elem, number, true
 	}
 
-	err = ErrNotFound
 	return
 }
 
 // 根据score获取value值
 func (s *SkipList[K, T]) Get(score K) (elem T) {
-	elem, _ = s.GetWithErr(score)
+	elem, _ = s.GetWithBool(score)
 	return elem
 }
 

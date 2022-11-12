@@ -5,7 +5,6 @@ package avltree
 // 参考资料
 // https://github.com/skywind3000/avlmini
 import (
-	"errors"
 	"fmt"
 
 	"github.com/antlabs/gstl/api"
@@ -13,8 +12,6 @@ import (
 	"github.com/antlabs/gstl/vec"
 	"golang.org/x/exp/constraints"
 )
-
-var ErrNotFound = errors.New("avltree: not found value")
 
 var _ api.SortedMap[int, int] = (*AvlTree[int, int])(nil)
 
@@ -191,10 +188,10 @@ func New[K constraints.Ordered, V any]() *AvlTree[K, V] {
 }
 
 // 第一个节点
-func (a *AvlTree[K, V]) First() (v V, err error) {
+func (a *AvlTree[K, V]) First() (v V, ok bool) {
 	n := a.root.node
 	if n == nil {
-		err = ErrNotFound
+		ok = false
 		return
 	}
 
@@ -202,14 +199,14 @@ func (a *AvlTree[K, V]) First() (v V, err error) {
 		n = n.left
 	}
 
-	return n.val, nil
+	return n.val, true
 }
 
 // 最后一个节点
-func (a *AvlTree[K, V]) Last() (v V, err error) {
+func (a *AvlTree[K, V]) Last() (v V, ok bool) {
 	n := a.root.node
 	if n == nil {
-		err = ErrNotFound
+		ok = false
 		return
 	}
 
@@ -217,21 +214,21 @@ func (a *AvlTree[K, V]) Last() (v V, err error) {
 		n = n.right
 	}
 
-	return n.val, nil
+	return n.val, true
 }
 
 // Get
 func (a *AvlTree[K, V]) Get(k K) (v V) {
-	v, _ = a.GetWithErr(k)
+	v, _ = a.GetWithBool(k)
 	return
 }
 
 // 从avl tree找到需要的值
-func (a *AvlTree[K, V]) GetWithErr(k K) (v V, err error) {
+func (a *AvlTree[K, V]) GetWithBool(k K) (v V, ok bool) {
 	n := a.root.node
 	for n != nil {
 		if n.key == k {
-			return n.val, nil
+			return n.val, true
 		}
 
 		if k > n.key {
@@ -241,7 +238,6 @@ func (a *AvlTree[K, V]) GetWithErr(k K) (v V, err error) {
 		}
 	}
 
-	err = ErrNotFound
 	return
 }
 

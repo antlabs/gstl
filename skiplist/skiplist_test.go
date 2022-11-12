@@ -59,9 +59,9 @@ func Test_SetGetRemove(t *testing.T) {
 			if j == i {
 				continue
 			}
-			v, err := zset.GetWithErr(j)
-			assert.NoError(t, err, fmt.Sprintf("score:%f, i:%f, j:%f", j, i, j))
-			if err != nil {
+			v, ok := zset.GetWithBool(j)
+			assert.True(t, ok, fmt.Sprintf("score:%f, i:%f, j:%f", j, i, j))
+			if !ok {
 				return
 			}
 			assert.Equal(t, v, j)
