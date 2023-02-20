@@ -183,7 +183,7 @@ allKeys := m.Keys() //返回所有的key
 allValues := m.Values()// 返回所有的value
 ```
 ## 十二、`cmap`
-cmap是用锁分区的方式实现的，(TODO与sync.Map测试下性能对比，从sync.Map的源代码上看只能用于读多写少，如果写读对半分，或者写多读少？)
+cmap是用锁分区的方式实现的，(TODO优化，目前只有几个指标比sync.Map快)
 ```go
 var m cmap.CMap[string, string] // 声明一个string, string的map
 m.Store("hello", "1") // 保存
