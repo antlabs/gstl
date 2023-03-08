@@ -14,3 +14,10 @@ func IfElse[T any](cond bool, ifVal T, elseVal T) T {
 	}
 	return elseVal
 }
+
+func IfElseAny(cond bool, ifVal any, elseVal any) any {
+	if cond {
+		return ifVal
+	}
+	return elseVal
+}

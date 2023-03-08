@@ -131,10 +131,16 @@ assert.True(t, s.Equal(s2))
 
 ## 九、`ifop`
 ifop是弥补下golang没有三目运算符，使用函数模拟
-
+### 9.1 if else部分类型相同
 ```go
 // 如果该值不为0, 返回原来的值，否则默认值
 val = IfElse(len(val) != 0, val, "default")
+```
+### 9.2 if else部分类型不同
+```go
+o := map[string]any{"hello": "hello"}
+a := []any{"hello", "world"}
+fmt.Printf("%#v", IfElseAny(o != nil, o, a))
 ```
 ## 十、`mapex`
 薄薄一层包装，增加标准库map的接口
