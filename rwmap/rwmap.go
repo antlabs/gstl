@@ -30,6 +30,10 @@ func New[K comparable, V any](l int) *RWMap[K, V] {
 	}
 }
 
+func (r *RWMap[K, V]) ToMap() map[K]V {
+	return r.m
+}
+
 // 删除
 func (r *RWMap[K, V]) Delete(key K) {
 	r.rw.Lock()
