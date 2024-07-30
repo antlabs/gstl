@@ -182,3 +182,41 @@ func Test_Values(t *testing.T) {
 	m2 := New[string, string]()
 	assert.Equal(t, len(m2.Keys()), 0)
 }
+
+func Test_UpdateOrInsert(t *testing.T) {
+	t.Run("Update", func(t *testing.T) {
+		m := New[string, string]()
+		m.Store("a", "1")
+		m.Store("b", "2")
+		m.Store("c", "3")
+		m.UpdateOrInsert("a", func(exist bool, old string) string {
+			if !exist {
+				t.Error("should exist")
+			}
+			if exist {
+				return "4"
+			}
+			return old
+		})
+		get, _ := m.Load("a")
+		if get != "4" {
+			t.Error("should be 4")
+		}
+	})
+
+	t.Run("Insert", func(t *testing.T) {
+		m := New[string, string]()
+		m.Store("a", "1")
+		m.UpdateOrInsert("b", func(exist bool, old string) string {
+			if !exist {
+				return "2"
+			}
+			return ""
+		})
+
+		get, _ := m.Load("b")
+		if get != "2" {
+			t.Error("should be 2")
+		}
+	})
+}

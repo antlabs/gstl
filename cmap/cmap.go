@@ -96,6 +96,19 @@ func (c *CMap[K, V]) Delete(key K) {
 	item.rw.Unlock()
 }
 
+type UpdataOrInsertCb[K constraints.Ordered, V any] func(exits bool, old V) (newVal V)
+
+// 删除或者更新
+func (c *CMap[K, V]) UpdateOrInsert(k K, cb UpdataOrInsertCb[K, V]) {
+	item := c.findIndex(k)
+	item.rw.Lock()
+	old, ok := item.m.GetWithBool(k)
+	newVal := cb(ok, old)
+	item.m.Set(k, newVal)
+	item.rw.Unlock()
+
+}
+
 func (c *CMap[K, V]) Load(key K) (value V, ok bool) {
 	item := c.findIndex(key)
 	item.rw.RLock()

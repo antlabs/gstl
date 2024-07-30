@@ -9,8 +9,7 @@ import (
 	"github.com/antlabs/gstl/mapex"
 )
 
-//type Pair[K comparable, V any] = mapex.Pair[K comparable, V any]
-
+// type Pair[K comparable, V any] = mapex.Pair[K comparable, V any]
 type Pair[K comparable, V any] struct {
 	Key K
 	Val V
@@ -47,7 +46,6 @@ func (r *RWMap[K, V]) Load(key K) (value V, ok bool) {
 	value, ok = r.m[key]
 	r.rw.RUnlock()
 	return
-
 }
 
 // 获取值，然后并删除
@@ -98,7 +96,6 @@ func (r *RWMap[K, V]) Iter() <-chan Pair[K, V] {
 		}
 		close(p)
 		r.rw.RUnlock()
-
 	}()
 	return p
 }
@@ -115,7 +112,6 @@ func (r *RWMap[K, V]) Store(key K, value V) {
 
 // keys
 func (r *RWMap[K, V]) Keys() (keys []K) {
-
 	r.rw.RLock()
 	if r.m == nil {
 		r.rw.RUnlock()
@@ -128,7 +124,6 @@ func (r *RWMap[K, V]) Keys() (keys []K) {
 
 // vals
 func (r *RWMap[K, V]) Values() (values []V) {
-
 	r.rw.RLock()
 	if r.m == nil {
 		r.rw.RUnlock()
