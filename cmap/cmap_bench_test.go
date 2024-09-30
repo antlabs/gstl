@@ -1,8 +1,8 @@
 // Copyright 2016 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-// guonaihong: 如何如下
-// 1. interface的换成泛型语法
+// guonaihong: 修改如下
+// 1. interface的地方换成泛型语法
 
 package cmap
 
