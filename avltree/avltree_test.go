@@ -1,12 +1,10 @@
 package avltree
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/antlabs/gstl/cmp"
 	"github.com/antlabs/gstl/vec"
-	"github.com/stretchr/testify/assert"
 )
 
 // 从小到大, 插入
@@ -19,8 +17,12 @@ func Test_SetAndGet(t *testing.T) {
 
 	for i := 0; i < max; i++ {
 		v, ok := b.GetWithBool(i)
-		assert.True(t, ok)
-		assert.Equal(t, v, i)
+		if !ok {
+			t.Errorf("expected true, got false for index %d", i)
+		}
+		if v != i {
+			t.Errorf("expected %d, got %d for index %d", i, v, i)
+		}
 	}
 }
 
@@ -34,8 +36,12 @@ func Test_SetAndGet2(t *testing.T) {
 
 	for i := max; i >= 0; i-- {
 		v, ok := b.GetWithBool(i)
-		assert.True(t, ok)
-		assert.Equal(t, v, i)
+		if !ok {
+			t.Errorf("expected true, got false for index %d", i)
+		}
+		if v != i {
+			t.Errorf("expected %d, got %d for index %d", i, v, i)
+		}
 	}
 }
 
@@ -58,15 +64,23 @@ func Test_AVLTree_Delete1(t *testing.T) {
 		// max/2-max应该能找到
 		for i := max / 2; i < max; i++ {
 			v, ok := b.GetWithBool(i)
-			assert.True(t, ok, fmt.Sprintf("index:%d", i))
-			assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
+			if !ok {
+				t.Errorf("expected true, got false for index %d", i)
+			}
+			if v != i {
+				t.Errorf("expected %d, got %d for index %d", i, v, i)
+			}
 		}
 
 		// 0-max/2应该找不到
 		for i := 0; i < max/2; i++ {
 			v, ok := b.GetWithBool(i)
-			assert.False(t, ok, fmt.Sprintf("index:%d", i))
-			assert.Equal(t, v, 0, fmt.Sprintf("index:%d", i))
+			if ok {
+				t.Errorf("expected false, got true for index %d", i)
+			}
+			if v != 0 {
+				t.Errorf("expected 0, got %d for index %d", v, i)
+			}
 		}
 	}
 }
@@ -97,7 +111,9 @@ func Test_AvlTree_TopMax(t *testing.T) {
 
 			b.Draw()
 
-			assert.Equal(t, b.Len(), count10)
+			if b.Len() != count10 {
+				t.Errorf("expected length %d, got %d", count10, b.Len())
+			}
 			return b
 		}(),
 		// btree里面元素 等于 TopMax 需要返回的值
@@ -107,7 +123,9 @@ func Test_AvlTree_TopMax(t *testing.T) {
 			for i := 0; i < count100; i++ {
 				b.Set(int(i), i)
 			}
-			assert.Equal(t, b.Len(), count100)
+			if b.Len() != count100 {
+				t.Errorf("expected length %d, got %d", count100, b.Len())
+			}
 			return b
 		}(),
 		// btree里面元素 大于 TopMax 需要返回的值
@@ -117,7 +135,9 @@ func Test_AvlTree_TopMax(t *testing.T) {
 			for i := 0; i < count1000; i++ {
 				b.Set(int(i), i)
 			}
-			assert.Equal(t, b.Len(), count1000)
+			if b.Len() != count1000 {
+				t.Errorf("expected length %d, got %d", count1000, b.Len())
+			}
 			return b
 		}(),
 	} {
@@ -128,10 +148,13 @@ func Test_AvlTree_TopMax(t *testing.T) {
 			return true
 		})
 		length := cmp.Min(count[i], len(need[i]))
-		assert.Equal(t, key, need[i][:length])
-		assert.Equal(t, val, need[i][:length])
+		if !equalSlices(key, need[i][:length]) {
+			t.Errorf("expected keys %v, got %v", need[i][:length], key)
+		}
+		if !equalSlices(val, need[i][:length]) {
+			t.Errorf("expected values %v, got %v", need[i][:length], val)
+		}
 	}
-
 }
 
 // 测试TopMin, 它返回最小的几个值
@@ -155,7 +178,9 @@ func Test_AvlTree_TopMin(t *testing.T) {
 				b.Set(i, i)
 			}
 
-			assert.Equal(t, b.Len(), count10)
+			if b.Len() != count10 {
+				t.Errorf("expected length %d, got %d", count10, b.Len())
+			}
 			return b
 		}(),
 		// btree里面元素 等于 TopMin 需要返回的值
@@ -165,7 +190,9 @@ func Test_AvlTree_TopMin(t *testing.T) {
 			for i := 0; i < count100; i++ {
 				b.Set(i, i)
 			}
-			assert.Equal(t, b.Len(), count100)
+			if b.Len() != count100 {
+				t.Errorf("expected length %d, got %d", count100, b.Len())
+			}
 			return b
 		}(),
 		// btree里面元素 大于 TopMin 需要返回的值
@@ -175,7 +202,9 @@ func Test_AvlTree_TopMin(t *testing.T) {
 			for i := 0; i < count1000; i++ {
 				b.Set(i, i)
 			}
-			assert.Equal(t, b.Len(), count1000)
+			if b.Len() != count1000 {
+				t.Errorf("expected length %d, got %d", count1000, b.Len())
+			}
 			return b
 		}(),
 	} {
@@ -185,10 +214,13 @@ func Test_AvlTree_TopMin(t *testing.T) {
 			val = append(val, v)
 			return true
 		})
-		assert.Equal(t, key, need[:needCount[i]])
-		assert.Equal(t, val, need[:needCount[i]])
+		if !equalSlices(key, need[:needCount[i]]) {
+			t.Errorf("expected keys %v, got %v", need[:needCount[i]], key)
+		}
+		if !equalSlices(val, need[:needCount[i]]) {
+			t.Errorf("expected values %v, got %v", need[:needCount[i]], val)
+		}
 	}
-
 }
 
 func Test_RanePrev(t *testing.T) {
@@ -215,6 +247,23 @@ func Test_RanePrev(t *testing.T) {
 		return true
 	})
 
-	assert.Equal(t, gotKey, dataRev)
-	assert.Equal(t, gotVal, dataRev)
+	if !equalSlices(gotKey, dataRev) {
+		t.Errorf("expected keys %v, got %v", dataRev, gotKey)
+	}
+	if !equalSlices(gotVal, dataRev) {
+		t.Errorf("expected values %v, got %v", dataRev, gotVal)
+	}
+}
+
+// 辅助函数，用于比较两个切片是否相等
+func equalSlices(a, b []int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }

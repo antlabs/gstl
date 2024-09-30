@@ -3,8 +3,6 @@ package set
 // apache 2.0 antlabs
 import (
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_Range_New(t *testing.T) {
@@ -19,7 +17,9 @@ func Test_Range_New(t *testing.T) {
 		return true
 	})
 
-	assert.Equal(t, got, a)
+	if !equalSlices(got, a) {
+		t.Errorf("expected %v, got %v", a, got)
+	}
 }
 
 func Test_Range_From(t *testing.T) {
@@ -34,7 +34,9 @@ func Test_Range_From(t *testing.T) {
 		return true
 	})
 
-	assert.Equal(t, got, a)
+	if !equalSlices(got, a) {
+		t.Errorf("expected %v, got %v", a, got)
+	}
 }
 
 func Test_Len(t *testing.T) {
@@ -43,7 +45,9 @@ func Test_Len(t *testing.T) {
 	for i := 0; i < max; i++ {
 		s.Set(i)
 	}
-	assert.Equal(t, s.Len(), max)
+	if s.Len() != max {
+		t.Errorf("expected %d, got %d", max, s.Len())
+	}
 }
 
 func Test_Equal(t *testing.T) {
@@ -52,12 +56,18 @@ func Test_Equal(t *testing.T) {
 	for i := 0; i < max; i++ {
 		s.Set(i)
 	}
-	assert.Equal(t, s.Len(), max)
+	if s.Len() != max {
+		t.Errorf("expected %d, got %d", max, s.Len())
+	}
 
 	s2 := s.Clone()
 
-	assert.Equal(t, s.Len(), s2.Len())
-	assert.True(t, s.Equal(s2))
+	if s.Len() != s2.Len() {
+		t.Errorf("expected %d, got %d", s.Len(), s2.Len())
+	}
+	if !s.Equal(s2) {
+		t.Errorf("expected sets to be equal")
+	}
 }
 
 func Test_Not_Equal(t *testing.T) {
@@ -69,14 +79,20 @@ func Test_Not_Equal(t *testing.T) {
 		s.Set(i)
 	}
 
-	assert.Equal(t, s.Len(), max)
+	if s.Len() != max {
+		t.Errorf("expected %d, got %d", max, s.Len())
+	}
 
 	for i := 0; i < max; i++ {
 		s2.Set(i - 1)
 	}
 
-	assert.Equal(t, s.Len(), s2.Len())
-	assert.False(t, s.Equal(s2))
+	if s.Len() != s2.Len() {
+		t.Errorf("expected %d, got %d", s.Len(), s2.Len())
+	}
+	if s.Equal(s2) {
+		t.Errorf("expected sets to be not equal")
+	}
 }
 
 func Test_Not_Equal2(t *testing.T) {
@@ -88,13 +104,17 @@ func Test_Not_Equal2(t *testing.T) {
 		s.Set(i)
 	}
 
-	assert.Equal(t, s.Len(), max)
+	if s.Len() != max {
+		t.Errorf("expected %d, got %d", max, s.Len())
+	}
 
 	for i := 0; i < max/2; i++ {
 		s2.Set(i - 1)
 	}
 
-	assert.False(t, s.Equal(s2))
+	if s.Equal(s2) {
+		t.Errorf("expected sets to be not equal")
+	}
 }
 
 func Test_IsMember(t *testing.T) {
@@ -102,7 +122,9 @@ func Test_IsMember(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		s.Set(i)
 	}
-	assert.True(t, s.IsMember(1))
+	if !s.IsMember(1) {
+		t.Errorf("expected true, got false")
+	}
 }
 
 func Test_Union(t *testing.T) {
@@ -111,7 +133,10 @@ func Test_Union(t *testing.T) {
 	s2 := From("3333")
 
 	newSet := s.Union(s1, s2)
-	assert.Equal(t, newSet.ToSlice(), []string{"1111", "2222", "3333"})
+	expected := []string{"1111", "2222", "3333"}
+	if !equalSlices(newSet.ToSlice(), expected) {
+		t.Errorf("expected %v, got %v", expected, newSet.ToSlice())
+	}
 }
 
 func Test_Diff(t *testing.T) {
@@ -119,7 +144,10 @@ func Test_Diff(t *testing.T) {
 	s2 := From("1234", "4567")
 
 	newSet := s.Diff(s2)
-	assert.Equal(t, newSet.ToSlice(), []string{"hello", "world"})
+	expected := []string{"hello", "world"}
+	if !equalSlices(newSet.ToSlice(), expected) {
+		t.Errorf("expected %v, got %v", expected, newSet.ToSlice())
+	}
 }
 
 func Test_Intersection(t *testing.T) {
@@ -127,53 +155,75 @@ func Test_Intersection(t *testing.T) {
 	s2 := From("abcde", "5678", "9abc")
 
 	v := s.Intersection(s2).ToSlice()
-	assert.Equal(t, v, []string{"5678", "9abc"})
+	expected := []string{"5678", "9abc"}
+	if !equalSlices(v, expected) {
+		t.Errorf("expected %v, got %v", expected, v)
+	}
 }
 
 func Test_IsSubset(t *testing.T) {
-
 	s := From("5678", "9abc")
 	s2 := From("abcde", "5678", "9abc")
 
-	assert.True(t, s.IsSubset(s2))
+	if !s.IsSubset(s2) {
+		t.Errorf("expected true, got false")
+	}
 }
 
 func Test_IsSubset_Not(t *testing.T) {
-
 	s := From("aa", "5678", "9abc")
 	s2 := From("abcde", "5678", "9abc")
 
-	assert.False(t, s.IsSubset(s2))
+	if s.IsSubset(s2) {
+		t.Errorf("expected false, got true")
+	}
 }
 
 func Test_IsSubset_Not2(t *testing.T) {
-
 	s := From("aa", "5678", "9abc", "33333")
 	s2 := From("abcde", "5678", "9abc")
 
-	assert.False(t, s.IsSubset(s2))
+	if s.IsSubset(s2) {
+		t.Errorf("expected false, got true")
+	}
 }
 
-func Test_IsSuperbset(t *testing.T) {
-
+func Test_IsSuperset(t *testing.T) {
 	s2 := From("5678", "9abc")
 	s := From("abcde", "5678", "9abc")
 
-	assert.True(t, s.IsSuperset(s2))
+	if !s.IsSuperset(s2) {
+		t.Errorf("expected true, got false")
+	}
 }
 
 func Test_IsSuperset_Not(t *testing.T) {
-
 	s2 := From("aa", "5678", "9abc")
 	s := From("abcde", "5678", "9abc")
 
-	assert.False(t, s.IsSuperset(s2))
+	if s.IsSuperset(s2) {
+		t.Errorf("expected false, got true")
+	}
 }
 
 func Test_IsSuperset_Not2(t *testing.T) {
-
 	s2 := From("aa", "5678", "9abc", "33333")
 	s := From("abcde", "5678", "9abc")
 
-	assert.False(t, s.IsSuperset(s2))
+	if s.IsSuperset(s2) {
+		t.Errorf("expected false, got true")
+	}
+}
+
+// 辅助函数，用于比较两个切片是否相等
+func equalSlices(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }

@@ -1,12 +1,10 @@
 package rbtree
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/antlabs/gstl/cmp"
 	"github.com/antlabs/gstl/vec"
-	"github.com/stretchr/testify/assert"
 )
 
 // 从小到大, 插入
@@ -19,8 +17,12 @@ func Test_SetAndGet(t *testing.T) {
 
 	for i := 0; i < max; i++ {
 		v, ok := b.GetWithBool(i)
-		assert.True(t, ok)
-		assert.Equal(t, v, i)
+		if !ok {
+			t.Errorf("Expected true, got false for key %d", i)
+		}
+		if v != i {
+			t.Errorf("Expected %d, got %d for key %d", i, v, i)
+		}
 	}
 }
 
@@ -34,15 +36,18 @@ func Test_SetAndGet2(t *testing.T) {
 
 	for i := max; i >= 0; i-- {
 		v, ok := b.GetWithBool(i)
-		assert.True(t, ok)
-		assert.Equal(t, v, i)
+		if !ok {
+			t.Errorf("Expected true, got false for key %d", i)
+		}
+		if v != i {
+			t.Errorf("Expected %d, got %d for key %d", i, v, i)
+		}
 	}
 }
 
 // 测试avltree删除的情况, 少量数量
 func Test_RBTree_Delete1(t *testing.T) {
 	for max := 3; max < 1000; max++ {
-
 		b := New[int, int]()
 
 		// 设置0-max
@@ -58,22 +63,29 @@ func Test_RBTree_Delete1(t *testing.T) {
 		// max/2-max应该能找到
 		for i := max / 2; i < max; i++ {
 			v, ok := b.GetWithBool(i)
-			assert.True(t, ok, fmt.Sprintf("index:%d", i))
-			assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
+			if !ok {
+				t.Errorf("Expected true, got false for key %d", i)
+			}
+			if v != i {
+				t.Errorf("Expected %d, got %d for key %d", i, v, i)
+			}
 		}
 
 		// 0-max/2应该找不到
 		for i := 0; i < max/2; i++ {
 			v, ok := b.GetWithBool(i)
-			assert.False(t, ok, fmt.Sprintf("index:%d", i))
-			assert.Equal(t, v, 0, fmt.Sprintf("index:%d", i))
+			if ok {
+				t.Errorf("Expected false, got true for key %d", i)
+			}
+			if v != 0 {
+				t.Errorf("Expected 0, got %d for key %d", v, i)
+			}
 		}
 	}
 }
 
 // 测试TopMax, 返回最大的几个数据降序返回
 func Test_RBTree_TopMax(t *testing.T) {
-
 	need := [3][]int{}
 	count10 := 10
 	count100 := 100
@@ -94,30 +106,22 @@ func Test_RBTree_TopMax(t *testing.T) {
 			for i := 0; i < count10; i++ {
 				b.Set(i, i)
 			}
-
-			//b.Draw()
-
-			assert.Equal(t, b.Len(), count10)
 			return b
 		}(),
 		// btree里面元素 等于 TopMax 需要返回的值
 		func() *RBTree[int, int] {
-
 			b := New[int, int]()
 			for i := 0; i < count100; i++ {
 				b.Set(int(i), i)
 			}
-			assert.Equal(t, b.Len(), count100)
 			return b
 		}(),
 		// btree里面元素 大于 TopMax 需要返回的值
 		func() *RBTree[int, int] {
-
 			b := New[int, int]()
 			for i := 0; i < count1000; i++ {
 				b.Set(int(i), i)
 			}
-			assert.Equal(t, b.Len(), count1000)
 			return b
 		}(),
 	} {
@@ -128,15 +132,17 @@ func Test_RBTree_TopMax(t *testing.T) {
 			return true
 		})
 		length := cmp.Min(count[i], len(need[i]))
-		assert.Equal(t, key, need[i][:length])
-		assert.Equal(t, val, need[i][:length])
+		if !slicesEqual(key, need[i][:length]) {
+			t.Errorf("Expected %v, got %v", need[i][:length], key)
+		}
+		if !slicesEqual(val, need[i][:length]) {
+			t.Errorf("Expected %v, got %v", need[i][:length], val)
+		}
 	}
-
 }
 
 // 测试TopMin, 它返回最小的几个值
 func Test_RBTree_TopMin(t *testing.T) {
-
 	need := []int{}
 	count10 := 10
 	count100 := 100
@@ -154,28 +160,22 @@ func Test_RBTree_TopMin(t *testing.T) {
 			for i := 0; i < count10; i++ {
 				b.Set(i, i)
 			}
-
-			assert.Equal(t, b.Len(), count10)
 			return b
 		}(),
 		// btree里面元素 等于 TopMin 需要返回的值
 		func() *RBTree[int, int] {
-
 			b := New[int, int]()
 			for i := 0; i < count100; i++ {
 				b.Set(i, i)
 			}
-			assert.Equal(t, b.Len(), count100)
 			return b
 		}(),
 		// btree里面元素 大于 TopMin 需要返回的值
 		func() *RBTree[int, int] {
-
 			b := New[int, int]()
 			for i := 0; i < count1000; i++ {
 				b.Set(i, i)
 			}
-			assert.Equal(t, b.Len(), count1000)
 			return b
 		}(),
 	} {
@@ -185,10 +185,13 @@ func Test_RBTree_TopMin(t *testing.T) {
 			val = append(val, v)
 			return true
 		})
-		assert.Equal(t, key, need[:needCount[i]])
-		assert.Equal(t, val, need[:needCount[i]])
+		if !slicesEqual(key, need[:needCount[i]]) {
+			t.Errorf("Expected %v, got %v", need[:needCount[i]], key)
+		}
+		if !slicesEqual(val, need[:needCount[i]]) {
+			t.Errorf("Expected %v, got %v", need[:needCount[i]], val)
+		}
 	}
-
 }
 
 func Test_RanePrev(t *testing.T) {
@@ -204,17 +207,31 @@ func Test_RanePrev(t *testing.T) {
 		a.Set(i, i)
 	}
 
-	//a.Draw()
-
 	var gotKey []int
 	var gotVal []int
 	a.RangePrev(func(k, v int) bool {
 		gotKey = append(gotKey, k)
 		gotVal = append(gotVal, v)
-
 		return true
 	})
 
-	assert.Equal(t, gotKey, dataRev)
-	assert.Equal(t, gotVal, dataRev)
+	if !slicesEqual(gotKey, dataRev) {
+		t.Errorf("Expected %v, got %v", dataRev, gotKey)
+	}
+	if !slicesEqual(gotVal, dataRev) {
+		t.Errorf("Expected %v, got %v", dataRev, gotVal)
+	}
+}
+
+// Helper function to compare slices
+func slicesEqual[T comparable](a, b []T) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }

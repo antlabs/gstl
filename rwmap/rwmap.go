@@ -23,9 +23,14 @@ type RWMap[K comparable, V any] struct {
 }
 
 // 通过new函数分配可以指定map的长度
-func New[K comparable, V any](l int) *RWMap[K, V] {
+func New[K comparable, V any](l ...int) *RWMap[K, V] {
+	if len(l) == 0 {
+		return &RWMap[K, V]{
+			m: make(map[K]V),
+		}
+	}
 	return &RWMap[K, V]{
-		m: make(map[K]V, l),
+		m: make(map[K]V, l[0]),
 	}
 }
 

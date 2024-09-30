@@ -6,12 +6,13 @@ import (
 	"testing"
 
 	"github.com/antlabs/gstl/cmp"
-	"github.com/stretchr/testify/assert"
 )
 
 func Test_New(t *testing.T) {
 	n := New[int, int]()
-	assert.NotNil(t, n)
+	if n == nil {
+		t.Errorf("expected non-nil, got nil")
+	}
 }
 
 func Test_SetGet(t *testing.T) {
@@ -23,7 +24,9 @@ func Test_SetGet(t *testing.T) {
 
 	for i := 0.0; i < max; i++ {
 		v := zset.Get(i)
-		assert.Equal(t, v, fmt.Sprintf("%d", int(i)))
+		if v != fmt.Sprintf("%d", int(i)) {
+			t.Errorf("expected %s, got %s", fmt.Sprintf("%d", int(i)), v)
+		}
 	}
 }
 
@@ -40,7 +43,9 @@ func Test_InsertRepeatingElement(t *testing.T) {
 	}
 
 	for i := 0; i < max; i++ {
-		assert.Equal(t, sl.Get(float64(i)), fmt.Sprint(i+1))
+		if sl.Get(float64(i)) != fmt.Sprint(i+1) {
+			t.Errorf("expected %s, got %s", fmt.Sprint(i+1), sl.Get(float64(i)))
+		}
 	}
 }
 
@@ -54,17 +59,21 @@ func Test_SetGetRemove(t *testing.T) {
 
 	for i := 0.0; i < max; i++ {
 		zset.Remove(i)
-		assert.Equal(t, float64(zset.Len()), max-1)
+		if float64(zset.Len()) != max-1 {
+			t.Errorf("expected %f, got %f", max-1, float64(zset.Len()))
+		}
 		for j := 0.0; j < max; j++ {
 			if j == i {
 				continue
 			}
 			v, ok := zset.GetWithBool(j)
-			assert.True(t, ok, fmt.Sprintf("score:%f, i:%f, j:%f", j, i, j))
 			if !ok {
+				t.Errorf("expected true for score:%f, i:%f, j:%f", j, i, j)
 				return
 			}
-			assert.Equal(t, v, j)
+			if v != j {
+				t.Errorf("expected %f, got %f", j, v)
+			}
 		}
 		zset.Set(i, i)
 	}
@@ -91,7 +100,9 @@ func Test_Skiplist_TopMin(t *testing.T) {
 				b.Set(float64(i), i)
 			}
 
-			assert.Equal(t, b.Len(), count10)
+			if b.Len() != count10 {
+				t.Errorf("expected %d, got %d", count10, b.Len())
+			}
 			return b
 		}(),
 		// btree里面元素 等于 TopMin 需要返回的值
@@ -101,7 +112,9 @@ func Test_Skiplist_TopMin(t *testing.T) {
 			for i := 0; i < count100; i++ {
 				b.Set(float64(i), i)
 			}
-			assert.Equal(t, b.Len(), count100)
+			if b.Len() != count100 {
+				t.Errorf("expected %d, got %d", count100, b.Len())
+			}
 			return b
 		}(),
 		// btree里面元素 大于 TopMin 需要返回的值
@@ -111,7 +124,9 @@ func Test_Skiplist_TopMin(t *testing.T) {
 			for i := 0; i < count1000; i++ {
 				b.Set(float64(i), i)
 			}
-			assert.Equal(t, b.Len(), count1000)
+			if b.Len() != count1000 {
+				t.Errorf("expected %d, got %d", count1000, b.Len())
+			}
 			return b
 		}(),
 	} {
@@ -121,8 +136,12 @@ func Test_Skiplist_TopMin(t *testing.T) {
 			val = append(val, v)
 			return true
 		})
-		assert.Equal(t, key, need[:needCount[i]])
-		assert.Equal(t, val, need[:needCount[i]])
+		if !equalSlices(key, need[:needCount[i]]) {
+			t.Errorf("expected %v, got %v", need[:needCount[i]], key)
+		}
+		if !equalSlices(val, need[:needCount[i]]) {
+			t.Errorf("expected %v, got %v", need[:needCount[i]], val)
+		}
 	}
 }
 
@@ -146,7 +165,9 @@ func Test_Skiplist_TopMin2(t *testing.T) {
 		return true
 	})
 
-	assert.Equal(t, need, got)
+	if !equalSlices(need, got) {
+		t.Errorf("expected %v, got %v", need, got)
+	}
 }
 
 // debug, 指定层
@@ -169,7 +190,9 @@ func Test_SkipList_SetAndGet_Level(t *testing.T) {
 			count.Keys,
 			count.Level,
 			count.MaxLevel)
-		assert.Equal(t, v, i)
+		if v != i {
+			t.Errorf("expected %d, got %d", i, v)
+		}
 	}
 }
 
@@ -193,7 +216,9 @@ func Test_SkipList_SetAndGet2(t *testing.T) {
 			count.Keys,
 			count.Level,
 			count.MaxLevel)
-		assert.Equal(t, v, i)
+		if v != i {
+			t.Errorf("expected %d, got %d", i, v)
+		}
 	}
 }
 
@@ -221,7 +246,9 @@ func Test_Skiplist_TopMax(t *testing.T) {
 				b.Set(float64(i), i)
 			}
 
-			assert.Equal(t, b.Len(), count10)
+			if b.Len() != count10 {
+				t.Errorf("expected %d, got %d", count10, b.Len())
+			}
 			return b
 		}(),
 		// btree里面元素 等于 TopMax 需要返回的值
@@ -231,7 +258,9 @@ func Test_Skiplist_TopMax(t *testing.T) {
 			for i := 0; i < count100; i++ {
 				b.Set(float64(i), i)
 			}
-			assert.Equal(t, b.Len(), count100)
+			if b.Len() != count100 {
+				t.Errorf("expected %d, got %d", count100, b.Len())
+			}
 			return b
 		}(),
 		// btree里面元素 大于 TopMax 需要返回的值
@@ -241,7 +270,9 @@ func Test_Skiplist_TopMax(t *testing.T) {
 			for i := 0; i < count1000; i++ {
 				b.Set(float64(i), i)
 			}
-			assert.Equal(t, b.Len(), count1000)
+			if b.Len() != count1000 {
+				t.Errorf("expected %d, got %d", count1000, b.Len())
+			}
 			return b
 		}(),
 	} {
@@ -252,8 +283,24 @@ func Test_Skiplist_TopMax(t *testing.T) {
 			return true
 		})
 		length := cmp.Min(count[i], len(need[i]))
-		assert.Equal(t, key, need[i][:length])
-		assert.Equal(t, val, need[i][:length])
+		if !equalSlices(key, need[i][:length]) {
+			t.Errorf("expected %v, got %v", need[i][:length], key)
+		}
+		if !equalSlices(val, need[i][:length]) {
+			t.Errorf("expected %v, got %v", need[i][:length], val)
+		}
 	}
+}
 
+// 辅助函数，用于比较两个切片是否相等
+func equalSlices(a, b []int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }

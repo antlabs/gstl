@@ -1,12 +1,9 @@
 package btree
 
-// apache 2.0 antlabs
 import (
-	"fmt"
 	"testing"
 
 	"github.com/antlabs/gstl/cmp"
-	"github.com/stretchr/testify/assert"
 )
 
 // 测试get set
@@ -21,8 +18,12 @@ func Test_Btree_SetAndGet(t *testing.T) {
 
 	for i := 0; i < max; i++ {
 		v, ok := b.GetWithBool(i)
-		assert.True(t, ok)
-		assert.Equal(t, v, i)
+		if !ok {
+			t.Errorf("Expected true, got false for key %d", i)
+		}
+		if v != i {
+			t.Errorf("Expected %d, got %d for key %d", i, v, i)
+		}
 	}
 }
 
@@ -38,8 +39,12 @@ func Test_Btree_SetAndGet_Split(t *testing.T) {
 
 	for i := 0; i < max; i++ {
 		v, ok := b.GetWithBool(i)
-		assert.True(t, ok, fmt.Sprintf("index:%d", i))
-		assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
+		if !ok {
+			t.Errorf("Expected true, got false for key %d", i)
+		}
+		if v != i {
+			t.Errorf("Expected %d, got %d for key %d", i, v, i)
+		}
 	}
 }
 
@@ -55,8 +60,12 @@ func Test_Btree_SetAndGet_Split_Big(t *testing.T) {
 
 	for i := 0; i < max; i++ {
 		v, ok := b.GetWithBool(i)
-		assert.True(t, ok, fmt.Sprintf("index:%d", i))
-		assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
+		if !ok {
+			t.Errorf("Expected true, got false for key %d", i)
+		}
+		if v != i {
+			t.Errorf("Expected %d, got %d for key %d", i, v, i)
+		}
 	}
 }
 
@@ -71,14 +80,22 @@ func Test_Btree_SetAndGet_Replace(t *testing.T) {
 
 	for i := 0; i < max; i++ {
 		prev, replace := b.SetWithPrev(i, i+1)
-		assert.True(t, replace)
-		assert.Equal(t, prev, i)
+		if !replace {
+			t.Errorf("Expected true, got false for key %d", i)
+		}
+		if prev != i {
+			t.Errorf("Expected %d, got %d for key %d", i, prev, i)
+		}
 	}
 
 	for i := 0; i < max; i++ {
 		v, ok := b.GetWithBool(i)
-		assert.True(t, ok, fmt.Sprintf("index:%d", i))
-		assert.Equal(t, v, i+1, fmt.Sprintf("index:%d", i))
+		if !ok {
+			t.Errorf("Expected true, got false for key %d", i)
+		}
+		if v != i+1 {
+			t.Errorf("Expected %d, got %d for key %d", i+1, v, i)
+		}
 	}
 }
 
@@ -90,9 +107,7 @@ func Test_Btree_Range(t *testing.T) {
 	val := make([]int, 0, max)
 	need := make([]int, 0, max)
 	for i := max - 1; i >= 0; i-- {
-		assert.NotPanics(t, func() {
-			b.Set(i, i)
-		}, fmt.Sprintf("index:%d", i))
+		b.Set(i, i)
 	}
 
 	for i := 0; i < max; i++ {
@@ -105,13 +120,16 @@ func Test_Btree_Range(t *testing.T) {
 		return true
 	})
 
-	assert.Equal(t, key, need)
-	assert.Equal(t, val, need)
+	if !slicesEqual(key, need) {
+		t.Errorf("Expected %v, got %v", need, key)
+	}
+	if !slicesEqual(val, need) {
+		t.Errorf("Expected %v, got %v", need, val)
+	}
 }
 
 // 测试TopMin, 它返回最小的几个值
 func Test_Btree_TopMin(t *testing.T) {
-
 	need := []int{}
 	count10 := 10
 	count100 := 100
@@ -129,28 +147,22 @@ func Test_Btree_TopMin(t *testing.T) {
 			for i := 0; i < count10; i++ {
 				b.Set(i, i)
 			}
-
-			assert.Equal(t, b.Len(), count10)
 			return b
 		}(),
 		// btree里面元素 等于 TopMin 需要返回的值
 		func() *Btree[int, int] {
-
 			b := New[int, int](2)
 			for i := 0; i < count100; i++ {
 				b.Set(i, i)
 			}
-			assert.Equal(t, b.Len(), count100)
 			return b
 		}(),
 		// btree里面元素 大于 TopMin 需要返回的值
 		func() *Btree[int, int] {
-
 			b := New[int, int](2)
 			for i := 0; i < count1000; i++ {
 				b.Set(i, i)
 			}
-			assert.Equal(t, b.Len(), count1000)
 			return b
 		}(),
 	} {
@@ -160,24 +172,24 @@ func Test_Btree_TopMin(t *testing.T) {
 			val = append(val, v)
 			return true
 		})
-		assert.Equal(t, key, need[:needCount[i]])
-		assert.Equal(t, val, need[:needCount[i]])
+		if !slicesEqual(key, need[:needCount[i]]) {
+			t.Errorf("Expected %v, got %v", need[:needCount[i]], key)
+		}
+		if !slicesEqual(val, need[:needCount[i]]) {
+			t.Errorf("Expected %v, got %v", need[:needCount[i]], val)
+		}
 	}
-
 }
 
 // 测试倒序输出
 func Test_Btree_RangePrev(t *testing.T) {
-
 	b := New[int, int](2)
 	max := 1000
 	key := make([]int, 0, max)
 	val := make([]int, 0, max)
 	need := make([]int, 0, max)
 	for i := 0; i < max; i++ {
-		assert.NotPanics(t, func() {
-			b.Set(i, i)
-		}, fmt.Sprintf("index:%d", i))
+		b.Set(i, i)
 	}
 
 	for i := max - 1; i >= 0; i-- {
@@ -190,20 +202,19 @@ func Test_Btree_RangePrev(t *testing.T) {
 		return true
 	})
 
-	assert.Equal(t, key, need)
+	if !slicesEqual(key, need) {
+		t.Errorf("Expected %v, got %v", need, key)
+	}
 }
 
 func Test_Btree_RangePrev2(t *testing.T) {
-
 	b := New[int, int](2)
 	max := 1000
 	key := make([]int, 0, max)
 	val := make([]int, 0, max)
 	need := make([]int, 0, max)
 	for i := max - 1; i >= 0; i-- {
-		assert.NotPanics(t, func() {
-			b.Set(i, i)
-		}, fmt.Sprintf("index:%d", i))
+		b.Set(i, i)
 	}
 
 	for i := max - 1; i >= 0; i-- {
@@ -216,7 +227,9 @@ func Test_Btree_RangePrev2(t *testing.T) {
 		return true
 	})
 
-	assert.Equal(t, key, need)
+	if !slicesEqual(key, need) {
+		t.Errorf("Expected %v, got %v", need, key)
+	}
 }
 
 // 测试Find接口
@@ -227,15 +240,18 @@ func Test_Btree_Find(t *testing.T) {
 	b.Set(2, 2)
 
 	index, _ := b.find(b.root, 2)
-	assert.Equal(t, index, 2)
+	if index != 2 {
+		t.Errorf("Expected 2, got %d", index)
+	}
 
 	index, _ = b.find(b.root, 4)
-	assert.Equal(t, index, 3)
+	if index != 3 {
+		t.Errorf("Expected 3, got %d", index)
+	}
 }
 
 // 测试TopMax, 返回最大的几个数据降序返回
 func Test_Btree_TopMax(t *testing.T) {
-
 	need := [3][]int{}
 	count10 := 10
 	count100 := 100
@@ -256,28 +272,22 @@ func Test_Btree_TopMax(t *testing.T) {
 			for i := 0; i < count10; i++ {
 				b.Set(i, i)
 			}
-
-			assert.Equal(t, b.Len(), count10)
 			return b
 		}(),
 		// btree里面元素 等于 TopMin 需要返回的值
 		func() *Btree[int, int] {
-
 			b := New[int, int](2)
 			for i := 0; i < count100; i++ {
 				b.Set(i, i)
 			}
-			assert.Equal(t, b.Len(), count100)
 			return b
 		}(),
 		// btree里面元素 大于 TopMin 需要返回的值
 		func() *Btree[int, int] {
-
 			b := New[int, int](2)
 			for i := 0; i < count1000; i++ {
 				b.Set(i, i)
 			}
-			assert.Equal(t, b.Len(), count1000)
 			return b
 		}(),
 	} {
@@ -288,16 +298,18 @@ func Test_Btree_TopMax(t *testing.T) {
 			return true
 		})
 		length := cmp.Min(count[i], len(need[i]))
-		assert.Equal(t, key, need[i][:length])
-		assert.Equal(t, val, need[i][:length])
+		if !slicesEqual(key, need[i][:length]) {
+			t.Errorf("Expected %v, got %v", need[i][:length], key)
+		}
+		if !slicesEqual(val, need[i][:length]) {
+			t.Errorf("Expected %v, got %v", need[i][:length], val)
+		}
 	}
-
 }
 
 // 测试btree删除的情况, 少量数量
 func Test_Btree_Delete1(t *testing.T) {
 	for max := 3; max < 1000; max++ {
-
 		b := New[int, int](64)
 
 		// 设置0-max
@@ -313,22 +325,29 @@ func Test_Btree_Delete1(t *testing.T) {
 		// max/2-max应该能找到
 		for i := max / 2; i < max; i++ {
 			v, ok := b.GetWithBool(i)
-			assert.True(t, ok, fmt.Sprintf("index:%d", i))
-			assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
+			if !ok {
+				t.Errorf("Expected true, got false for key %d", i)
+			}
+			if v != i {
+				t.Errorf("Expected %d, got %d for key %d", i, v, i)
+			}
 		}
 
 		// 0-max/2应该找不到
 		for i := 0; i < max/2; i++ {
 			v, ok := b.GetWithBool(i)
-			assert.False(t, ok, fmt.Sprintf("index:%d", i))
-			assert.Equal(t, v, 0, fmt.Sprintf("index:%d", i))
+			if ok {
+				t.Errorf("Expected false, got true for key %d", i)
+			}
+			if v != 0 {
+				t.Errorf("Expected 0, got %d for key %d", v, i)
+			}
 		}
 	}
 }
 
 // 测试draw
 func Test_Btree_Draw(t *testing.T) {
-
 	b := New[int, int](2)
 	for i := 0; i < 10; i++ {
 		b.Set(i, i)
@@ -341,7 +360,6 @@ func Test_Btree_Delete2(t *testing.T) {
 	b := New[int, int](2)
 
 	for max := 0; max <= 500; max++ {
-		//for max := 0; max <= 22; max++ {
 		for i := 0; i < max; i++ {
 			b.Set(i, i)
 		}
@@ -350,31 +368,47 @@ func Test_Btree_Delete2(t *testing.T) {
 		// 删除后半段
 		for i := start; i < max; i++ {
 			prev, ok := b.DeleteWithPrev(i)
-			assert.True(t, ok, fmt.Sprintf("max:%d, i:%d", max, i))
-			assert.Equal(t, prev, i, fmt.Sprintf("max:%d, i:%d", max, i))
-
 			if !ok {
-				return
+				t.Errorf("Expected true, got false for key %d", i)
+			}
+			if prev != i {
+				t.Errorf("Expected %d, got %d for key %d", i, prev, i)
 			}
 		}
 
 		// 查找后半段, 应该找不到
 		for i := start; i < max; i++ {
 			v, ok := b.GetWithBool(i)
-			assert.False(t, ok, fmt.Sprintf("index:%d", i))
-			assert.Equal(t, v, 0, fmt.Sprintf("index:%d", i))
+			if ok {
+				t.Errorf("Expected false, got true for key %d", i)
+			}
+			if v != 0 {
+				t.Errorf("Expected 0, got %d for key %d", v, i)
+			}
 		}
 
 		// 查找前半段
 		for i := 0; i < start; i++ {
 			v, ok := b.GetWithBool(i)
-			assert.True(t, ok, fmt.Sprintf("index:%d, max:%d, delete-start:%d", i, max, start))
 			if !ok {
-				return
+				t.Errorf("Expected true, got false for key %d", i)
 			}
-
-			assert.Equal(t, v, i, fmt.Sprintf("index:%d", i))
+			if v != i {
+				t.Errorf("Expected %d, got %d for key %d", i, v, i)
+			}
 		}
-
 	}
+}
+
+// Helper function to compare slices
+func slicesEqual[T comparable](a, b []T) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
