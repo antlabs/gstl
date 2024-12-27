@@ -2,6 +2,7 @@ package linkedlist
 
 import (
 	"testing"
+	"time"
 
 	"github.com/antlabs/gstl/must"
 )
@@ -520,6 +521,132 @@ func Test_OtherMoveToFrontList(t *testing.T) {
 	}
 	if !sliceEqual(other.ToSlice(), []int(nil)) {
 		t.Errorf("OtherMoveToFrontList() = %v, want %v", other.ToSlice(), []int(nil))
+	}
+}
+
+// 测试对象池在不同类型下的行为
+func Test_NodePool(t *testing.T) {
+	// 测试不同类型使用不同的对象池
+	l1 := New[int]()
+	l2 := New[string]()
+
+	// 添加和删除大量元素，测试对象池的复用
+	for i := 0; i < 1000; i++ {
+		l1.PushBack(i)
+		l2.PushBack(string(rune(i + 65))) // A-Z...
+	}
+
+	// 记录初始长度
+	len1 := l1.Len()
+	len2 := l2.Len()
+
+	// 删除一半元素
+	for i := 0; i < 500; i++ {
+		l1.Remove(0)
+		l2.Remove(0)
+	}
+
+	// 再次添加元素，应该复用之前的节点
+	for i := 0; i < 500; i++ {
+		l1.PushBack(i)
+		l2.PushBack(string(rune(i + 65)))
+	}
+
+	// 检查最终长度是否正确
+	if l1.Len() != len1 || l2.Len() != len2 {
+		t.Errorf("NodePool reuse failed: l1.Len() = %v, want %v; l2.Len() = %v, want %v",
+			l1.Len(), len1, l2.Len(), len2)
+	}
+}
+
+// 测试并发安全性
+func Test_ConcurrentLinkedList(t *testing.T) {
+	list := NewConcurrent[int]()
+	done := make(chan bool, 11)
+
+	// 并发写入
+	for i := 0; i < 10; i++ {
+		go func(n int) {
+			for j := 0; j < 100; j++ {
+				list.PushBack(j)
+				list.Range(func(value int) {})
+			}
+			done <- true
+		}(i)
+	}
+
+	// 并发读取
+	go func() {
+		time.Sleep(time.Second)
+		for i := 0; i < 100; i++ {
+			// list.Range(func(value int) {})
+		}
+		done <- true
+	}()
+
+	// 等待所有goroutine完成
+	for i := 0; i < 11; i++ { // 10个写入 + 1个读取
+		<-done
+	}
+
+	// 验证最终长度
+	if list.Len() != 1000 { // 10 goroutines * 100 items
+		t.Errorf("ConcurrentLinkedList failed: Len() = %v, want %v", list.Len(), 1000)
+	}
+}
+
+// 测试直接创建LinkedList的情况
+func Test_DirectLinkedList(t *testing.T) {
+	// 直接创建LinkedList而不是通过New
+	var list LinkedList[int]
+
+	// 应该可以正常使用
+	list.PushBack(1, 2, 3)
+
+	if list.Len() != 3 {
+		t.Errorf("DirectLinkedList failed: Len() = %v, want %v", list.Len(), 3)
+	}
+
+	// 测试获取元素
+	if val := list.Get(0); val != 1 {
+		t.Errorf("DirectLinkedList failed: Get(0) = %v, want %v", val, 1)
+	}
+
+	// 测试删除元素
+	list.Remove(0)
+	if list.Len() != 2 {
+		t.Errorf("DirectLinkedList failed after remove: Len() = %v, want %v", list.Len(), 2)
+	}
+}
+
+// 测试边界情况
+func Test_EdgeCases(t *testing.T) {
+	list := New[int]()
+
+	// 测试空链表的操作
+	if val, ok := list.First(); ok {
+		t.Errorf("Empty list First() should return false, got true with value %v", val)
+	}
+
+	// 测试nil对象池的情况
+	list.pool = nil
+	list.PushBack(1) // 应该仍然可以工作
+
+	if list.Len() != 1 {
+		t.Errorf("List with nil pool failed: Len() = %v, want %v", list.Len(), 1)
+	}
+
+	// 测试大量添加删除操作
+	for i := 0; i < 1000; i++ {
+		list.PushBack(i)
+		if i%2 == 0 {
+			list.Remove(0)
+		}
+	}
+
+	// 最终长度应该是500
+	if list.Len() != 501 {
+		t.Errorf("Edge case large operations failed: Len() = %v, want %v", list.Len(), 501)
 	}
 }
 

@@ -8,9 +8,81 @@
 
 ```
 ## 二、`Listked`
-```go
 
+`Listked` 是一个支持泛型的双向链表容器，提供了加锁和不加锁的实现。
+
+#### 不加锁的使用方式
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/antlabs/gstl/linkedlist"
+)
+
+func main() {
+    // 创建一个不加锁的链表
+    list := linkedlist.New[int]()
+
+    // 插入元素
+    list.PushBack(1)
+    list.PushFront(0)
+
+    // 遍历链表
+    list.Range(func(value int) {
+        fmt.Println(value)
+    })
+
+    // 删除元素
+    list.Remove(0)
+}
 ```
+
+#### 加锁的使用方式
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "github.com/antlabs/gstl/linkedlist"
+)
+
+func main() {
+    // 创建一个加锁的链表
+    list := linkedlist.NewConcurrent[int]()
+
+    var wg sync.WaitGroup
+    wg.Add(2)
+
+    // 并发插入元素
+    go func() {
+        defer wg.Done()
+        list.PushBack(1)
+        list.PushFront(0)
+    }()
+
+    // 并发遍历链表
+    go func() {
+        defer wg.Done()
+        list.Range(func(value int) {
+            fmt.Println(value)
+        })
+    }()
+
+    wg.Wait()
+
+    // 删除元素
+    list.Remove(0)
+}
+```
+
+### 区别
+
+- **不加锁的链表**：适用于单线程环境，性能更高。
+- **加锁的链表**：适用于多线程环境，保证线程安全。
 
 ## 三、`rhashmap`
 和标准库不同的地方是有序hash
@@ -212,4 +284,3 @@ for pair := range m.Iter() {
 m.Len()// 获取长度
 allKeys := m.Keys() //返回所有的key
 allValues := m.Values()// 返回所有的value
-```

@@ -20,6 +20,8 @@ package linkedlist
 
 import (
 	"errors"
+	"reflect"
+	"sync"
 
 	"github.com/antlabs/gstl/cmp"
 )
@@ -27,9 +29,51 @@ import (
 var ErrListElemEmpty = errors.New("list is empty")
 var ErrNotFound = errors.New("element not found")
 
-type LinkedList[T any] struct {
-	root   Node[T]
-	length int
+// 节点对象池，为每种类型维护一个独立的对象池
+type nodePool[T any] struct {
+	pool sync.Pool
+}
+
+var (
+	poolMap sync.Map // map[reflect.Type]*nodePool[T]
+)
+
+// 获取指定类型的对象池
+func getNodePool[T any]() *nodePool[T] {
+	var t T
+	typ := reflect.TypeOf(t)
+
+	if p, ok := poolMap.Load(typ); ok {
+		return p.(*nodePool[T])
+	}
+
+	pool := &nodePool[T]{}
+	pool.pool.New = func() interface{} {
+		return new(Node[T])
+	}
+
+	actual, _ := poolMap.LoadOrStore(typ, pool)
+	return actual.(*nodePool[T])
+}
+
+// 从对象池获取节点
+func (p *nodePool[T]) getNode() *Node[T] {
+	if p == nil {
+		return new(Node[T])
+	}
+	return p.pool.Get().(*Node[T])
+}
+
+// 将节点放回对象池
+func (p *nodePool[T]) putNode(n *Node[T]) {
+	if p == nil || n == nil {
+		return
+	}
+	n.next = nil
+	n.prev = nil
+	var zero T
+	n.Element = zero
+	p.pool.Put(n)
 }
 
 // 每个Node节点, 包含前向和后向两个指针和数据域
@@ -39,9 +83,10 @@ type Node[T any] struct {
 	Element T
 }
 
-// 返回一个双向循环链表
-func New[T any]() *LinkedList[T] {
-	return new(LinkedList[T]).Init()
+type LinkedList[T any] struct {
+	root   Node[T]
+	length int
+	pool   *nodePool[T]
 }
 
 // 指向自己, 组成一个环
@@ -61,6 +106,9 @@ func (l *LinkedList[T]) Len() int {
 func (l *LinkedList[T]) lazyInit() {
 	if l.root.next == nil {
 		l.Init()
+	}
+	if l.pool == nil {
+		l.pool = getNodePool[T]()
 	}
 }
 
@@ -226,7 +274,9 @@ func (l *LinkedList[T]) PushFrontList(other *LinkedList[T]) *LinkedList[T] {
 func (l *LinkedList[T]) PushFront(elems ...T) *LinkedList[T] {
 	l.lazyInit()
 	for _, e := range elems {
-		l.insert(&l.root, &Node[T]{Element: e})
+		newNode := l.pool.getNode()
+		newNode.Element = e
+		l.insert(&l.root, newNode)
 	}
 	return l
 }
@@ -252,7 +302,10 @@ func (l *LinkedList[T]) PushBackList(other *LinkedList[T]) *LinkedList[T] {
 func (l *LinkedList[T]) PushBack(elems ...T) *LinkedList[T] {
 	l.lazyInit()
 	for _, e := range elems {
-		l.insert(l.root.prev, &Node[T]{Element: e})
+		// newNode := l.pool.getNode()
+		newNode := &Node[T]{}
+		newNode.Element = e
+		l.insert(l.root.prev, newNode)
 	}
 	return l
 }
@@ -293,7 +346,9 @@ func (l *LinkedList[T]) Clear() *LinkedList[T] {
 func (l *LinkedList[T]) InsertAfter(value T, equal func(value T) bool) *LinkedList[T] {
 	l.RangeSafe(func(n *Node[T]) bool {
 		if equal(n.Element) {
-			l.insert(n, &Node[T]{Element: value})
+			newNode := l.pool.getNode()
+			newNode.Element = value
+			l.insert(n, newNode)
 			return true
 		}
 		return false
@@ -305,7 +360,9 @@ func (l *LinkedList[T]) InsertAfter(value T, equal func(value T) bool) *LinkedLi
 func (l *LinkedList[T]) InsertBefore(value T, equal func(value T) bool) *LinkedList[T] {
 	l.RangeSafe(func(n *Node[T]) bool {
 		if equal(n.Element) {
-			l.insert(n.prev, &Node[T]{Element: value})
+			newNode := l.pool.getNode()
+			newNode.Element = value
+			l.insert(n.prev, newNode)
 			return true
 		}
 		return false
@@ -343,8 +400,7 @@ func (l *LinkedList[T]) GetWithBool(idx int) (e T, ok bool) {
 func (l *LinkedList[T]) remove(n *Node[T]) {
 	n.prev.next = n.next
 	n.next.prev = n.prev
-	n.prev = nil
-	n.next = nil
+	l.pool.putNode(n)
 	l.length--
 }
 
@@ -576,18 +632,15 @@ func (l *LinkedList[T]) rangeStartEndSafe(start, end int, callback func(start, e
 	if start > end || start >= l.length {
 		return
 	}
-	var pos *Node[T]
-	var n *Node[T]
 
-	pos = l.root.next
-	n = pos.next
+	pos := l.root.next
 
 	for pos != &l.root {
+		next := pos.next
 		if callback(start, end, pos) {
 			break
 		}
-		pos = n
-		n = pos.next
+		pos = next
 	}
 }
 
@@ -603,4 +656,69 @@ func (l *LinkedList[T]) Trim(start, end int) *LinkedList[T] {
 		return false
 	})
 	return l
+}
+
+// ConcurrentLinkedList 是线程安全的双向链表
+type ConcurrentLinkedList[T any] struct {
+	mu   sync.RWMutex
+	list *LinkedList[T]
+}
+
+// NewConcurrent 返回一个并发安全的双向链表
+func NewConcurrent[T any]() *ConcurrentLinkedList[T] {
+	return &ConcurrentLinkedList[T]{
+		list: New[T](),
+	}
+}
+
+// PushFront 线程安全地在链表头部添加元素
+func (cl *ConcurrentLinkedList[T]) PushFront(elems ...T) *ConcurrentLinkedList[T] {
+	cl.mu.Lock()
+	defer cl.mu.Unlock()
+	cl.list.PushFront(elems...)
+	return cl
+}
+
+// PushBack 线程安全地在链表尾部添加元素
+func (cl *ConcurrentLinkedList[T]) PushBack(elems ...T) *ConcurrentLinkedList[T] {
+	cl.mu.Lock()
+	defer cl.mu.Unlock()
+	cl.list.PushBack(elems...)
+	return cl
+}
+
+// Remove 线程安全地删除指定索引的元素
+func (cl *ConcurrentLinkedList[T]) Remove(index int) *ConcurrentLinkedList[T] {
+	cl.mu.Lock()
+	defer cl.mu.Unlock()
+	cl.list.Remove(index)
+	return cl
+}
+
+// Get 线程安全地获取指定索引的元素
+func (cl *ConcurrentLinkedList[T]) Get(idx int) (T, bool) {
+	cl.mu.RLock()
+	defer cl.mu.RUnlock()
+	return cl.list.GetWithBool(idx)
+}
+
+// Len 线程安全地获取链表长度
+func (cl *ConcurrentLinkedList[T]) Len() int {
+	cl.mu.RLock()
+	defer cl.mu.RUnlock()
+	return cl.list.Len()
+}
+
+// Range 线程安全地遍历链表
+func (cl *ConcurrentLinkedList[T]) Range(callback func(value T), startAndEnd ...int) {
+	cl.mu.RLock()
+	defer cl.mu.RUnlock()
+	cl.list.Range(callback, startAndEnd...)
+}
+
+// 返回一个双向循环链表
+func New[T any]() *LinkedList[T] {
+	l := new(LinkedList[T])
+	l.pool = getNodePool[T]()
+	return l.Init()
 }

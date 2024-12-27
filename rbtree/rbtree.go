@@ -520,10 +520,6 @@ func (n *node[K, V]) rangePrevInner(callback func(k K, v V) bool) bool {
 
 func (n *node[K, V]) rangeInner(callback func(k K, v V) bool) bool {
 
-	if n == nil {
-		return true
-	}
-
 	if n.left != nil {
 		if !n.left.rangeInner(callback) {
 			return false
