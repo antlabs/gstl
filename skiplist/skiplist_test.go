@@ -3,6 +3,7 @@ package skiplist
 // apache 2.0 antlabs
 import (
 	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/antlabs/gstl/cmp"
@@ -288,6 +289,65 @@ func Test_Skiplist_TopMax(t *testing.T) {
 		}
 		if !equalSlices(val, need[i][:length]) {
 			t.Errorf("expected %v, got %v", need[i][:length], val)
+		}
+	}
+}
+
+func Test_ConcurrentSkipList_InsertGet(t *testing.T) {
+	csl := NewConcurrent[int, string]()
+	var wg sync.WaitGroup
+	count := 1000
+
+	// Concurrent inserts
+	wg.Add(count)
+	for i := 0; i < count; i++ {
+		go func(i int) {
+			defer wg.Done()
+			csl.Insert(i, fmt.Sprintf("value%d", i))
+		}(i)
+	}
+
+	wg.Wait()
+
+	// Concurrent gets
+	wg.Add(count)
+	for i := 0; i < count; i++ {
+		go func(i int) {
+			defer wg.Done()
+			if val, ok := csl.Get(i); !ok || val != fmt.Sprintf("value%d", i) {
+				t.Errorf("expected value%d, got %v", i, val)
+			}
+		}(i)
+	}
+
+	wg.Wait()
+}
+
+func Test_ConcurrentSkipList_Delete(t *testing.T) {
+	csl := NewConcurrent[int, string]()
+	var wg sync.WaitGroup
+	count := 1000
+
+	// Insert elements
+	for i := 0; i < count; i++ {
+		csl.Insert(i, fmt.Sprintf("value%d", i))
+	}
+
+	// Concurrent deletes
+	wg.Add(count)
+	for i := 0; i < count; i++ {
+		go func(i int) {
+			defer wg.Done()
+			csl.Delete(i)
+		}(i)
+	}
+
+	wg.Wait()
+
+	// Verify all elements are deleted
+	for i := 0; i < count; i++ {
+		if _, ok := csl.Get(i); ok {
+			t.Errorf("expected element %d to be deleted", i)
 		}
 	}
 }
