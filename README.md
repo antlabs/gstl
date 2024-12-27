@@ -92,15 +92,93 @@ func main() {
 ## 四、`btree`
 ```go
 ```
-## 五、`rbtree`
+## 五、`SkipList`
+
+`SkipList` 是一种高效的有序数据结构，支持快速的插入、删除和查找操作。
+
+#### 基本使用
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/antlabs/gstl/skiplist"
+)
+
+func main() {
+    // 创建一个新的 SkipList
+    sl := skiplist.New[int, string]()
+
+    // 插入元素
+    sl.Insert(1, "one")
+    sl.Insert(2, "two")
+
+    // 获取元素
+    if value, ok := sl.Get(1); ok {
+        fmt.Println("Key 1:", value)
+    }
+
+    // 删除元素
+    sl.Delete(1)
+}
+```
+
+#### 并发安全的使用
+
+```go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "github.com/antlabs/gstl/skiplist"
+)
+
+func main() {
+    // 创建一个并发安全的 SkipList
+    csl := skiplist.NewConcurrent[int, string]()
+    var wg sync.WaitGroup
+
+    // 并发插入元素
+    wg.Add(2)
+    go func() {
+        defer wg.Done()
+        csl.Insert(1, "one")
+    }()
+    go func() {
+        defer wg.Done()
+        csl.Insert(2, "two")
+    }()
+    wg.Wait()
+
+    // 并发获取元素
+    wg.Add(2)
+    go func() {
+        defer wg.Done()
+        if value, ok := csl.Get(1); ok {
+            fmt.Println("Key 1:", value)
+        }
+    }()
+    go func() {
+        defer wg.Done()
+        if value, ok := csl.Get(2); ok {
+            fmt.Println("Key 2:", value)
+        }
+    }()
+    wg.Wait()
+}
+```
+
+## 六、`rbtree`
 ```go
 ```
 
-## 六、`avltree`
+## 七、`avltree`
 ```go
 ```
 
-## 七、`trie`
+## 八、`trie`
 ```go
 // 声明一个bool类型的trie tree
 t := trie.New[bool]()
@@ -121,7 +199,7 @@ t.Delete(k string)
 t.Len()
 ```
 
-## 八、`set`
+## 九、`set`
 ```go
 // 声明一个string类型的set
 s := set.New[string]()
@@ -201,20 +279,20 @@ s2 := s.Clone()
 assert.True(t, s.Equal(s2))
 ```
 
-## 九、`ifop`
+## 十、`ifop`
 ifop是弥补下golang没有三目运算符，使用函数模拟
-### 9.1 if else部分类型相同
+### 10.1 if else部分类型相同
 ```go
 // 如果该值不为0, 返回原来的值，否则默认值
 val = IfElse(len(val) != 0, val, "default")
 ```
-### 9.2 if else部分类型不同
+### 10.2 if else部分类型不同
 ```go
 o := map[string]any{"hello": "hello"}
 a := []any{"hello", "world"}
 fmt.Printf("%#v", IfElseAny(o != nil, o, a))
 ```
-## 十、`mapex`
+## 十一、`mapex`
 薄薄一层包装，增加标准库map的接口
 * mapex.Keys()
 ```go
@@ -233,7 +311,7 @@ m["b"] = "2"
 m["c"] = "3"
 get := mapex.Values(m)
 ```
-## 十一、`rwmap`
+## 十二、`rwmap`
 rwmap与sync.Map类似支持并发访问，只解决sync.Map 2个问题.  
 1. 没有Len成员函数  
 2. 以及没有使用泛型语法，有运行才发现类型使用错误的烦恼
@@ -260,7 +338,7 @@ m.Len()// 获取长度
 allKeys := m.Keys() //返回所有的key
 allValues := m.Values()// 返回所有的value
 ```
-## 十二、`cmap`
+## 十三、`cmap`
 cmap是用锁分区的方式实现的，(TODO优化，目前只有几个指标比sync.Map快)
 ```go
 var m cmap.CMap[string, string] // 声明一个string, string的map
