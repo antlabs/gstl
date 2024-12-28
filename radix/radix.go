@@ -67,7 +67,7 @@ func (r *Radix[V]) newEdge(label rune, p pair[V], prefix string) edge[V] {
 }
 
 // 设置
-func (r *Radix[V]) SetWithPrev(k string, v V) (prev V, replaced bool) {
+func (r *Radix[V]) Swap(k string, v V) (prev V, replaced bool) {
 
 	var parent *node[V]
 	var found bool

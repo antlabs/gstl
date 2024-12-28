@@ -79,7 +79,7 @@ func Test_Btree_SetAndGet_Replace(t *testing.T) {
 	}
 
 	for i := 0; i < max; i++ {
-		prev, replace := b.SetWithPrev(i, i+1)
+		prev, replace := b.Swap(i, i+1)
 		if !replace {
 			t.Errorf("Expected true, got false for key %d", i)
 		}

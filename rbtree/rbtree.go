@@ -217,11 +217,11 @@ func (r *RBTree[K, V]) Last() (v V, ok bool) {
 }
 
 func (r *RBTree[K, V]) Set(k K, v V) {
-	_, _ = r.SetWithPrev(k, v)
+	_, _ = r.Swap(k, v)
 }
 
 // 设置
-func (r *RBTree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
+func (r *RBTree[K, V]) Swap(k K, v V) (prev V, replaced bool) {
 	link := &r.root.node
 	var parent *node[K, V]
 

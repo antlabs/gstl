@@ -12,7 +12,7 @@ func Test_SetAndGet(t *testing.T) {
 	b := New[int, int]()
 	max := 1000
 	for i := 0; i < max; i++ {
-		b.SetWithPrev(i, i)
+		b.Swap(i, i)
 	}
 
 	for i := 0; i < max; i++ {
@@ -31,7 +31,7 @@ func Test_SetAndGet2(t *testing.T) {
 	b := New[int, int]()
 	max := 1000
 	for i := max; i >= 0; i-- {
-		b.SetWithPrev(i, i)
+		b.Swap(i, i)
 	}
 
 	for i := max; i >= 0; i-- {

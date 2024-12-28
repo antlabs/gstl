@@ -12,7 +12,7 @@ type Map[K constraints.Ordered, V any] interface {
 	// 设置
 	Set(k K, v V)
 	// 设置值
-	SetWithPrev(k K, v V) (prev V, replaced bool)
+	Swap(k K, v V) (prev V, replaced bool)
 	// int
 	Len() int
 	// 遍历
@@ -32,7 +32,7 @@ type Set[K constraints.Ordered] interface {
 
 type Trie[V any] interface {
 	Get(k string) (v V)
-	SetWithPrev(k string, v V) (prev V, replaced bool)
+	Swap(k string, v V) (prev V, replaced bool)
 	HasPrefix(k string) bool
 	TryGet(k string) (v V, found bool)
 	Delete(k string)

@@ -375,11 +375,11 @@ func (h *HashMap[K, V]) Range(pr func(key K, val V) bool) {
 }
 
 func (h *HashMap[K, V]) Set(k K, v V) {
-	h.SetWithPrev(k, v)
+	h.Swap(k, v)
 }
 
 // 设置
-func (h *HashMap[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
+func (h *HashMap[K, V]) Swap(k K, v V) (prev V, replaced bool) {
 	h.lazyinit()
 	if h.isRehashing() {
 		h.rehash(1)

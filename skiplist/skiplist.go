@@ -186,7 +186,7 @@ func (s *SkipList[K, T]) InsertOrUpdate(score K, elem T, cb InsertOrUpdateCb[T])
 	s.InsertInner(score, elem, s.rand())
 }
 
-func (s *SkipList[K, T]) SetWithPrev(score K, elem T) (prev T, replaced bool) {
+func (s *SkipList[K, T]) Swap(score K, elem T) (prev T, replaced bool) {
 
 	return s.InsertInner(score, elem, s.rand())
 }

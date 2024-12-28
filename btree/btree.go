@@ -61,7 +61,7 @@ func (b *Btree[K, V]) Len() int {
 // 设置接口, 如果有这个值, 有值就替换, 没有就新加
 func (b *Btree[K, V]) Set(k K, v V) {
 
-	_, _ = b.SetWithPrev(k, v)
+	_, _ = b.Swap(k, v)
 }
 
 // 新建一个节点
@@ -155,7 +155,7 @@ func (b *Btree[K, V]) nodeSet(n *node[K, V], item pair[K, V]) (prev V, replaced 
 }
 
 // 设置接口, 如果有值, 把prev值带返回, 并且被替换, 没有就新加
-func (b *Btree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
+func (b *Btree[K, V]) Swap(k K, v V) (prev V, replaced bool) {
 	item := pair[K, V]{key: k, val: v}
 	// 如果是每一个节点, 直接加入到root节点
 	if b.root == nil {
@@ -184,8 +184,8 @@ func (b *Btree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 			b.root.items.Push(median)
 		}
 
-		// 再调用下SetWithPrev, 结点分裂好了, 就有空间放数据
-		return b.SetWithPrev(item.key, item.val)
+		// 再调用下Swap, 结点分裂好了, 就有空间放数据
+		return b.Swap(item.key, item.val)
 	}
 
 	if replaced {

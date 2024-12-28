@@ -37,7 +37,7 @@ func (s *stdmap[K, V]) Set(key K, value V) {
 }
 
 // 设置值
-func (s *stdmap[K, V]) SetWithPrev(key K, value V) (prev V, replaced bool) {
+func (s *stdmap[K, V]) Swap(key K, value V) (prev V, replaced bool) {
 	prev, replaced = s.m[key]
 	s.m[key] = value
 	return

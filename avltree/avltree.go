@@ -245,11 +245,11 @@ func (a *AvlTree[K, V]) TryGet(k K) (v V, ok bool) {
 }
 
 func (a *AvlTree[K, V]) Set(k K, v V) {
-	_, _ = a.SetWithPrev(k, v)
+	_, _ = a.Swap(k, v)
 }
 
 // 设置接口, 如果有值, 把prev值带返回, 并且被替换, 没有就新加
-func (a *AvlTree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
+func (a *AvlTree[K, V]) Swap(k K, v V) (prev V, replaced bool) {
 	link := &a.root.node
 	var parent *node[K, V]
 	node := &node[K, V]{pair: pair[K, V]{key: k, val: v}}
