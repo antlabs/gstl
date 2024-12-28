@@ -1,8 +1,8 @@
 module github.com/antlabs/gstl
 
-go 1.19
+go 1.22.0
 
 require (
 	github.com/cespare/xxhash/v2 v2.1.2
-	golang.org/x/exp v0.0.0-20220328175248-053ad81199eb
+	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67
 )
