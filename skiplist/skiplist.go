@@ -520,6 +520,9 @@ func NewConcurrent[K constraints.Ordered, T any]() *ConcurrentSkipList[K, T] {
 func (c *ConcurrentSkipList[K, T]) Insert(score K, elem T) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.SkipList == nil {
+		c.SkipList = New[K, T]()
+	}
 	c.SkipList.Insert(score, elem)
 }
 
@@ -527,6 +530,9 @@ func (c *ConcurrentSkipList[K, T]) Insert(score K, elem T) {
 func (c *ConcurrentSkipList[K, T]) InsertOrUpdate(score K, elem T, cb InsertOrUpdateCb[T]) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.SkipList == nil {
+		c.SkipList = New[K, T]()
+	}
 	c.SkipList.InsertOrUpdate(score, elem, cb)
 }
 
@@ -534,6 +540,9 @@ func (c *ConcurrentSkipList[K, T]) InsertOrUpdate(score K, elem T, cb InsertOrUp
 func (c *ConcurrentSkipList[K, T]) Set(score K, elem T) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.SkipList == nil {
+		c.SkipList = New[K, T]()
+	}
 	c.SkipList.Set(score, elem)
 }
 
@@ -541,6 +550,9 @@ func (c *ConcurrentSkipList[K, T]) Set(score K, elem T) {
 func (c *ConcurrentSkipList[K, T]) Delete(score K) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.SkipList == nil {
+		c.SkipList = New[K, T]()
+	}
 	c.SkipList.Delete(score)
 }
 
@@ -548,13 +560,19 @@ func (c *ConcurrentSkipList[K, T]) Delete(score K) {
 func (c *ConcurrentSkipList[K, T]) Get(score K) (elem T, ok bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+	if c.SkipList == nil {
+		return elem, false
+	}
 	return c.SkipList.TryGet(score)
 }
 
-// Get retrieves an element from the concurrent skip list
+// TryGet retrieves an element from the concurrent skip list
 func (c *ConcurrentSkipList[K, T]) TryGet(score K) (elem T, ok bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+	if c.SkipList == nil {
+		return elem, false
+	}
 	return c.SkipList.TryGet(score)
 }
 
@@ -562,6 +580,9 @@ func (c *ConcurrentSkipList[K, T]) TryGet(score K) (elem T, ok bool) {
 func (c *ConcurrentSkipList[K, T]) Range(callback func(score K, v T) bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+	if c.SkipList == nil {
+		return
+	}
 	c.SkipList.Range(callback)
 }
 
@@ -569,6 +590,9 @@ func (c *ConcurrentSkipList[K, T]) Range(callback func(score K, v T) bool) {
 func (c *ConcurrentSkipList[K, T]) Remove(score K) *ConcurrentSkipList[K, T] {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.SkipList == nil {
+		c.SkipList = New[K, T]()
+	}
 	c.SkipList.Remove(score)
 	return c
 }
@@ -577,6 +601,9 @@ func (c *ConcurrentSkipList[K, T]) Remove(score K) *ConcurrentSkipList[K, T] {
 func (c *ConcurrentSkipList[K, T]) Draw() *ConcurrentSkipList[K, T] {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+	if c.SkipList == nil {
+		return c
+	}
 	c.SkipList.Draw()
 	return c
 }
@@ -585,6 +612,9 @@ func (c *ConcurrentSkipList[K, T]) Draw() *ConcurrentSkipList[K, T] {
 func (c *ConcurrentSkipList[K, T]) Len() int {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+	if c.SkipList == nil {
+		return 0
+	}
 	return c.SkipList.Len()
 }
 
@@ -592,6 +622,9 @@ func (c *ConcurrentSkipList[K, T]) Len() int {
 func (c *ConcurrentSkipList[K, T]) RangePrev(callback func(k K, v T) bool) *ConcurrentSkipList[K, T] {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+	if c.SkipList == nil {
+		return c
+	}
 	c.SkipList.RangePrev(callback)
 	return c
 }
@@ -600,6 +633,9 @@ func (c *ConcurrentSkipList[K, T]) RangePrev(callback func(k K, v T) bool) *Conc
 func (c *ConcurrentSkipList[K, T]) TopMin(limit int, callback func(score K, v T) bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+	if c.SkipList == nil {
+		return
+	}
 	c.SkipList.TopMin(limit, callback)
 }
 
@@ -607,5 +643,8 @@ func (c *ConcurrentSkipList[K, T]) TopMin(limit int, callback func(score K, v T)
 func (c *ConcurrentSkipList[K, T]) TopMax(limit int, callback func(k K, v T) bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+	if c.SkipList == nil {
+		return
+	}
 	c.SkipList.TopMax(limit, callback)
 }
