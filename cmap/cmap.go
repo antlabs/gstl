@@ -102,7 +102,7 @@ type UpdataOrInsertCb[K constraints.Ordered, V any] func(exist bool, old V) (new
 func (c *CMap[K, V]) UpdateOrInsert(k K, cb UpdataOrInsertCb[K, V]) {
 	item := c.findIndex(k)
 	item.rw.Lock()
-	old, ok := item.m.GetWithBool(k)
+	old, ok := item.m.TryGet(k)
 	newVal := cb(ok, old)
 	item.m.Set(k, newVal)
 	item.rw.Unlock()
@@ -112,7 +112,7 @@ func (c *CMap[K, V]) UpdateOrInsert(k K, cb UpdataOrInsertCb[K, V]) {
 func (c *CMap[K, V]) Load(key K) (value V, ok bool) {
 	item := c.findIndex(key)
 	item.rw.RLock()
-	value, ok = item.m.GetWithBool(key)
+	value, ok = item.m.TryGet(key)
 	item.rw.RUnlock()
 	return
 }
@@ -120,7 +120,7 @@ func (c *CMap[K, V]) Load(key K) (value V, ok bool) {
 func (c *CMap[K, V]) LoadAndDelete(key K) (value V, loaded bool) {
 	item := c.findIndex(key)
 	item.rw.Lock()
-	value, loaded = item.m.GetWithBool(key)
+	value, loaded = item.m.TryGet(key)
 	if !loaded {
 		item.rw.Unlock()
 		return
@@ -133,7 +133,7 @@ func (c *CMap[K, V]) LoadAndDelete(key K) (value V, loaded bool) {
 func (c *CMap[K, V]) LoadOrStore(key K, value V) (actual V, loaded bool) {
 	item := c.findIndex(key)
 	item.rw.Lock()
-	actual, loaded = item.m.GetWithBool(key)
+	actual, loaded = item.m.TryGet(key)
 	if !loaded {
 		actual = value
 		item.m.Set(key, actual)
@@ -141,7 +141,7 @@ func (c *CMap[K, V]) LoadOrStore(key K, value V) (actual V, loaded bool) {
 		return
 	}
 
-	actual, loaded = item.m.GetWithBool(key)
+	actual, loaded = item.m.TryGet(key)
 	item.rw.Unlock()
 	return
 }

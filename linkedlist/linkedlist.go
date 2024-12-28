@@ -383,13 +383,13 @@ func (l *LinkedList[T]) ContainsFunc(cb func(value T) bool) bool {
 
 // 获取指定索引数据, 忽略错误
 func (l *LinkedList[T]) Get(idx int) (e T) {
-	e, _ = l.GetWithBool(idx)
+	e, _ = l.TryGet(idx)
 	return
 }
 
 // 通过索引查找是否包含这个value
 // Get是Index的同义词
-func (l *LinkedList[T]) GetWithBool(idx int) (e T, ok bool) {
+func (l *LinkedList[T]) TryGet(idx int) (e T, ok bool) {
 	return l.Index(idx)
 }
 
@@ -699,7 +699,7 @@ func (cl *ConcurrentLinkedList[T]) Remove(index int) *ConcurrentLinkedList[T] {
 func (cl *ConcurrentLinkedList[T]) Get(idx int) (T, bool) {
 	cl.mu.RLock()
 	defer cl.mu.RUnlock()
-	return cl.list.GetWithBool(idx)
+	return cl.list.TryGet(idx)
 }
 
 // Len 线程安全地获取链表长度

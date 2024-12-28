@@ -122,30 +122,30 @@ func Test_Last(t *testing.T) {
 
 func Test_Get(t *testing.T) {
 	// 正索引
-	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").GetWithBool(0)); got != "1" {
+	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").TryGet(0)); got != "1" {
 		t.Errorf("Get() = %v, want %v", got, "1")
 	}
-	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").GetWithBool(1)); got != "2" {
+	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").TryGet(1)); got != "2" {
 		t.Errorf("Get() = %v, want %v", got, "2")
 	}
-	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").GetWithBool(2)); got != "3" {
+	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").TryGet(2)); got != "3" {
 		t.Errorf("Get() = %v, want %v", got, "3")
 	}
-	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").GetWithBool(3)); got != "4" {
+	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").TryGet(3)); got != "4" {
 		t.Errorf("Get() = %v, want %v", got, "4")
 	}
 
 	// 负索引
-	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").GetWithBool(-1)); got != "4" {
+	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").TryGet(-1)); got != "4" {
 		t.Errorf("Get() = %v, want %v", got, "4")
 	}
-	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").GetWithBool(-2)); got != "3" {
+	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").TryGet(-2)); got != "3" {
 		t.Errorf("Get() = %v, want %v", got, "3")
 	}
-	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").GetWithBool(-3)); got != "2" {
+	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").TryGet(-3)); got != "2" {
 		t.Errorf("Get() = %v, want %v", got, "2")
 	}
-	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").GetWithBool(-4)); got != "1" {
+	if got := must.TakeOneDiscardBool(New[string]().RPush("1", "2", "3", "4").TryGet(-4)); got != "1" {
 		t.Errorf("Get() = %v, want %v", got, "1")
 	}
 }

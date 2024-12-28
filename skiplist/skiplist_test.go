@@ -67,7 +67,7 @@ func Test_SetGetRemove(t *testing.T) {
 			if j == i {
 				continue
 			}
-			v, ok := zset.GetWithBool(j)
+			v, ok := zset.TryGet(j)
 			if !ok {
 				t.Errorf("expected true for score:%f, i:%f, j:%f", j, i, j)
 				return
@@ -348,6 +348,83 @@ func Test_ConcurrentSkipList_Delete(t *testing.T) {
 	for i := 0; i < count; i++ {
 		if _, ok := csl.Get(i); ok {
 			t.Errorf("expected element %d to be deleted", i)
+		}
+	}
+}
+
+func Test_ConcurrentSkipList_Get(t *testing.T) {
+	csl := NewConcurrent[int, string]()
+	var wg sync.WaitGroup
+	count := 1000
+
+	// Insert elements
+	for i := 0; i < count; i++ {
+		csl.Insert(i, fmt.Sprintf("value%d", i))
+	}
+
+	// Concurrent gets
+	wg.Add(count)
+	for i := 0; i < count; i++ {
+		go func(i int) {
+			defer wg.Done()
+			if val, ok := csl.Get(i); !ok || val != fmt.Sprintf("value%d", i) {
+				t.Errorf("expected value%d, got %v", i, val)
+			}
+		}(i)
+	}
+
+	wg.Wait()
+}
+
+func Test_ConcurrentSkipList_Range(t *testing.T) {
+	csl := NewConcurrent[int, string]()
+	count := 1000
+
+	// Insert elements
+	for i := 0; i < count; i++ {
+		csl.Insert(i, fmt.Sprintf("value%d", i))
+	}
+
+	// Range over elements
+	elements := make(map[int]string)
+	csl.Range(func(score int, value string) bool {
+		elements[score] = value
+		return true
+	})
+
+	// Verify all elements are ranged
+	for i := 0; i < count; i++ {
+		if val, exists := elements[i]; !exists || val != fmt.Sprintf("value%d", i) {
+			t.Errorf("expected value%d, got %v", i, val)
+		}
+	}
+}
+
+func Test_ConcurrentSkipList_Remove(t *testing.T) {
+	csl := NewConcurrent[int, string]()
+	var wg sync.WaitGroup
+	count := 1000
+
+	// Insert elements
+	for i := 0; i < count; i++ {
+		csl.Insert(i, fmt.Sprintf("value%d", i))
+	}
+
+	// Concurrent removes
+	wg.Add(count)
+	for i := 0; i < count; i++ {
+		go func(i int) {
+			defer wg.Done()
+			csl.Remove(i)
+		}(i)
+	}
+
+	wg.Wait()
+
+	// Verify all elements are removed
+	for i := 0; i < count; i++ {
+		if _, ok := csl.Get(i); ok {
+			t.Errorf("expected element %d to be removed", i)
 		}
 	}
 }

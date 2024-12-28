@@ -55,7 +55,7 @@ func Test_TrieMap_HasPrefix_notFound(t *testing.T) {
 	}
 }
 
-func Test_TrieMap_GetWithBool_notFound(t *testing.T) {
+func Test_TrieMap_TryGet_notFound(t *testing.T) {
 	tm := New[string]()
 	key := "/hello/world"
 	tm.Set("/hello", "1")
@@ -66,11 +66,11 @@ func Test_TrieMap_GetWithBool_notFound(t *testing.T) {
 			t.Errorf("expected true for prefix %s", key[:i])
 		}
 	}
-	_, ok := tm.GetWithBool("/ha")
+	_, ok := tm.TryGet("/ha")
 	if ok {
 		t.Errorf("expected false for /ha")
 	}
-	_, ok = tm.GetWithBool("/he")
+	_, ok = tm.TryGet("/he")
 	if ok {
 		t.Errorf("expected false for /he")
 	}
@@ -91,7 +91,7 @@ func Test_TrieMap_Delete(t *testing.T) {
 			t.Errorf("expected %s, got %s", key, val)
 		}
 		tm.Delete(key)
-		val, ok := tm.GetWithBool(key)
+		val, ok := tm.TryGet(key)
 		if ok {
 			t.Errorf("expected false for key %s", key)
 		}
@@ -102,7 +102,7 @@ func Test_TrieMap_Delete(t *testing.T) {
 
 	key := fmt.Sprint(max + 1)
 	tm.Delete(key)
-	val, ok := tm.GetWithBool(key)
+	val, ok := tm.TryGet(key)
 	if ok {
 		t.Errorf("expected false for key %s", key)
 	}

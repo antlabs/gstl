@@ -66,7 +66,7 @@ func (t *Trie[V]) HasPrefix(k string) bool {
 	return true
 }
 
-func (t *Trie[V]) GetWithBool(k string) (v V, found bool) {
+func (t *Trie[V]) TryGet(k string) (v V, found bool) {
 
 	n := t
 	for _, r := range k {
@@ -79,7 +79,7 @@ func (t *Trie[V]) GetWithBool(k string) (v V, found bool) {
 }
 
 func (t *Trie[V]) Get(k string) (v V) {
-	v, _ = t.GetWithBool(k)
+	v, _ = t.TryGet(k)
 	return
 }
 

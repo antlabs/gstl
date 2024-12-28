@@ -58,7 +58,7 @@ func (s *Set[K]) Clone() (new *Set[K]) {
 
 // 测试k是否在集合中
 func (s *Set[K]) IsMember(k K) (b bool) {
-	_, b = s.GetWithBool(k)
+	_, b = s.TryGet(k)
 	return
 }
 
@@ -147,7 +147,7 @@ func (s *Set[K]) Equal(s1 *Set[K]) (b bool) {
 
 	b = true
 	s.Range(func(k K) bool {
-		_, b = s1.GetWithBool(k)
+		_, b = s1.TryGet(k)
 		return b
 	})
 

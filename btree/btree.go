@@ -197,13 +197,13 @@ func (b *Btree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 
 // 获取值, 忽略找不到的情况
 func (b *Btree[K, V]) Get(k K) (v V) {
-	v, _ = b.GetWithBool(k)
+	v, _ = b.TryGet(k)
 	return
 }
 
 // 找到ok为true
 // 找不到ok为false
-func (b *Btree[K, V]) GetWithBool(k K) (v V, ok bool) {
+func (b *Btree[K, V]) TryGet(k K) (v V, ok bool) {
 	if b.root == nil {
 		return
 	}

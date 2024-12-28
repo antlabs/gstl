@@ -119,7 +119,7 @@ func Test_SetGet_Zero(t *testing.T) {
 	}
 
 	for i := 0; i < 10; i++ {
-		v, err := hm.GetWithBool(i)
+		v, err := hm.TryGet(i)
 		if err {
 			t.Errorf("Expected false, got true for key %d", i)
 		}
@@ -136,7 +136,7 @@ func Test_SetGet_NotFound(t *testing.T) {
 	hm.Set(1, "hello")
 	hm.Set(1, "world")
 
-	_, err := hm.GetWithBool(3)
+	_, err := hm.TryGet(3)
 
 	if err {
 		t.Errorf("Expected false, got true for key 3")
@@ -156,7 +156,7 @@ func Test_SetGet_Rehashing(t *testing.T) {
 	hm.Set(4, "world")
 	hm.Set(5, "world")
 
-	_, err := hm.GetWithBool(7)
+	_, err := hm.TryGet(7)
 
 	if err {
 		t.Errorf("Expected false, got true for key 7")
@@ -316,6 +316,33 @@ func Test_Range_ShrinkToFit(t *testing.T) {
 	}
 	if hm.Len() != 0 {
 		t.Errorf("Expected 0, got %v", hm.Len())
+	}
+}
+
+func Test_HashMap_InsertOrUpdate(t *testing.T) {
+	hm := New[int, int]()
+	max := 100
+
+	// Insert elements
+	for i := 0; i < max; i++ {
+		hm.InsertOrUpdate(i, i, func(prev, new int) int {
+			return prev + new
+		})
+	}
+
+	// Update elements
+	for i := 0; i < max; i++ {
+		hm.InsertOrUpdate(i, i, func(prev, new int) int {
+			return prev + new
+		})
+	}
+
+	// Verify elements
+	for i := 0; i < max; i++ {
+		v, ok := hm.TryGet(i)
+		if !ok || v != i*2 {
+			t.Errorf("expected %d, got %v", i*2, v)
+		}
 	}
 }
 

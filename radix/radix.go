@@ -40,7 +40,7 @@ type Radix[V any] struct {
 
 // 获取
 func (r *Radix[V]) Get(k string) (v V) {
-	v, _ = r.GetWithBool(k)
+	v, _ = r.TryGet(k)
 	return
 }
 
@@ -197,7 +197,7 @@ func (n *node[V]) find(r rune) (index int, found bool) {
 }
 
 // 获取返回bool
-func (r *Radix[V]) GetWithBool(k string) (v V, found bool) {
+func (r *Radix[V]) TryGet(k string) (v V, found bool) {
 	n := r.root
 
 	for {

@@ -308,7 +308,7 @@ func sizeMask(exp int8) uint64 {
 }
 
 // 获取
-func (h *HashMap[K, V]) GetWithBool(key K) (v V, ok bool) {
+func (h *HashMap[K, V]) TryGet(key K) (v V, ok bool) {
 	if h.Len() == 0 {
 		return
 	}
@@ -339,7 +339,7 @@ func (h *HashMap[K, V]) GetWithBool(key K) (v V, ok bool) {
 
 // 获取
 func (h *HashMap[K, V]) Get(key K) (v V) {
-	v, _ = h.GetWithBool(key)
+	v, _ = h.TryGet(key)
 	return
 }
 
@@ -409,6 +409,16 @@ func (h *HashMap[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 	h.table[idx][index] = e
 	h.used[idx]++
 	return
+}
+
+type InsertOrUpdateCb[V any] func(prev V, new V) V
+
+// InsertOrUpdate inserts or updates an element in the HashMap
+func (h *HashMap[K, V]) InsertOrUpdate(k K, v V, cb InsertOrUpdateCb[V]) {
+	if prev, ok := h.TryGet(k); ok {
+		v = cb(prev, v)
+	}
+	h.Set(k, v)
 }
 
 // Remove是delete别名

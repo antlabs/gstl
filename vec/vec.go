@@ -173,7 +173,7 @@ func (v *Vec[T]) Get(index int) (e T) {
 }
 
 // 获取指定索引的值, 如果索引不合法会返回错误
-func (v *Vec[T]) GetWithBool(index int) (e T, ok bool) {
+func (v *Vec[T]) TryGet(index int) (e T, ok bool) {
 	if index < 0 || index >= v.Len() {
 		return
 	}

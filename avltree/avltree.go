@@ -182,6 +182,9 @@ type AvlTree[K constraints.Ordered, V any] struct {
 	root   root[K, V]
 }
 
+// 如果有值，则这个回调函数会被调用
+type InsertOrUpdateCb[V any] func(prev V, new V) V
+
 // 构造函数
 func New[K constraints.Ordered, V any]() *AvlTree[K, V] {
 	return &AvlTree[K, V]{}
@@ -219,12 +222,12 @@ func (a *AvlTree[K, V]) Last() (v V, ok bool) {
 
 // Get
 func (a *AvlTree[K, V]) Get(k K) (v V) {
-	v, _ = a.GetWithBool(k)
+	v, _ = a.TryGet(k)
 	return
 }
 
 // 从avl tree找到需要的值
-func (a *AvlTree[K, V]) GetWithBool(k K) (v V, ok bool) {
+func (a *AvlTree[K, V]) TryGet(k K) (v V, ok bool) {
 	n := a.root.node
 	for n != nil {
 		if n.key == k {
@@ -270,6 +273,13 @@ func (a *AvlTree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 	a.root.postInsert(node)
 	a.length++
 	return
+}
+
+func (a *AvlTree[K, V]) InsertOrUpdate(k K, v V, cb InsertOrUpdateCb[V]) {
+	if prev, ok := a.TryGet(k); ok {
+		v = cb(prev, v)
+	}
+	a.Set(k, v)
 }
 
 func (r *root[K, V]) rebalance(node *node[K, V]) {

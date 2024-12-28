@@ -16,7 +16,7 @@ func Test_SetAndGet(t *testing.T) {
 	}
 
 	for i := 0; i < max; i++ {
-		v, ok := b.GetWithBool(i)
+		v, ok := b.TryGet(i)
 		if !ok {
 			t.Errorf("expected true, got false for index %d", i)
 		}
@@ -35,7 +35,7 @@ func Test_SetAndGet2(t *testing.T) {
 	}
 
 	for i := max; i >= 0; i-- {
-		v, ok := b.GetWithBool(i)
+		v, ok := b.TryGet(i)
 		if !ok {
 			t.Errorf("expected true, got false for index %d", i)
 		}
@@ -63,7 +63,7 @@ func Test_AVLTree_Delete1(t *testing.T) {
 
 		// max/2-max应该能找到
 		for i := max / 2; i < max; i++ {
-			v, ok := b.GetWithBool(i)
+			v, ok := b.TryGet(i)
 			if !ok {
 				t.Errorf("expected true, got false for index %d", i)
 			}
@@ -74,7 +74,7 @@ func Test_AVLTree_Delete1(t *testing.T) {
 
 		// 0-max/2应该找不到
 		for i := 0; i < max/2; i++ {
-			v, ok := b.GetWithBool(i)
+			v, ok := b.TryGet(i)
 			if ok {
 				t.Errorf("expected false, got true for index %d", i)
 			}
@@ -252,6 +252,60 @@ func Test_RanePrev(t *testing.T) {
 	}
 	if !equalSlices(gotVal, dataRev) {
 		t.Errorf("expected values %v, got %v", dataRev, gotVal)
+	}
+}
+
+func Test_AvlTree_InsertOrUpdate(t *testing.T) {
+	b := New[int, int]()
+	max := 100
+
+	// Insert elements
+	for i := 0; i < max; i++ {
+		b.InsertOrUpdate(i, i, func(prev, new int) int {
+			return prev + new
+		})
+	}
+
+	// Update elements
+	for i := 0; i < max; i++ {
+		b.InsertOrUpdate(i, i, func(prev, new int) int {
+			return prev + new
+		})
+	}
+
+	// Verify elements
+	for i := 0; i < max; i++ {
+		v, ok := b.TryGet(i)
+		if !ok || v != i*2 {
+			t.Errorf("expected %d, got %v", i*2, v)
+		}
+	}
+}
+
+func Test_AvlTree_InsertOrUpdate2(t *testing.T) {
+	b := New[int, int]()
+	max := 100
+
+	// Insert elements
+	for i := 0; i < max; i++ {
+		b.InsertOrUpdate(i, i, func(prev, new int) int {
+			return prev + new
+		})
+	}
+
+	// Update elements
+	for i := 0; i < max; i++ {
+		b.InsertOrUpdate(i, i*2, func(prev, new int) int {
+			return prev + new
+		})
+	}
+
+	// Verify elements
+	for i := 0; i < max; i++ {
+		v, ok := b.TryGet(i)
+		if !ok || v != i*3 {
+			t.Errorf("expected %d, got %v", i*3, v)
+		}
 	}
 }
 

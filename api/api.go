@@ -6,7 +6,7 @@ type Map[K constraints.Ordered, V any] interface {
 	// 获取
 	Get(k K) (elem V)
 	// 获取
-	GetWithBool(k K) (elem V, ok bool)
+	TryGet(k K) (elem V, ok bool)
 	// 删除
 	Delete(k K)
 	// 设置
@@ -34,7 +34,7 @@ type Trie[V any] interface {
 	Get(k string) (v V)
 	SetWithPrev(k string, v V) (prev V, replaced bool)
 	HasPrefix(k string) bool
-	GetWithBool(k string) (v V, found bool)
+	TryGet(k string) (v V, found bool)
 	Delete(k string)
 	Len() int
 }

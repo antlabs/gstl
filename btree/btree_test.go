@@ -17,7 +17,7 @@ func Test_Btree_SetAndGet(t *testing.T) {
 	}
 
 	for i := 0; i < max; i++ {
-		v, ok := b.GetWithBool(i)
+		v, ok := b.TryGet(i)
 		if !ok {
 			t.Errorf("Expected true, got false for key %d", i)
 		}
@@ -38,7 +38,7 @@ func Test_Btree_SetAndGet_Split(t *testing.T) {
 	}
 
 	for i := 0; i < max; i++ {
-		v, ok := b.GetWithBool(i)
+		v, ok := b.TryGet(i)
 		if !ok {
 			t.Errorf("Expected true, got false for key %d", i)
 		}
@@ -59,7 +59,7 @@ func Test_Btree_SetAndGet_Split_Big(t *testing.T) {
 	}
 
 	for i := 0; i < max; i++ {
-		v, ok := b.GetWithBool(i)
+		v, ok := b.TryGet(i)
 		if !ok {
 			t.Errorf("Expected true, got false for key %d", i)
 		}
@@ -89,7 +89,7 @@ func Test_Btree_SetAndGet_Replace(t *testing.T) {
 	}
 
 	for i := 0; i < max; i++ {
-		v, ok := b.GetWithBool(i)
+		v, ok := b.TryGet(i)
 		if !ok {
 			t.Errorf("Expected true, got false for key %d", i)
 		}
@@ -324,7 +324,7 @@ func Test_Btree_Delete1(t *testing.T) {
 
 		// max/2-max应该能找到
 		for i := max / 2; i < max; i++ {
-			v, ok := b.GetWithBool(i)
+			v, ok := b.TryGet(i)
 			if !ok {
 				t.Errorf("Expected true, got false for key %d", i)
 			}
@@ -335,7 +335,7 @@ func Test_Btree_Delete1(t *testing.T) {
 
 		// 0-max/2应该找不到
 		for i := 0; i < max/2; i++ {
-			v, ok := b.GetWithBool(i)
+			v, ok := b.TryGet(i)
 			if ok {
 				t.Errorf("Expected false, got true for key %d", i)
 			}
@@ -378,7 +378,7 @@ func Test_Btree_Delete2(t *testing.T) {
 
 		// 查找后半段, 应该找不到
 		for i := start; i < max; i++ {
-			v, ok := b.GetWithBool(i)
+			v, ok := b.TryGet(i)
 			if ok {
 				t.Errorf("Expected false, got true for key %d", i)
 			}
@@ -389,7 +389,7 @@ func Test_Btree_Delete2(t *testing.T) {
 
 		// 查找前半段
 		for i := 0; i < start; i++ {
-			v, ok := b.GetWithBool(i)
+			v, ok := b.TryGet(i)
 			if !ok {
 				t.Errorf("Expected true, got false for key %d", i)
 			}

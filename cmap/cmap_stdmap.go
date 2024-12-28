@@ -21,7 +21,7 @@ func (s *stdmap[K, V]) Get(key K) (elem V) {
 }
 
 // 获取
-func (s *stdmap[K, V]) GetWithBool(key K) (elem V, ok bool) {
+func (s *stdmap[K, V]) TryGet(key K) (elem V, ok bool) {
 	elem, ok = s.m[key]
 	return
 }

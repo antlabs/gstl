@@ -176,6 +176,16 @@ func (s *SkipList[K, T]) Set(score K, elem T) {
 	s.InsertInner(score, elem, s.rand())
 }
 
+type InsertOrUpdateCb[T any] func(prev T, new T) T
+
+// Insert or update an element into the skip list
+func (s *SkipList[K, T]) InsertOrUpdate(score K, elem T, cb InsertOrUpdateCb[T]) {
+	if prev, ok := s.TryGet(score); ok {
+		elem = cb(prev, elem)
+	}
+	s.InsertInner(score, elem, s.rand())
+}
+
 func (s *SkipList[K, T]) SetWithPrev(score K, elem T) (prev T, replaced bool) {
 
 	return s.InsertInner(score, elem, s.rand())
@@ -271,7 +281,7 @@ func (s *SkipList[K, T]) InsertInner(score K, elem T, level int) (prev T, replac
 }
 
 // 获取
-func (s *SkipList[K, T]) GetWithBool(score K) (elem T, ok bool) {
+func (s *SkipList[K, T]) TryGet(score K) (elem T, ok bool) {
 
 	x := s.head
 	for i := s.level - 1; i >= 0; i-- {
@@ -352,7 +362,7 @@ func (s *SkipList[K, T]) GetWithMeta(score K) (elem T, number Number[K], ok bool
 
 // 根据score获取value值
 func (s *SkipList[K, T]) Get(score K) (elem T) {
-	elem, _ = s.GetWithBool(score)
+	elem, _ = s.TryGet(score)
 	return elem
 }
 
@@ -513,6 +523,20 @@ func (c *ConcurrentSkipList[K, T]) Insert(score K, elem T) {
 	c.SkipList.Insert(score, elem)
 }
 
+// Insert or update an element into the concurrent skip list
+func (c *ConcurrentSkipList[K, T]) InsertOrUpdate(score K, elem T, cb InsertOrUpdateCb[T]) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.SkipList.InsertOrUpdate(score, elem, cb)
+}
+
+// Set sets a new element into the concurrent skip list
+func (c *ConcurrentSkipList[K, T]) Set(score K, elem T) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.SkipList.Set(score, elem)
+}
+
 // Delete removes an element from the concurrent skip list
 func (c *ConcurrentSkipList[K, T]) Delete(score K) {
 	c.mu.Lock()
@@ -524,7 +548,14 @@ func (c *ConcurrentSkipList[K, T]) Delete(score K) {
 func (c *ConcurrentSkipList[K, T]) Get(score K) (elem T, ok bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	return c.SkipList.GetWithBool(score)
+	return c.SkipList.TryGet(score)
+}
+
+// Get retrieves an element from the concurrent skip list
+func (c *ConcurrentSkipList[K, T]) TryGet(score K) (elem T, ok bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.SkipList.TryGet(score)
 }
 
 // Range iterates over elements in the concurrent skip list
@@ -532,6 +563,14 @@ func (c *ConcurrentSkipList[K, T]) Range(callback func(score K, v T) bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	c.SkipList.Range(callback)
+}
+
+// Remove removes an element from the concurrent skip list
+func (c *ConcurrentSkipList[K, T]) Remove(score K) *ConcurrentSkipList[K, T] {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.SkipList.Remove(score)
+	return c
 }
 
 // Draw draws the concurrent skip list

@@ -173,6 +173,16 @@ type RBTree[K constraints.Ordered, V any] struct {
 	root   root[K, V]
 }
 
+type InsertOrUpdateCb[V any] func(prev V, new V) V
+
+// InsertOrUpdate inserts or updates an element in the RBTree
+func (r *RBTree[K, V]) InsertOrUpdate(k K, v V, cb InsertOrUpdateCb[V]) {
+	if prev, ok := r.TryGet(k); ok {
+		v = cb(prev, v)
+	}
+	r.Set(k, v)
+}
+
 // 初始化函数
 func New[K constraints.Ordered, V any]() *RBTree[K, V] {
 	return &RBTree[K, V]{}
@@ -240,12 +250,12 @@ func (r *RBTree[K, V]) SetWithPrev(k K, v V) (prev V, replaced bool) {
 
 // Get
 func (r *RBTree[K, V]) Get(k K) (v V) {
-	v, _ = r.GetWithBool(k)
+	v, _ = r.TryGet(k)
 	return
 }
 
 // 从rbtree 找到需要的值
-func (r *RBTree[K, V]) GetWithBool(k K) (v V, ok bool) {
+func (r *RBTree[K, V]) TryGet(k K) (v V, ok bool) {
 	n := r.root.node
 	for n != nil {
 		if n.key == k {
